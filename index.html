@@ -440,7 +440,11 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   function land(g) {
     if (landed === g.id) return; const first = !landed; landed = g.id;
     document.documentElement.dataset.game = g.id;
-    for (const bg of document.querySelectorAll('.room i')) bg.classList.toggle('on', bg.dataset.game === g.id);
+    for (const bg of document.querySelectorAll('.room i')) {
+      if (first) bg.style.transition = 'none';
+      bg.classList.toggle('on', bg.dataset.game === g.id);
+      if (first) { void bg.offsetWidth; requestAnimationFrame(() => { bg.style.transition = ''; }); }
+    }
     fxNext = g.id; if (first || calm) { fxGame = g.id; fxMix = 1; if (calm) requestAnimationFrame(drawFx); }
     fadeBeds();
     if (!first && ready) SFX[g.id]();
@@ -501,6 +505,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     shelf.animate([{ opacity: 0, transform: 'translateY(34px) scale(.9)' }, { opacity: 1, transform: 'none' }], { duration: 700, easing: 'cubic-bezier(.2,1.15,.3,1)', fill: 'backwards' });
     PIECES.forEach((el, k) => el.animate([{ opacity: 0, transform: 'translateY(20px)' }, { opacity: 1, transform: 'none' }], { duration: 560, delay: 220 + k * 90, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));
     document.querySelector('.top').animate([{ opacity: 0, transform: 'translateY(-12px)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: 'ease-out', fill: 'backwards' });
+    for (const el of [$('dots'), $('prevBtn'), $('nextBtn')]) el.animate({ opacity: [0, getComputedStyle(el).opacity] }, { duration: 500, delay: 300, easing: 'ease-out', fill: 'backwards' });
   }
   addEventListener('resize', () => { sizeFx(); setPos(pos); });
   $('prevBtn').addEventListener('click', () => go(sel - 1));
@@ -752,22 +757,32 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     if (!snd.on || /[?&]settings=1/.test(location.search)) return false;
     audioInit(); applySession();
     const c = snd.ctx; if (!c || c.state === 'running') { if (c) made.then(startBeds); return false; }
-    titleUp = true; titleEl.hidden = false; appEl.classList.add('waiting');
+    let pol = ''; try { if (navigator.getAutoplayPolicy) pol = navigator.getAutoplayPolicy('audiocontext'); } catch (e) { /* not supported */ }
+    if (pol === 'allowed') { try { c.resume().catch(() => {}); } catch (e) { /* fine */ } made.then(startBeds); return false; }
+    titleUp = true; appEl.classList.add('waiting');
     if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('titleGo').textContent = 'Click to start';
-    // a browser that lets sound start by itself after all doesn't make anyone tap
-    const check = () => { if (titleUp && c.state === 'running') start(); };
-    try { c.addEventListener('statechange', check); } catch (e) { /* fine */ } setTimeout(check, 300);
-    if (!calm) { titleEl.animate([{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: 'cubic-bezier(.2,1.2,.4,1)' }); }
+    // Give the browser a moment first: one that lets sound start by itself goes straight to the menu, no title at all.
+    try { c.resume().catch(() => {}); } catch (e) { /* fine */ }
+    const decide = () => {
+      if (!titleUp || !titleEl.hidden) return;
+      if (c.state === 'running') { titleUp = false; appEl.classList.remove('waiting'); made.then(startBeds); arrive(); return; }
+      titleEl.hidden = false;
+      if (!calm) titleEl.animate([{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: 'cubic-bezier(.2,1.2,.4,1)' });
+    };
+    try { c.addEventListener('statechange', () => { if (c.state === 'running') decide(); }); } catch (e) { /* fine */ }
+    setTimeout(decide, 220);
     return true;
   }
   function start() {
     if (!titleUp) return; titleUp = false;
     unlock(); SFX.play();
+    const shown = !titleEl.hidden;
     const done = () => { titleEl.hidden = true; titleEl.getAnimations().forEach((a) => a.cancel()); };
-    appEl.classList.remove('waiting');
-    if (calm) { done(); enter(); return; }
-    titleEl.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-24px) scale(1.04)' }], { duration: 260, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' }).finished.then(done, done);
-    setTimeout(enter, 150);
+    // the menu stays hidden until the moment it starts building in, so it never pops up early
+    const build = () => { appEl.classList.remove('waiting'); enter(); };
+    if (calm || !shown) { done(); build(); return; }
+    titleEl.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-24px) scale(1.04)' }], { duration: 240, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' }).finished.then(done, done);
+    setTimeout(build, 210);
   }
   titleEl.addEventListener('click', start);
 
