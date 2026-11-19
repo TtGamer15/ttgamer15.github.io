@@ -44,6 +44,14 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .room i[data-game="mad"]{background:radial-gradient(70% 45% at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),linear-gradient(180deg,#6f79de 0%,#a3adff 9%,#dde3ff 40%,#ffe7b6 100%)}
 #fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 .veil{position:fixed;inset:0;z-index:0;pointer-events:none}
+/* A game plays right here, in a frame under the menu: the menu slides away on top of it, then steps aside. */
+.gameframe{position:fixed;left:0;top:0;width:100%;height:var(--app-h,100%);border:0;margin:0;padding:0;display:block;z-index:0;opacity:0;pointer-events:none;background:transparent}
+.gameframe.shown{opacity:1}
+.gameframe.live{pointer-events:auto}
+.gameframe.fading{transition:opacity 1.5s ease-in-out}
+.app.busy{pointer-events:none}
+.app.away{visibility:hidden}
+.probe{position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 
 .app{position:fixed;left:0;right:0;top:0;z-index:1;height:var(--app-h,100%);display:grid;grid-template-rows:auto 1fr auto;padding:max(12px,env(safe-area-inset-top)) 0 max(16px,env(safe-area-inset-bottom))}
 .top{display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-left))}
@@ -196,6 +204,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 
 <script>
 (() => {
+  try { if (window.parent !== window && window.parent.TTG_HOST) { window.parent.TTG_HOST.home(); return; } } catch (e) { /* not inside the app */ }
   // Add a game: one entry here, a poster (1040 x 1400) in art/, and the game's own folder on the site.
   const GAMES = [
     { id: 'nb', name: 'Noodle Bots', url: '/noodle-bots/', art: 'art/noodle-bots.jpg?v=3',
@@ -294,7 +303,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown']) addEventListener(ev, unlock, true);
   // Once a tap has let sound in, it comes back by itself: after switching apps, and after coming back from a game.
   function wake() {
-    const c = snd.ctx; if (!c || !snd.unlocked || document.hidden || c.state === 'running' || c.state === 'closed') return;
+    const c = snd.ctx; if (!c || !snd.unlocked || document.hidden || c.state === 'running' || c.state === 'closed' || (open && open.shown)) return;
     snd.waking = performance.now(); applySession();
     try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ }
   }
@@ -321,6 +330,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   function star(x, y, r) { fc.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? r * 0.32 : r; fc.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } fc.closePath(); fc.fill(); }
   let lastT = 0;
   function drawFx(t) {
+    if (open && open.live) { lastT = 0; requestAnimationFrame(drawFx); return; }
     const dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0; lastT = t;
     fc.setTransform(DPR, 0, 0, DPR, 0, 0); fc.clearRect(0, 0, FW, FH);
     // when the game changes, the old bits fade away first, then the new ones fade in
@@ -409,6 +419,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     fxNext = g.id; if (first || calm) { fxGame = g.id; fxMix = 1; if (calm) requestAnimationFrame(drawFx); }
     fadeBeds();
     if (!first && ready) SFX[g.id]();
+    clearTimeout(warmT); warmT = setTimeout(() => warm(g), 1200);
   }
   function go(i, how = {}) {
     i = Math.max(0, Math.min(N - 1, i));
@@ -473,27 +484,90 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   // Coming back, the game slides off to the left and the menu builds itself back in from the right.
   let leaving = false;
   const PARTS = () => [document.querySelector('.top'), shelf, $('dots'), ...PIECES];
+  // The menu slides off to the right, piece by piece. Returns how long that takes.
+  function takeApartHub() {
+    if (calm) return 0;
+    tw = null; ++flow;
+    PARTS().forEach((el, k) => { const from = looks(el); el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = '';
+      el.animate([from, { transform: `translateX(${SHIFT * 1.4}px)`, opacity: 0 }], { duration: 300, delay: k * 70, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' }); });
+    $('fx').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: 'forwards' });
+    return PARTS().length * 70 + 300;
+  }
+  /* ---------- playing a game, right here ---------- */
+  // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
+  // and the menu's sound picks right back up when you come back.
+  const V = '4';   // bump when the games change, so phones get the new copies
+  const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
+  const appEl = document.querySelector('.app');
+  const probe = document.createElement('div'); probe.className = 'probe'; document.body.append(probe);
+  function safe() { const cs = getComputedStyle(probe); return { top: parseFloat(cs.paddingTop) || 0, right: parseFloat(cs.paddingRight) || 0, bottom: parseFloat(cs.paddingBottom) || 0, left: parseFloat(cs.paddingLeft) || 0 }; }
+  let open = null;   // the game that's open: { g, frame, api, t0, exitMs, bg, shown, live, backMs }
   function play() {
-    const g = GAMES[sel]; if (!g || leaving) return; leaving = true;
+    const g = GAMES[sel]; if (!g || leaving || open) return; leaving = true;
     SFX.play();
     const on = document.querySelector('.room i.on'), bg = on ? getComputedStyle(on).backgroundImage : '';
-    try { sessionStorage.setItem('ttg.hub', '1'); sessionStorage.setItem('ttg.trip', JSON.stringify({ at: Date.now(), dir: 1, bg })); } catch (e) { /* fine */ }
-    let wait = live() ? 300 : 0;
-    if (!calm) {
-      tw = null; ++flow;
-      PARTS().forEach((el, k) => { const from = looks(el); el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = '';
-        el.animate([from, { transform: `translateX(${SHIFT * 1.4}px)`, opacity: 0 }], { duration: 300, delay: k * 70, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' }); });
-      wait = PARTS().length * 70 + 300;
-    }
-    setTimeout(() => { location.href = g.url + '?hub=1'; }, wait);
+    try { sessionStorage.setItem('ttg.hub', '1'); } catch (e) { /* fine */ }
+    appEl.classList.add('busy');
+    const f = document.createElement('iframe'); f.className = 'gameframe'; f.title = g.name;
+    f.allow = 'clipboard-read; clipboard-write; gamepad; autoplay; fullscreen; web-share; screen-wake-lock'; f.src = frameUrl(g);
+    appEl.before(f);
+    const o = open = { g, frame: f, api: null, t0: performance.now(), exitMs: takeApartHub(), bg, shown: false, live: false, backMs: null };
+    bedsDown();
+    // a game that never says it's ready still gets shown
+    f.addEventListener('load', () => setTimeout(() => { if (open === o && !o.shown) reveal(o); }, 1200));
+    try { history.pushState({ ttgGame: g.id }, ''); } catch (e) { /* fine */ }
   }
+  function reveal(o) {
+    if (o.shown || open !== o) return; o.shown = true;
+    // the game starts building itself in while the last bits of the menu are still sliding away
+    setTimeout(() => {
+      if (open !== o) return;
+      o.frame.classList.add('shown');
+      if (o.api) { try { o.api.reveal({ dir: 1, bg: o.bg, at: Date.now() }); } catch (e) { /* fine */ } }
+      setTimeout(() => {
+        if (open !== o) return;
+        o.live = true; appEl.classList.add('away'); appEl.classList.remove('busy'); o.frame.classList.add('live');
+        try { o.frame.contentWindow.focus(); } catch (e) { /* fine */ }
+      }, Math.max(0, o.t0 + o.exitMs - performance.now()));
+    }, Math.max(0, o.t0 + o.exitMs * 0.45 - performance.now()));
+  }
+  function closeGame() {
+    const o = open; if (!o) return; open = null;
+    let ms = o.backMs;
+    if (ms == null) { try { ms = o.api && o.shown ? o.api.leave() : 0; } catch (e) { ms = 0; } }   // e.g. Android's back gesture: the game takes itself apart first
+    o.frame.classList.remove('live');
+    setTimeout(() => {
+      appEl.classList.remove('away', 'busy'); leaving = false;
+      if (sel >= 0) setPos(sel);
+      buildIn({ dir: -1, noVeil: true });   // the menu slides back in from the right, over the game
+      $('fx').getAnimations().forEach((a) => a.cancel()); fxMix = 0;
+      wakeSoon(); bedsUp();
+      // then the game's colors slowly fade into the menu's
+      setTimeout(() => { o.frame.classList.add('fading'); o.frame.classList.remove('shown'); setTimeout(() => o.frame.remove(), 1600); }, calm ? 0 : 420);
+    }, calm ? 0 : ms * 0.5);
+  }
+  window.TTG_HOST = {
+    safe,
+    ready(api) { const o = open; if (!o || !api || api.win !== o.frame.contentWindow) return; o.api = api; reveal(o); },
+    back(info) { const o = open; if (!o || (info && info.win && info.win !== o.frame.contentWindow)) return; o.backMs = (info && info.ms) || 0; if (history.state && history.state.ttgGame) history.back(); else closeGame(); },
+    home() { if (open) { open.backMs = 0; closeGame(); } },
+  };
+  addEventListener('popstate', () => { if (open) closeGame(); });
+  addEventListener('resize', () => { if (open && open.api) { try { open.api.win.dispatchEvent(new Event('resize')); } catch (e) { /* fine */ } } });
+  // The menu's sound beds fade out while a game plays, and come back after.
+  function bedsDown() { const c = snd.ctx; if (!c) return; for (const id in snd.beds) snd.beds[id].gain.setTargetAtTime(0, c.currentTime, 0.25); clearTimeout(snd.napT); snd.napT = setTimeout(() => { if (open) nap(); }, 1500); }
+  function bedsUp() { clearTimeout(snd.napT); fadeBeds(); }
+  // Fetch the game you're looking at ahead of time, so Play opens it quickly.
+  const warmed = {}; let warmT = 0;
+  function warm(g) { if (warmed[g.id] || !window.fetch) return; warmed[g.id] = true; fetch(frameUrl(g), { credentials: 'same-origin' }).catch(() => { warmed[g.id] = false; }); }
   function buildIn(t) {
     leaving = false;
     PARTS().forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = ''; });
     if (!t) { enter(); return; }
-    const veil = document.createElement('div'); veil.className = 'veil'; veil.style.background = t.bg || '#1b1236'; $('fx').after(veil);
+    const veil = document.createElement('div'); veil.className = 'veil'; veil.style.background = t.bg || '#1b1236'; if (!t.noVeil) $('fx').after(veil);
     fxMix = 0;
     if (!calm) PARTS().forEach((el, k) => el.animate([{ transform: `translateX(${SHIFT * 1.4}px)`, opacity: 0 }, { transform: 'translateX(0px)', opacity: 1 }], { duration: 520, delay: 60 + k * 70, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));
+    if (t.noVeil) return;
     const fade = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 400 : 1500, delay: calm ? 0 : 520, easing: 'ease-in-out', fill: 'both' });
     fade.finished.then(() => veil.remove(), () => veil.remove());
   }
@@ -507,6 +581,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 
   /* ---------- keyboard and controllers ---------- */
   addEventListener('keydown', (e) => {
+    if (open) return;
     if ($('sheet').classList.contains('open')) { if (e.key === 'Escape') closeSheet(); return; }
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(sel - 1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); go(sel + 1); }
@@ -514,6 +589,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   });
   const pad = { held: {}, next: 0, dir: 0 };
   function pollPads(now) {
+    if (open) { requestAnimationFrame(pollPads); return; }
     const ps = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
     if (ps.length) {
       $('hint').textContent = 'Left and right to pick · A to play';
@@ -642,7 +718,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('hint').textContent = 'Use the arrows or ← → keys to pick a game';
   go(last >= 0 ? last : 0, { instant: true }); arrive(); setTimeout(() => { ready = true; }, 400);
   // for the site's own checks
-  window.TTG_HUB = { sound: () => ({ state: snd.ctx && snd.ctx.state, beds: Object.keys(snd.beds), made: Object.keys(BUF).filter((k) => BUF[k]).length, of: Object.keys(MAKE).length }), pos: () => pos };
+  window.TTG_HUB = { sound: () => ({ state: snd.ctx && snd.ctx.state, beds: Object.keys(snd.beds), made: Object.keys(BUF).filter((k) => BUF[k]).length, of: Object.keys(MAKE).length }), pos: () => pos, open: () => open && { id: open.g.id, shown: open.shown, live: open.live } };
   if (/[?&]settings=1/.test(location.search)) openSheet();
 })();
 </script>
