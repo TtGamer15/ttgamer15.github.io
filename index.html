@@ -21,7 +21,7 @@
   --ink:#23164a; --muted:rgba(35,22,74,.68); --line:rgba(35,22,74,.14);
   --accent:#ff8a1f; --accent-deep:#c25f0d; --accent-ink:#23164a; --ring:rgba(255,138,31,.5);
   --f-ui:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --card-w:min(72vw,330px,calc((var(--app-h,100vh) - 340px) * .78));
+  --card-w:min(72vw,330px,calc((var(--app-h,100vh) - 350px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) * .78));
 }
 :root[data-game="nb"]{ --accent:#ff8a1f; --accent-deep:#c25f0d; --ring:rgba(255,138,31,.5) }
 :root[data-game="mad"]{ --accent:#f2c24b; --accent-deep:#9a6c10; --ring:rgba(214,160,40,.55) }
@@ -53,7 +53,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .app.away{visibility:hidden}
 .probe{position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 
-.app{position:fixed;left:0;right:0;top:0;z-index:1;height:var(--app-h,100%);display:grid;grid-template-rows:auto 1fr auto;padding:max(12px,env(safe-area-inset-top)) 0 max(16px,env(safe-area-inset-bottom))}
+.app{position:fixed;left:0;right:0;top:0;z-index:1;height:var(--app-h,100%);display:grid;grid-template-rows:auto 1fr auto;padding:calc(env(safe-area-inset-top,0px) + 20px) 0 max(16px,env(safe-area-inset-bottom))}   /* + room below the iPhone's blur under the clock */
+.app.waiting{visibility:hidden}
 .top{display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-left))}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px}
 .brand img{width:34px;height:34px;border-radius:9px;box-shadow:0 3px 0 rgba(35,22,74,.25)}
@@ -83,7 +84,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .arrow{display:none}
 
 @media (min-width:760px){
-  :root{--card-w:min(40vw,380px,calc((var(--app-h,100vh) - 340px) * .78))}
+  :root{--card-w:min(40vw,380px,calc((var(--app-h,100vh) - 350px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) * .78))}
 }
 @media (min-width:760px) and (hover:hover){
   .arrow{display:grid;place-items:center;position:absolute;top:50%;width:56px;height:56px;margin-top:-28px;border-radius:50%;border:0;background:rgba(255,255,255,.85);box-shadow:0 4px 0 rgba(35,22,74,.14);cursor:pointer;z-index:20;transition:opacity .3s}
@@ -95,11 +96,21 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 @media (max-height:640px) and (orientation:landscape){
   .app{grid-template-columns:1.1fr 1fr;grid-template-rows:auto 1fr;column-gap:10px}
   .top{grid-column:1/-1}
-  :root{--card-w:min(260px,calc((var(--app-h,100vh) - 130px) * .75))}
+  :root{--card-w:min(260px,calc((var(--app-h,100vh) - 140px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) * .75))}
   .shelf{margin:-18px 0}
   .info{align-content:center}
   .arrow{display:none}
 }
+
+/* Tap to start: the first tap is what lets an iPhone play sound, so the app opens on a title screen like a console game. */
+.title{position:fixed;inset:0;z-index:4;display:grid;place-content:center;justify-items:center;gap:12px;padding:0 24px;border:0;background:transparent;color:var(--ink);font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-align:center}
+.title[hidden]{display:none}
+.t-icon{width:118px;height:118px;border-radius:28px;box-shadow:0 6px 0 rgba(35,22,74,.22),0 20px 44px rgba(60,30,100,.28);animation:t-bob 2.8s ease-in-out infinite}
+.t-name{margin-top:10px;font-weight:700;font-size:36px;line-height:1.1}
+.t-go{margin-top:26px;min-width:min(70vw,260px);padding:13px 28px;border-radius:999px;border:4px solid #fff;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:22px;box-shadow:0 6px 0 var(--accent-deep),0 12px 24px rgba(60,30,100,.2);animation:t-pulse 1.7s ease-in-out infinite}
+@keyframes t-bob{50%{transform:translateY(-9px)}}
+@keyframes t-pulse{50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.t-icon,.t-go{animation:none}}
 
 /* Settings sheet */
 .sheet{position:fixed;inset:0;z-index:5;display:grid;align-items:end;justify-items:center;background:rgba(35,22,74,.35);opacity:0;pointer-events:none;transition:opacity .25s}
@@ -163,6 +174,12 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     <p class="hint" id="hint">Swipe to pick a game</p>
   </section>
 </div>
+
+<button class="title" id="titleScreen" type="button" hidden aria-label="Start TtGamer15 Games">
+  <img class="t-icon" src="apple-touch-icon.png" alt="">
+  <span class="t-name">TtGamer15 Games</span>
+  <span class="t-go" id="titleGo">Tap to start</span>
+</button>
 
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
   <div class="panel">
@@ -269,6 +286,8 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     try {
       const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
       const c = new AC(); snd.ctx = c; snd.out = c.createGain(); snd.out.gain.value = snd.on ? 0.6 : 0; snd.out.connect(c.destination);
+      const ran = () => { if (c.state !== 'running') return; snd.unlocked = true; dropStale(); };
+      c.onstatechange = ran; ran();
     } catch (e) { snd.ctx = null; }
   }
   // iPhones only start sound from a tap, and the silent switch mutes it unless the page asks to play like music.
@@ -278,7 +297,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   function applySession() {
     try { if (navigator.audioSession) navigator.audioSession.type = snd.silentOk ? 'playback' : 'ambient'; } catch (e) { /* older phone */ }
     if (!navigator.audioSession) {
-      if (snd.silentOk && snd.unlocked && !snd.tag) { try { snd.tag = new Audio(silentWav()); snd.tag.loop = true; snd.tag.setAttribute('playsinline', ''); const p = snd.tag.play(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ } }
+      if (snd.silentOk && snd.ctx && !snd.tag) { try { snd.tag = new Audio(silentWav()); snd.tag.loop = true; snd.tag.setAttribute('playsinline', ''); const p = snd.tag.play(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ } }
       if (!snd.silentOk && snd.tag) { try { snd.tag.pause(); snd.tag = null; } catch (e) { /* fine */ } }
     }
   }
@@ -295,11 +314,17 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   function fadeBeds() { const c = snd.ctx; if (!c) return; for (const id in snd.beds) snd.beds[id].gain.setTargetAtTime(landed === id ? 1 : 0, c.currentTime, 0.4); }
   function unlock() {
     audioInit(); const c = snd.ctx; if (!c) return;
-    if (!snd.unlocked) { snd.unlocked = true; try { const s0 = c.createBufferSource(); s0.buffer = c.createBuffer(1, 1, 22050); s0.connect(c.destination); s0.start(0); } catch (e) { /* fine */ } }
     applySession();
-    if (c.state !== 'running') { snd.waking = performance.now(); try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ } }
+    if (c.state !== 'running') {
+      // inside a tap, this is what lets an iPhone play sound (it keeps trying on every tap until it works)
+      try { const s0 = c.createBufferSource(); s0.buffer = c.createBuffer(1, 1, 22050); s0.connect(c.destination); s0.start(0); } catch (e) { /* fine */ }
+      snd.waking = performance.now(); try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ }
+    }
     made.then(startBeds);
   }
+  // sounds asked for while the sound was still locked: drop old ones so they don't all play at once later
+  const queued = [];
+  function dropStale() { const now = performance.now(); while (queued.length) { const q = queued.shift(); if (now - q.at > 1200) { try { q.s.stop(); } catch (e) { /* fine */ } } } }
   for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown']) addEventListener(ev, unlock, true);
   // Once a tap has let sound in, it comes back by itself: after switching apps, and after coming back from a game.
   function wake() {
@@ -313,7 +338,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   addEventListener('pagehide', nap); addEventListener('pageshow', wakeSoon); addEventListener('focus', wake);
   // sounds asked for while the sound is just waking up still play, the moment it's awake
   const live = () => snd.on && snd.ctx && (snd.ctx.state === 'running' || (snd.unlocked && performance.now() - (snd.waking || 0) < 1500));
-  function playSound(name) { if (!live() || !BUF[name]) return; try { const s = snd.ctx.createBufferSource(); s.buffer = BUF[name]; s.connect(snd.out); s.start(); } catch (e) { /* fine */ } }
+  function playSound(name) { if (!live() || !BUF[name]) return; try { const s = snd.ctx.createBufferSource(); s.buffer = BUF[name]; s.connect(snd.out); s.start(); if (snd.ctx.state !== 'running') queued.push({ s, at: performance.now() }); } catch (e) { /* fine */ } }
   const SFX = new Proxy({}, { get: (_, name) => () => playSound(name) });
   function setSound(on) { snd.on = on; store.set('ttg.sound', on ? '1' : '0'); unlock(); if (snd.out) snd.out.gain.setTargetAtTime(on ? 0.6 : 0, snd.ctx.currentTime, 0.03); if (on) setTimeout(() => SFX.good(), 60); }
   $('sndChk').checked = snd.on; $('sndChk').addEventListener('change', () => setSound($('sndChk').checked));
@@ -581,6 +606,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 
   /* ---------- keyboard and controllers ---------- */
   addEventListener('keydown', (e) => {
+    if (titleUp) { if (!e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); start(); } return; }
     if (open) return;
     if ($('sheet').classList.contains('open')) { if (e.key === 'Escape') closeSheet(); return; }
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(sel - 1); }
@@ -590,6 +616,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   const pad = { held: {}, next: 0, dir: 0 };
   function pollPads(now) {
     if (open) { requestAnimationFrame(pollPads); return; }
+    if (titleUp) { const ps0 = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; if (ps0.some((g) => g.buttons.some((b) => b.pressed))) start(); requestAnimationFrame(pollPads); return; }
     const ps = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
     if (ps.length) {
       $('hint').textContent = 'Left and right to pick · A to play';
@@ -716,9 +743,37 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 
   /* ---------- start ---------- */
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('hint').textContent = 'Use the arrows or ← → keys to pick a game';
-  go(last >= 0 ? last : 0, { instant: true }); arrive(); setTimeout(() => { ready = true; }, 400);
+  /* ---------- tap to start ---------- */
+  // An iPhone won't play any sound until you tap the page (a swipe doesn't count), so the app opens on a title screen.
+  // That first tap starts the music while the menu builds itself in. Skipped when sound is off or already allowed.
+  let titleUp = false;
+  const titleEl = $('titleScreen');
+  function showTitle() {
+    if (!snd.on || /[?&]settings=1/.test(location.search)) return false;
+    audioInit(); applySession();
+    const c = snd.ctx; if (!c || c.state === 'running') { if (c) made.then(startBeds); return false; }
+    titleUp = true; titleEl.hidden = false; appEl.classList.add('waiting');
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('titleGo').textContent = 'Click to start';
+    // a browser that lets sound start by itself after all doesn't make anyone tap
+    const check = () => { if (titleUp && c.state === 'running') start(); };
+    try { c.addEventListener('statechange', check); } catch (e) { /* fine */ } setTimeout(check, 300);
+    if (!calm) { titleEl.animate([{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: 'cubic-bezier(.2,1.2,.4,1)' }); }
+    return true;
+  }
+  function start() {
+    if (!titleUp) return; titleUp = false;
+    unlock(); SFX.play();
+    const done = () => { titleEl.hidden = true; titleEl.getAnimations().forEach((a) => a.cancel()); };
+    appEl.classList.remove('waiting');
+    if (calm) { done(); enter(); return; }
+    titleEl.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-24px) scale(1.04)' }], { duration: 260, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' }).finished.then(done, done);
+    setTimeout(enter, 150);
+  }
+  titleEl.addEventListener('click', start);
+
+  go(last >= 0 ? last : 0, { instant: true }); if (!showTitle()) arrive(); setTimeout(() => { ready = true; }, 400);
   // for the site's own checks
-  window.TTG_HUB = { sound: () => ({ state: snd.ctx && snd.ctx.state, beds: Object.keys(snd.beds), made: Object.keys(BUF).filter((k) => BUF[k]).length, of: Object.keys(MAKE).length }), pos: () => pos, open: () => open && { id: open.g.id, shown: open.shown, live: open.live } };
+  window.TTG_HUB = { sound: () => ({ state: snd.ctx && snd.ctx.state, beds: Object.keys(snd.beds), made: Object.keys(BUF).filter((k) => BUF[k]).length, of: Object.keys(MAKE).length }), pos: () => pos, open: () => open && { id: open.g.id, shown: open.shown, live: open.live }, title: () => titleUp };
   if (/[?&]settings=1/.test(location.search)) openSheet();
 })();
 </script>
