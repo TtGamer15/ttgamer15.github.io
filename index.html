@@ -21,7 +21,7 @@
   --ink:#23164a; --muted:rgba(35,22,74,.68); --line:rgba(35,22,74,.14);
   --accent:#ff8a1f; --accent-deep:#c25f0d; --accent-ink:#23164a; --ring:rgba(255,138,31,.5);
   --f-ui:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --card-w:min(72vw,330px);
+  --card-w:min(72vw,330px,calc((var(--app-h,100vh) - 340px) * .78));
 }
 :root[data-game="nb"]{ --accent:#ff8a1f; --accent-deep:#c25f0d; --ring:rgba(255,138,31,.5) }
 :root[data-game="mad"]{ --accent:#f2c24b; --accent-deep:#9a6c10; --ring:rgba(214,160,40,.55) }
@@ -37,7 +37,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 
 /* The room: a bright sky in the selected game's colors, with little things floating in it. */
 .room{position:fixed;left:0;right:0;top:0;bottom:-140px;z-index:0;pointer-events:none}
-.room i{position:absolute;inset:0;opacity:0;transition:opacity .6s ease}
+.room i{position:absolute;inset:0;opacity:0;transition:opacity 1.5s ease}
 .room i.on{opacity:1}
 /* a deeper color at the very top so the iPhone clock (always white in Home Screen apps) stays readable */
 .room i[data-game="nb"]{background:radial-gradient(70% 45% at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),linear-gradient(180deg,#ff9369 0%,#ffbfa0 9%,#ffe0e4 40%,#e4d8ff 100%)}
@@ -51,15 +51,17 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .gear{appearance:none;width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.78);box-shadow:0 3px 0 rgba(35,22,74,.14),0 6px 16px rgba(35,22,74,.12);display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
 .gear svg{width:23px;height:23px}
 
-/* The shelf: swipe sideways between game posters. */
+/* The shelf: posters on a track that follows your finger. The script places each poster. */
+.stage,.info{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .stage{display:grid;align-content:center;min-height:0;position:relative}
-.shelf{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:58px calc(50vw - var(--card-w) / 2);margin:-24px 0;perspective:1100px;outline:none}
-.shelf::-webkit-scrollbar{display:none}
-.game{flex:0 0 var(--card-w);scroll-snap-align:center;appearance:none;border:0;background:none;padding:0 4%;cursor:pointer;touch-action:pan-x;
-  transform:translateZ(calc(var(--d,1) * -120px)) rotateY(calc(var(--s,0) * -24deg)) scale(calc(1 - var(--d,1) * .12));
-  opacity:calc(1 - var(--d,1) * .35);transform-style:preserve-3d;will-change:transform}
-.game .cover{display:block;width:100%;aspect-ratio:1040/1400;border-radius:22px;background:#23164a center/cover;border:6px solid #fff;box-shadow:0 14px 30px rgba(60,30,100,.28);transition:box-shadow .3s}
+.shelf{position:relative;height:calc(var(--card-w) * 1.2385 + 64px);margin:-14px 0;perspective:1100px;outline:none;cursor:grab}
+.shelf.dragging{cursor:grabbing}
+.game{position:absolute;left:50%;top:32px;width:var(--card-w);margin-left:calc(var(--card-w) / -2);appearance:none;border:0;background:none;padding:0 calc(var(--card-w) * .04);cursor:pointer;transform-style:preserve-3d;will-change:transform,opacity}
+.game[data-g="nb"]{--accent:#ff8a1f;--ring:rgba(255,138,31,.5)}
+.game[data-g="mad"]{--accent:#f2c24b;--ring:rgba(214,160,40,.55)}
+.game .cover{display:block;width:100%;aspect-ratio:1040/1400;border-radius:22px;background:#23164a center/cover;border:6px solid #fff;box-shadow:0 14px 30px rgba(60,30,100,.28);transition:box-shadow .45s}
 .game[aria-current="true"] .cover{box-shadow:0 0 0 5px var(--accent),0 0 40px 6px var(--ring),0 18px 36px rgba(60,30,100,.32)}
+.pw{display:grid;justify-items:center}
 .dots{display:flex;justify-content:center;gap:9px;margin-top:4px}
 .dots i{width:10px;height:10px;border-radius:5px;background:rgba(35,22,74,.2);transition:background .3s,width .3s}
 .dots i.on{width:28px;background:var(--accent)}
@@ -72,18 +74,20 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .arrow{display:none}
 
 @media (min-width:760px){
-  :root{--card-w:min(30vw,340px)}
-  .arrow{display:grid;place-items:center;position:absolute;top:50%;width:56px;height:56px;margin-top:-28px;border-radius:50%;border:0;background:rgba(255,255,255,.85);box-shadow:0 4px 0 rgba(35,22,74,.14);cursor:pointer;z-index:2}
+  :root{--card-w:min(40vw,380px,calc((var(--app-h,100vh) - 340px) * .78))}
+}
+@media (min-width:760px) and (hover:hover){
+  .arrow{display:grid;place-items:center;position:absolute;top:50%;width:56px;height:56px;margin-top:-28px;border-radius:50%;border:0;background:rgba(255,255,255,.85);box-shadow:0 4px 0 rgba(35,22,74,.14);cursor:pointer;z-index:20;transition:opacity .3s}
   .arrow svg{width:26px;height:26px}
-  .arrow.l{left:max(18px,calc(50vw - var(--card-w) - 120px))}
-  .arrow.r{right:max(18px,calc(50vw - var(--card-w) - 120px))}
+  .arrow.l{left:max(18px,calc(50vw - var(--card-w) * 1.5 - 70px))}
+  .arrow.r{right:max(18px,calc(50vw - var(--card-w) * 1.5 - 70px))}
   .arrow[disabled]{opacity:.35;cursor:default}
 }
 @media (max-height:640px) and (orientation:landscape){
   .app{grid-template-columns:1.1fr 1fr;grid-template-rows:auto 1fr;column-gap:10px}
   .top{grid-column:1/-1}
-  :root{--card-w:min(25vh,210px)}
-  .shelf{padding:40px calc(27.5vw - var(--card-w) / 2);margin:-26px 0}
+  :root{--card-w:min(260px,calc((var(--app-h,100vh) - 130px) * .75))}
+  .shelf{margin:-18px 0}
   .info{align-content:center}
   .arrow{display:none}
 }
@@ -121,8 +125,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 .switch[hidden]{display:none}
 
 @media (prefers-reduced-motion:reduce){
-  .game{transform:none!important}
-  .room i,.sheet,.panel{transition:none}
+  .sheet,.panel{transition:none}
 }
 </style>
 </head>
@@ -147,7 +150,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   <section class="info" aria-live="polite">
     <h1 class="sr" id="title"></h1>
     <p class="blurb" id="blurb"></p>
-    <button class="play" id="playBtn" type="button">Play</button>
+    <div class="pw" id="playWrap"><button class="play" id="playBtn" type="button">Play</button></div>
     <p class="hint" id="hint">Swipe to pick a game</p>
   </section>
 </div>
@@ -194,23 +197,68 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 (() => {
   // Add a game: one entry here, a poster (1040 x 1400) in art/, and the game's own folder on the site.
   const GAMES = [
-    { id: 'nb', name: 'Noodle Bots', url: '/noodle-bots/', art: 'art/noodle-bots.jpg?v=2',
+    { id: 'nb', name: 'Noodle Bots', url: '/noodle-bots/', art: 'art/noodle-bots.jpg?v=3',
       blurb: 'Eat, grow, and teach a bot to play exactly like you. Then hand it the controls.', key: 'noodlebots.v2' },
-    { id: 'mad', name: 'Museum After Dark', url: '/Museum-After-Dark/', art: 'art/museum-after-dark.jpg?v=2',
+    { id: 'mad', name: 'Museum After Dark', url: '/Museum-After-Dark/', art: 'art/museum-after-dark.jpg?v=3',
       blurb: 'Sneak past the night guard when nobody\'s looking, or be the guard and catch the exhibits moving.', key: 'museum-after-dark-v1' },
   ];
   const $ = (id) => document.getElementById(id);
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } } };
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- sound: little effects for everything, and a soft sound bed for each game ---------- */
-  const snd = { ctx: null, out: null, noise: null, on: store.get('ttg.sound') !== '0', silentOk: store.get('ttg.silent') === '1', unlocked: false, tag: null, next: 0 };
+  /* ---------- sound ---------- */
+  // Every sound is made once, ahead of time, and then just played back. Building sounds while they play made them lag on phones.
+  // Each game also has a soft sound bed that loops: Noodle Bots blips like snacks getting eaten; Museum After Dark has a ticking clock and twinkling gems.
+  const RATE = 44100, BUF = {};
+  const snd = { ctx: null, out: null, beds: {}, on: store.get('ttg.sound') !== '0', silentOk: store.get('ttg.silent') === '1', unlocked: false, tag: null };
+  function render(dur, build) {
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OAC) return Promise.resolve(null);
+    const oc = new OAC(1, Math.ceil(dur * RATE), RATE), noise = oc.createBuffer(1, RATE, RATE), d = noise.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const tone = (f, len, type, vol, slide, at = 0) => {
+      const o = oc.createOscillator(), g = oc.createGain(); o.type = type; o.frequency.setValueAtTime(f, at); if (slide) o.frequency.exponentialRampToValueAtTime(slide, at + len);
+      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vol, at + 0.008); g.gain.exponentialRampToValueAtTime(0.0005, at + len); g.gain.linearRampToValueAtTime(0, at + len + 0.01);
+      o.connect(g); g.connect(oc.destination); o.start(at); o.stop(at + len + 0.02);
+    };
+    const hiss = (len, vol, f0, f1, at = 0, q = 1.2) => {
+      const n = oc.createBufferSource(), bp = oc.createBiquadFilter(), g = oc.createGain(); n.buffer = noise; bp.type = 'bandpass'; bp.Q.value = q;
+      bp.frequency.setValueAtTime(f0, at); bp.frequency.exponentialRampToValueAtTime(f1, at + len);
+      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vol, at + len * 0.3); g.gain.linearRampToValueAtTime(0, at + len);
+      n.connect(bp); bp.connect(g); g.connect(oc.destination); n.start(at, Math.random() * 0.5); n.stop(at + len + 0.02);
+    };
+    build(tone, hiss);
+    return new Promise((res) => { try { const p = oc.startRendering(); if (p && p.then) p.then(res, () => res(null)); else oc.oncomplete = (e) => res(e.renderedBuffer); } catch (e) { res(null); } });
+  }
+  const MAKE = {
+    tap: [0.12, (t) => t(880, 0.05, 'triangle', 0.16, 1320)],
+    swipe: [0.32, (t, h) => h(0.3, 0.14, 700, 2600)],
+    nb: [0.6, (t) => { [523, 659, 784, 1047].forEach((f, k) => t(f, 0.16, 'square', 0.05, f * 1.02, k * 0.07)); t(1568, 0.25, 'sine', 0.07, 2093, 0.3); }],
+    mad: [1.3, (t) => { t(196, 1.1, 'sine', 0.18, 190); t(392, 0.9, 'triangle', 0.05, 390, 0.02); [1568, 2093, 2637].forEach((f, k) => t(f, 0.5, 'sine', 0.04, f, 0.25 + k * 0.09)); }],
+    play: [0.9, (t, h) => { [392, 523, 659, 784].forEach((f, k) => t(f, 0.18, 'square', 0.06, f, k * 0.08)); t(1047, 0.45, 'triangle', 0.11, 1047, 0.32); h(0.5, 0.07, 1500, 6000, 0.3); }],
+    open: [0.2, (t) => t(520, 0.12, 'sine', 0.14, 980)],
+    close: [0.2, (t) => t(780, 0.12, 'sine', 0.12, 420)],
+    good: [0.6, (t) => [784, 988, 1175, 1568].forEach((f, k) => t(f, 0.22, 'triangle', 0.09, f, k * 0.08))],
+    bad: [0.35, (t) => t(220, 0.25, 'square', 0.05, 160)],
+    // the sound beds: 8 seconds each, looped
+    bedNb: [8, (t, h) => {
+      const notes = [523, 587, 659, 784, 880, 1047, 1175, 1319];
+      [[0.3, 2], [1.1, 4], [1.6, 5], [2.9, 1], [3.5, 3], [4.8, 6], [5.3, 7], [6.6, 2], [7.15, 4]].forEach(([at, k], i) => {
+        const f = notes[k]; t(f, 0.12, 'sine', 0.055, f * 1.6, at); if (i % 3 === 1) t(f * 1.5, 0.1, 'sine', 0.035, f * 2.2, at + 0.1);
+      });
+      h(0.5, 0.03, 300, 900, 4.0);
+    }],
+    bedMad: [8, (t, h) => {
+      for (let k = 0; k < 8; k++) h(0.05, 0.09, k % 2 ? 2600 : 1900, k % 2 ? 2400 : 1700, k, 6);
+      t(2349, 0.6, 'sine', 0.03, 2349, 2.45); t(3136, 0.6, 'sine', 0.025, 3136, 6.2);
+      t(70, 0.18, 'sine', 0.12, 50, 4.6); t(70, 0.18, 'sine', 0.1, 50, 5.15);
+    }],
+  };
+  const made = Promise.all(Object.entries(MAKE).map(([k, [dur, fn]]) => render(dur, fn).then((b) => { BUF[k] = b; })));
   function audioInit() {
     if (snd.ctx) return;
     try {
       const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-      const c = new AC(); snd.ctx = c; snd.out = c.createGain(); snd.out.gain.value = snd.on ? 0.55 : 0; snd.out.connect(c.destination);
-      const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; snd.noise = b;
+      const c = new AC(); snd.ctx = c; snd.out = c.createGain(); snd.out.gain.value = snd.on ? 0.6 : 0; snd.out.connect(c.destination);
     } catch (e) { snd.ctx = null; }
   }
   // iPhones only start sound from a tap, and the silent switch mutes it unless the page asks to play like music.
@@ -224,56 +272,30 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       if (!snd.silentOk && snd.tag) { try { snd.tag.pause(); snd.tag = null; } catch (e) { /* fine */ } }
     }
   }
+  // The two sound beds loop the whole time; switching games just fades one down and the other up.
+  function startBeds() {
+    const c = snd.ctx; if (!c || snd.beds.nb) return;
+    for (const [id, key] of [['nb', 'bedNb'], ['mad', 'bedMad']]) {
+      if (!BUF[key]) continue;
+      const s = c.createBufferSource(), g = c.createGain(); s.buffer = BUF[key]; s.loop = true; g.gain.value = 0;
+      s.connect(g); g.connect(snd.out); s.start(c.currentTime + 0.05); snd.beds[id] = g;
+    }
+    fadeBeds();
+  }
+  function fadeBeds() { const c = snd.ctx; if (!c) return; for (const id in snd.beds) snd.beds[id].gain.setTargetAtTime(landed === id ? 1 : 0, c.currentTime, 0.4); }
   function unlock() {
     audioInit(); const c = snd.ctx; if (!c) return;
     if (!snd.unlocked) { snd.unlocked = true; try { const s0 = c.createBufferSource(); s0.buffer = c.createBuffer(1, 1, 22050); s0.connect(c.destination); s0.start(0); } catch (e) { /* fine */ } }
     applySession();
     if (c.state !== 'running') { try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ } }
+    made.then(startBeds);
   }
   addEventListener('pointerdown', unlock, true); addEventListener('keydown', unlock, true); addEventListener('touchend', unlock, true);
+  document.addEventListener('visibilitychange', () => { const c = snd.ctx; if (!c || !snd.unlocked) return; try { if (document.hidden) c.suspend(); else c.resume(); } catch (e) { /* fine */ } });
   const live = () => snd.on && snd.ctx && snd.ctx.state === 'running';
-  function tone(f, dur, type, vol, slide, delay = 0) {
-    if (!live()) return; const c = snd.ctx, t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
-    o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(snd.out); o.start(t); o.stop(t + dur + 0.02);
-  }
-  function hiss(dur, vol, f0, f1, delay = 0, q = 1.2) {
-    if (!live()) return; const c = snd.ctx, t = c.currentTime + delay, s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
-    s.buffer = snd.noise; bp.type = 'bandpass'; bp.Q.value = q; bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(bp); bp.connect(g); g.connect(snd.out); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
-  }
-  const SFX = {
-    tap() { tone(880, 0.06, 'triangle', 0.12, 1320); },
-    swipe() { hiss(0.28, 0.12, 700, 2600); },
-    nb() { [523, 659, 784, 1047].forEach((f, k) => tone(f, 0.16, 'square', 0.05, f * 1.02, k * 0.07)); tone(1568, 0.25, 'sine', 0.06, 2093, 0.3); },
-    mad() { tone(196, 1.1, 'sine', 0.16, 190); tone(392, 0.9, 'triangle', 0.05, 390, 0.02); [1568, 2093, 2637].forEach((f, k) => tone(f, 0.5, 'sine', 0.035, f, 0.25 + k * 0.09)); },
-    play() { [392, 523, 659, 784].forEach((f, k) => tone(f, 0.18, 'square', 0.06, f, k * 0.08)); tone(1047, 0.45, 'triangle', 0.1, 1047, 0.32); hiss(0.5, 0.06, 1500, 6000, 0.3); },
-    open() { tone(520, 0.12, 'sine', 0.12, 980); },
-    close() { tone(780, 0.12, 'sine', 0.1, 420); },
-    good() { [784, 988, 1175, 1568].forEach((f, k) => tone(f, 0.22, 'triangle', 0.08, f, k * 0.08)); },
-    bad() { tone(220, 0.25, 'square', 0.05, 160); },
-  };
-  // The sound bed: Noodle Bots blips like snacks getting eaten; Museum After Dark has a ticking clock and twinkling gems.
-  const NB_NOTES = [523, 587, 659, 784, 880, 1047, 1175, 1319];
-  let tickTock = 0;
-  setInterval(() => {
-    if (!live() || document.hidden || !GAMES[sel]) return;
-    const now = performance.now(); if (now < snd.next) return;
-    if (GAMES[sel].id === 'nb') {
-      const f = NB_NOTES[Math.floor(Math.random() * NB_NOTES.length)];
-      tone(f, 0.12, 'sine', 0.05, f * 1.6); if (Math.random() < 0.3) tone(f * 1.5, 0.1, 'sine', 0.035, f * 2.2, 0.1);
-      if (Math.random() < 0.12) hiss(0.5, 0.03, 300, 900);
-      snd.next = now + 380 + Math.random() * 700;
-    } else {
-      tickTock ^= 1; hiss(0.05, 0.08, tickTock ? 2600 : 1900, tickTock ? 2400 : 1700, 0, 6);
-      if (Math.random() < 0.22) { const f = [2093, 2349, 2637, 3136][Math.floor(Math.random() * 4)]; tone(f, 0.6, 'sine', 0.025, f); }
-      if (Math.random() < 0.08) { tone(70, 0.18, 'sine', 0.12, 50, 0.2); tone(70, 0.18, 'sine', 0.1, 50, 0.75); }
-      snd.next = now + 1000;
-    }
-  }, 60);
-  function setSound(on) { snd.on = on; store.set('ttg.sound', on ? '1' : '0'); unlock(); if (snd.out) snd.out.gain.setTargetAtTime(on ? 0.55 : 0, snd.ctx.currentTime, 0.03); if (on) SFX.good(); }
+  function playSound(name) { if (!live() || !BUF[name]) return; try { const s = snd.ctx.createBufferSource(); s.buffer = BUF[name]; s.connect(snd.out); s.start(); } catch (e) { /* fine */ } }
+  const SFX = new Proxy({}, { get: (_, name) => () => playSound(name) });
+  function setSound(on) { snd.on = on; store.set('ttg.sound', on ? '1' : '0'); unlock(); if (snd.out) snd.out.gain.setTargetAtTime(on ? 0.6 : 0, snd.ctx.currentTime, 0.03); if (on) setTimeout(() => SFX.good(), 60); }
   $('sndChk').checked = snd.on; $('sndChk').addEventListener('change', () => setSound($('sndChk').checked));
   $('silentChk').checked = snd.silentOk;
   $('silentChk').addEventListener('change', () => { snd.silentOk = $('silentChk').checked; store.set('ttg.silent', snd.silentOk ? '1' : '0'); unlock(); applySession(); SFX.tap(); });
@@ -283,14 +305,15 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   const fx = $('fx'), fc = fx.getContext('2d'); let FW = 0, FH = 0, DPR = 1;
   const BITS = Array.from({ length: 34 }, (_, k) => ({ x: Math.random(), y: Math.random(), r: 4 + Math.random() * 9, v: 0.012 + Math.random() * 0.02, w: Math.random() * 6.28, k }));
   const NB_C = ['#ff9f43', '#52e5ff', '#ff6fae', '#a6e85b', '#ffd447', '#b28cff'], MAD_C = ['#e8bf4f', '#9fb3ff', '#ffffff', '#c7a0ff'];
-  let fxGame = 'nb', fxMix = 1;
+  let fxGame = 'nb', fxNext = 'nb', fxMix = 1;
   function sizeFx() { DPR = Math.min(2, devicePixelRatio || 1); FW = innerWidth; FH = innerHeight; fx.width = Math.round(FW * DPR); fx.height = Math.round(FH * DPR); }
   function star(x, y, r) { fc.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? r * 0.32 : r; fc.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } fc.closePath(); fc.fill(); }
   let lastT = 0;
   function drawFx(t) {
     const dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0; lastT = t;
     fc.setTransform(DPR, 0, 0, DPR, 0, 0); fc.clearRect(0, 0, FW, FH);
-    fxMix = Math.min(1, fxMix + dt * 2.5);
+    // when the game changes, the old bits fade away first, then the new ones fade in
+    if (fxNext !== fxGame) { fxMix -= dt * 2.4; if (fxMix <= 0) { fxMix = 0; fxGame = fxNext; } } else fxMix = Math.min(1, fxMix + dt * 1.1);
     for (const b of BITS) {
       if (!calm) { b.y -= b.v * dt * (fxGame === 'nb' ? 1 : 0.5); b.w += dt; if (b.y < -0.05) { b.y = 1.05; b.x = Math.random(); } }
       const x = b.x * FW + Math.sin(b.w) * 14, y = b.y * FH;
@@ -304,48 +327,135 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   sizeFx(); requestAnimationFrame(drawFx);
 
   /* ---------- the shelf ---------- */
-  const shelf = $('shelf'), cards = [], dots = [];
+  // The posters sit on a track that follows your finger. Switching games plays one little show: the game you're
+  // leaving slides off piece by piece (poster, words, Play button, hint, each a moment after the last), the new
+  // game slides in from the other side the same way, and then the room slowly changes color.
+  const shelf = $('shelf'), cards = [], dots = [], N = GAMES.length;
   for (const [i, g] of GAMES.entries()) {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'game'; b.dataset.i = String(i);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'game'; b.dataset.g = g.id;
     b.setAttribute('aria-label', g.name);
     const cv = document.createElement('span'); cv.className = 'cover'; cv.style.backgroundImage = `url("${g.art}")`; b.append(cv);
     b.addEventListener('click', () => { if (i === sel) play(); else { SFX.tap(); go(i); } });
     shelf.append(b); cards.push(b);
     const d = document.createElement('i'); $('dots').append(d); dots.push(d);
   }
-  let sel = -1, ready = false;
+  let sel = -1, pos = 0, ready = false, landed = '';
   const last = GAMES.findIndex((g) => g.id === store.get('ttg.last'));
-  const cardStep = () => cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : 1;
-  function go(i, instant) {
-    i = Math.max(0, Math.min(GAMES.length - 1, i));
-    shelf.scrollTo({ left: i * cardStep(), behavior: instant || calm ? 'auto' : 'smooth' });
-    pick(i);
-  }
-  function pick(i) {
-    if (i === sel) return; const first = sel < 0; sel = i; const g = GAMES[i];
-    document.documentElement.dataset.game = g.id;
-    cards.forEach((c, k) => c.setAttribute('aria-current', String(k === i)));
-    dots.forEach((d, k) => d.classList.toggle('on', k === i));
-    for (const bg of document.querySelectorAll('.room i')) bg.classList.toggle('on', bg.dataset.game === g.id);
-    $('title').textContent = g.name; $('blurb').textContent = g.blurb;
-    $('playBtn').setAttribute('aria-label', 'Play ' + g.name);
-    $('prevBtn').disabled = i === 0; $('nextBtn').disabled = i === GAMES.length - 1;
-    if (fxGame !== g.id) { fxGame = g.id; fxMix = 0; }
-    store.set('ttg.last', g.id);
-    if (!first && ready) { SFX.swipe(); (SFX[g.id] || SFX.tap)(); snd.next = performance.now() + 1200; }
-  }
-  // As the shelf scrolls, posters lean back and shrink the further they are from the middle.
-  function onScroll() {
-    const mid = shelf.scrollLeft + shelf.clientWidth / 2; let best = 0, bestD = Infinity;
+  const step = () => cards[0].offsetWidth || 280;   // how far apart the posters sit
+  // Put every poster in its spot for a track position (0 = first game in the middle, 0.5 = halfway to the second).
+  // Posters to the side lean in and shrink, and the whole row shrinks a little while it's between spots.
+  function setPos(p) {
+    pos = p; const st = step(), m = 1 - 0.07 * Math.abs(p - Math.round(p)) * 2;
     cards.forEach((c, k) => {
-      const cx = c.offsetLeft + c.offsetWidth / 2, off = (cx - mid) / c.offsetWidth, d = Math.min(1, Math.abs(off));
-      c.style.setProperty('--d', d.toFixed(3)); c.style.setProperty('--s', Math.max(-1, Math.min(1, off)).toFixed(3));
-      if (Math.abs(off) < bestD) { bestD = Math.abs(off); best = k; }
+      const o = k - p, a = Math.abs(o), d = Math.min(1, a), s = Math.max(-1, Math.min(1, o));
+      c.style.visibility = a > 2.2 ? 'hidden' : '';
+      c.style.transform = `translateX(${(o * st * m).toFixed(1)}px) translateZ(${(-120 * d).toFixed(1)}px) rotateY(${(-24 * s).toFixed(2)}deg) scale(${((1 - 0.12 * d) * m).toFixed(4)})`;
+      c.style.opacity = (1 - 0.35 * d).toFixed(3); c.style.zIndex = String(10 - Math.round(a * 2));
     });
-    pick(best);
   }
-  shelf.addEventListener('scroll', () => requestAnimationFrame(onScroll), { passive: true });
-  addEventListener('resize', () => { sizeFx(); go(sel, true); onScroll(); });
+  const ease = {
+    inOut: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+    back: (t) => 1 + 1.8 * Math.pow(t - 1, 3) + 0.8 * Math.pow(t - 1, 2),   // lands with a tiny bounce
+  };
+  let tw = null;
+  function tweenTo(to, dur, fn) {
+    if (calm) { tw = null; setPos(to); return; }
+    const me = tw = { from: pos, to, t0: performance.now(), dur, fn };
+    const tick = (now) => { if (tw !== me) return; const t = Math.min(1, Math.max(0, (now - me.t0) / me.dur)); setPos(me.from + (me.to - me.from) * me.fn(t)); if (t < 1) requestAnimationFrame(tick); else tw = null; };
+    requestAnimationFrame(tick);
+  }
+
+  // The words, the Play button and the hint each slide on their own, a beat apart.
+  const PIECES = [$('blurb'), $('playWrap'), $('hint')], SHIFT = 56;
+  function fill(el, g) { el.dataset.shown = g.id; if (el.id === 'blurb') el.textContent = g.blurb; if (el.id === 'playWrap') land(g); }
+  const looks = (el) => { const cs = getComputedStyle(el); return { transform: cs.transform === 'none' ? 'translateX(0px)' : cs.transform, opacity: cs.opacity }; };
+  let flow = 0;
+  function settle(dir) {   // dir 1: the new game came from the right, so everything moves left
+    const me = ++flow, g = GAMES[sel], rest = { transform: 'translateX(0px)', opacity: 1 };
+    PIECES.forEach((el, k) => {
+      const from = looks(el); el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = '';
+      if (calm) { fill(el, g); return; }
+      if (el.dataset.shown === g.id) { el.animate([from, rest], { duration: 420, easing: 'cubic-bezier(.2,1.2,.4,1)' }); return; }
+      const out = el.animate([from, { transform: `translateX(${-dir * SHIFT}px)`, opacity: 0 }], { duration: 210, delay: 70 + k * 80, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'both' });
+      out.finished.then(() => {
+        if (me !== flow) return;
+        fill(el, g);
+        el.animate([{ transform: `translateX(${dir * SHIFT}px)`, opacity: 0 }, rest], { duration: 480, delay: 60, easing: 'cubic-bezier(.2,1.25,.4,1)', fill: 'backwards' });
+        out.cancel();
+      }, () => {});
+    });
+  }
+  // While you drag, the words lean along with your finger.
+  function follow(q) {
+    const f = Math.max(-1, Math.min(1, q));
+    PIECES.forEach((el, k) => { el.getAnimations().forEach((a) => a.cancel()); el.style.transform = `translateX(${(-f * SHIFT * (1 - k * 0.15)).toFixed(1)}px)`; el.style.opacity = (1 - Math.abs(f) * 0.7).toFixed(3); });
+  }
+  // The new game has arrived: its colors, its floating bits and its sound bed fade in.
+  function land(g) {
+    if (landed === g.id) return; const first = !landed; landed = g.id;
+    document.documentElement.dataset.game = g.id;
+    for (const bg of document.querySelectorAll('.room i')) bg.classList.toggle('on', bg.dataset.game === g.id);
+    fxNext = g.id; if (first || calm) { fxGame = g.id; fxMix = 1; if (calm) requestAnimationFrame(drawFx); }
+    fadeBeds();
+    if (!first && ready) SFX[g.id]();
+  }
+  function go(i, how = {}) {
+    i = Math.max(0, Math.min(N - 1, i));
+    const dir = i > sel ? 1 : i < sel ? -1 : pos > i ? -1 : 1;
+    if (i !== sel) {
+      const first = sel < 0; sel = i; const g = GAMES[i];
+      cards.forEach((c, k) => c.setAttribute('aria-current', String(k === i)));
+      dots.forEach((d, k) => d.classList.toggle('on', k === i));
+      $('title').textContent = g.name; $('playBtn').setAttribute('aria-label', 'Play ' + g.name);
+      $('prevBtn').disabled = i === 0; $('nextBtn').disabled = i === N - 1;
+      store.set('ttg.last', g.id);
+      if (!first && ready) SFX.swipe();
+    }
+    if (how.instant) { tw = null; setPos(i); PIECES.forEach((el) => fill(el, GAMES[i])); return; }
+    tweenTo(i, how.drag ? 520 : 760, how.drag ? ease.back : ease.inOut);
+    settle(dir);
+  }
+
+  // Swiping: the posters follow your finger, then glide to the closest game (a quick flick counts too).
+  const drag = { id: null, on: false, x0: 0, y0: 0, p0: 0, pts: [], ate: false };
+  const rub = (x) => 0.32 * (1 - 1 / (1 + x * 2.2));   // stretchy at the ends
+  document.querySelector('.app').addEventListener('pointerdown', (e) => {
+    if (drag.id !== null || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('.top')) return;
+    Object.assign(drag, { id: e.pointerId, on: false, x0: e.clientX, y0: e.clientY, p0: pos, pts: [[e.timeStamp, e.clientX]] });
+  });
+  addEventListener('pointermove', (e) => {
+    if (e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (!drag.on) {
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) { if (Math.abs(dy) > 30) drag.id = null; return; }
+      drag.on = true; drag.x0 = e.clientX; tw = null; drag.p0 = pos; ++flow; shelf.classList.add('dragging');
+    }
+    let p = drag.p0 - (e.clientX - drag.x0) / step();
+    if (p < 0) p = -rub(-p); else if (p > N - 1) p = N - 1 + rub(p - N + 1);
+    setPos(p); follow(p - sel);
+    drag.pts.push([e.timeStamp, e.clientX]); while (drag.pts.length > 2 && e.timeStamp - drag.pts[0][0] > 100) drag.pts.shift();
+  });
+  function endDrag(e) {
+    if (e.pointerId !== drag.id) return; drag.id = null;
+    if (!drag.on) return; drag.on = false; shelf.classList.remove('dragging');
+    drag.ate = true; setTimeout(() => { drag.ate = false; }, 80);   // a swipe that ends on a poster isn't a tap
+    const [t0, x0] = drag.pts[0], [t1, x1] = drag.pts[drag.pts.length - 1], v = t1 > t0 ? (x1 - x0) / (t1 - t0) : 0;   // px per ms
+    let to = Math.round(pos - (v * 160) / step());
+    if (to === sel && Math.abs(pos - sel) > 0.14) to = sel + Math.sign(pos - sel);
+    if (Math.abs(to - sel) > 1) to = sel + Math.sign(to - sel);
+    go(to, { drag: true });
+  }
+  addEventListener('pointerup', endDrag); addEventListener('pointercancel', endDrag);
+  addEventListener('click', (e) => { if (drag.ate) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+  // The first look: posters rise in, then the words, Play and the hint, one after another.
+  function enter() {
+    if (calm) return;
+    shelf.animate([{ opacity: 0, transform: 'translateY(34px) scale(.9)' }, { opacity: 1, transform: 'none' }], { duration: 700, easing: 'cubic-bezier(.2,1.15,.3,1)', fill: 'backwards' });
+    PIECES.forEach((el, k) => el.animate([{ opacity: 0, transform: 'translateY(20px)' }, { opacity: 1, transform: 'none' }], { duration: 560, delay: 220 + k * 90, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));
+    document.querySelector('.top').animate([{ opacity: 0, transform: 'translateY(-12px)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: 'ease-out', fill: 'backwards' });
+  }
+  addEventListener('resize', () => { sizeFx(); setPos(pos); });
   $('prevBtn').addEventListener('click', () => go(sel - 1));
   $('nextBtn').addEventListener('click', () => go(sel + 1));
   function play() {
@@ -484,15 +594,16 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 
   /* ---------- fit the screen ---------- */
   // Keep the app exactly as tall as the screen the phone gives it (an iPhone Home Screen bug can leave a strip at the bottom).
-  function fitApp() { const h = window.innerHeight || document.documentElement.clientHeight || 0; if (h > 0) document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px'); }
+  function fitApp() { const h = window.innerHeight || document.documentElement.clientHeight || 0; if (h > 0) document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px'); if (!drag.on) setPos(tw ? pos : sel < 0 ? 0 : sel); }
   fitApp(); addEventListener('resize', fitApp); addEventListener('orientationchange', () => setTimeout(fitApp, 300)); addEventListener('pageshow', fitApp);
   try { if (window.visualViewport) visualViewport.addEventListener('resize', fitApp); } catch (e) { /* old browser */ }
   for (const ms of [100, 500, 1500]) setTimeout(fitApp, ms);
 
   /* ---------- start ---------- */
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('hint').textContent = 'Use the arrows or ← → keys to pick a game';
-  const start = last >= 0 ? last : 0;
-  requestAnimationFrame(() => { go(start, true); onScroll(); setTimeout(() => { ready = true; }, 300); });
+  go(last >= 0 ? last : 0, { instant: true }); enter(); setTimeout(() => { ready = true; }, 400);
+  // for the site's own checks
+  window.TTG_HUB = { sound: () => ({ state: snd.ctx && snd.ctx.state, beds: Object.keys(snd.beds), made: Object.keys(BUF).filter((k) => BUF[k]).length, of: Object.keys(MAKE).length }), pos: () => pos };
   if (/[?&]settings=1/.test(location.search)) openSheet();
 })();
 </script>
