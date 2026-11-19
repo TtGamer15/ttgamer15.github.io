@@ -43,6 +43,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .room i[data-game="nb"]{background:radial-gradient(70% 45% at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),linear-gradient(180deg,#ff9369 0%,#ffbfa0 9%,#ffe0e4 40%,#e4d8ff 100%)}
 .room i[data-game="mad"]{background:radial-gradient(70% 45% at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),linear-gradient(180deg,#6f79de 0%,#a3adff 9%,#dde3ff 40%,#ffe7b6 100%)}
 #fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.veil{position:fixed;inset:0;z-index:0;pointer-events:none}
 
 .app{position:fixed;left:0;right:0;top:0;z-index:1;height:var(--app-h,100%);display:grid;grid-template-rows:auto 1fr auto;padding:max(12px,env(safe-area-inset-top)) 0 max(16px,env(safe-area-inset-bottom))}
 .top{display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-left))}
@@ -210,7 +211,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   // Every sound is made once, ahead of time, and then just played back. Building sounds while they play made them lag on phones.
   // Each game also has a soft sound bed that loops: Noodle Bots blips like snacks getting eaten; Museum After Dark has a ticking clock and twinkling gems.
   const RATE = 44100, BUF = {};
-  const snd = { ctx: null, out: null, beds: {}, on: store.get('ttg.sound') !== '0', silentOk: store.get('ttg.silent') === '1', unlocked: false, tag: null };
+  const snd = { ctx: null, out: null, beds: {}, on: store.get('ttg.sound') !== '0', silentOk: store.get('ttg.silent') === '1', unlocked: false, tag: null, waking: 0 };
   function render(dur, build) {
     const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OAC) return Promise.resolve(null);
     const oc = new OAC(1, Math.ceil(dur * RATE), RATE), noise = oc.createBuffer(1, RATE, RATE), d = noise.getChannelData(0);
@@ -287,12 +288,22 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     audioInit(); const c = snd.ctx; if (!c) return;
     if (!snd.unlocked) { snd.unlocked = true; try { const s0 = c.createBufferSource(); s0.buffer = c.createBuffer(1, 1, 22050); s0.connect(c.destination); s0.start(0); } catch (e) { /* fine */ } }
     applySession();
-    if (c.state !== 'running') { try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ } }
+    if (c.state !== 'running') { snd.waking = performance.now(); try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ } }
     made.then(startBeds);
   }
-  addEventListener('pointerdown', unlock, true); addEventListener('keydown', unlock, true); addEventListener('touchend', unlock, true);
-  document.addEventListener('visibilitychange', () => { const c = snd.ctx; if (!c || !snd.unlocked) return; try { if (document.hidden) c.suspend(); else c.resume(); } catch (e) { /* fine */ } });
-  const live = () => snd.on && snd.ctx && snd.ctx.state === 'running';
+  for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown']) addEventListener(ev, unlock, true);
+  // Once a tap has let sound in, it comes back by itself: after switching apps, and after coming back from a game.
+  function wake() {
+    const c = snd.ctx; if (!c || !snd.unlocked || document.hidden || c.state === 'running' || c.state === 'closed') return;
+    snd.waking = performance.now(); applySession();
+    try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ }
+  }
+  const wakeSoon = () => { wake(); setTimeout(wake, 300); setTimeout(wake, 1000); };
+  function nap() { const c = snd.ctx; if (c && snd.unlocked && c.state === 'running') { try { c.suspend(); } catch (e) { /* fine */ } } }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) nap(); else wakeSoon(); });
+  addEventListener('pagehide', nap); addEventListener('pageshow', wakeSoon); addEventListener('focus', wake);
+  // sounds asked for while the sound is just waking up still play, the moment it's awake
+  const live = () => snd.on && snd.ctx && (snd.ctx.state === 'running' || (snd.unlocked && performance.now() - (snd.waking || 0) < 1500));
   function playSound(name) { if (!live() || !BUF[name]) return; try { const s = snd.ctx.createBufferSource(); s.buffer = BUF[name]; s.connect(snd.out); s.start(); } catch (e) { /* fine */ } }
   const SFX = new Proxy({}, { get: (_, name) => () => playSound(name) });
   function setSound(on) { snd.on = on; store.set('ttg.sound', on ? '1' : '0'); unlock(); if (snd.out) snd.out.gain.setTargetAtTime(on ? 0.6 : 0, snd.ctx.currentTime, 0.03); if (on) setTimeout(() => SFX.good(), 60); }
@@ -458,12 +469,40 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   addEventListener('resize', () => { sizeFx(); setPos(pos); });
   $('prevBtn').addEventListener('click', () => go(sel - 1));
   $('nextBtn').addEventListener('click', () => go(sel + 1));
+  // Opening a game: the menu takes itself apart piece by piece, sliding right, and the game builds itself in.
+  // Coming back, the game slides off to the left and the menu builds itself back in from the right.
+  let leaving = false;
+  const PARTS = () => [document.querySelector('.top'), shelf, $('dots'), ...PIECES];
   function play() {
-    const g = GAMES[sel]; if (!g) return;
+    const g = GAMES[sel]; if (!g || leaving) return; leaving = true;
     SFX.play();
-    try { sessionStorage.setItem('ttg.hub', '1'); } catch (e) { /* fine */ }
-    setTimeout(() => { location.href = g.url + '?hub=1'; }, live() ? 420 : 0);
+    const on = document.querySelector('.room i.on'), bg = on ? getComputedStyle(on).backgroundImage : '';
+    try { sessionStorage.setItem('ttg.hub', '1'); sessionStorage.setItem('ttg.trip', JSON.stringify({ at: Date.now(), dir: 1, bg })); } catch (e) { /* fine */ }
+    let wait = live() ? 300 : 0;
+    if (!calm) {
+      tw = null; ++flow;
+      PARTS().forEach((el, k) => { const from = looks(el); el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = '';
+        el.animate([from, { transform: `translateX(${SHIFT * 1.4}px)`, opacity: 0 }], { duration: 300, delay: k * 70, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' }); });
+      wait = PARTS().length * 70 + 300;
+    }
+    setTimeout(() => { location.href = g.url + '?hub=1'; }, wait);
   }
+  function buildIn(t) {
+    leaving = false;
+    PARTS().forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = ''; });
+    if (!t) { enter(); return; }
+    const veil = document.createElement('div'); veil.className = 'veil'; veil.style.background = t.bg || '#1b1236'; $('fx').after(veil);
+    fxMix = 0;
+    if (!calm) PARTS().forEach((el, k) => el.animate([{ transform: `translateX(${SHIFT * 1.4}px)`, opacity: 0 }, { transform: 'translateX(0px)', opacity: 1 }], { duration: 520, delay: 60 + k * 70, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));
+    const fade = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 400 : 1500, delay: calm ? 0 : 520, easing: 'ease-in-out', fill: 'both' });
+    fade.finished.then(() => veil.remove(), () => veil.remove());
+  }
+  function arrive() {
+    let t = null; try { t = JSON.parse(sessionStorage.getItem('ttg.trip') || 'null'); if (t && t.dir === -1) sessionStorage.removeItem('ttg.trip'); } catch (e) { t = null; }
+    buildIn(t && t.dir === -1 && Date.now() - t.at < 8000 ? t : null);
+  }
+  // the browser kept this page while you played, so it comes straight back (music and all)
+  addEventListener('pageshow', (e) => { if (e.persisted) { if (sel >= 0) setPos(sel); arrive(); } });
   $('playBtn').addEventListener('click', play);
 
   /* ---------- keyboard and controllers ---------- */
@@ -601,7 +640,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 
   /* ---------- start ---------- */
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('hint').textContent = 'Use the arrows or ← → keys to pick a game';
-  go(last >= 0 ? last : 0, { instant: true }); enter(); setTimeout(() => { ready = true; }, 400);
+  go(last >= 0 ? last : 0, { instant: true }); arrive(); setTimeout(() => { ready = true; }, 400);
   // for the site's own checks
   window.TTG_HUB = { sound: () => ({ state: snd.ctx && snd.ctx.state, beds: Object.keys(snd.beds), made: Object.keys(BUF).filter((k) => BUF[k]).length, of: Object.keys(MAKE).length }), pos: () => pos };
   if (/[?&]settings=1/.test(location.search)) openSheet();
