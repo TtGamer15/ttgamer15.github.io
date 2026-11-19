@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>TtGamer15 Games</title>
 <meta name="description" content="All of TtGamer15's games in one place: Noodle Bots and Museum After Dark. Swipe to pick a game and play free in your browser.">
-<meta name="theme-color" content="#120d26">
+<meta name="theme-color" content="#ff9a72">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -15,69 +15,69 @@
 <meta name="apple-mobile-web-app-title" content="TtGamer15">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Cinzel:wght@800&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#fbf7ff; --muted:rgba(251,247,255,.7); --line:rgba(251,247,255,.16);
-  --room:#120d26;                 /* the shelf when nothing is picked */
-  --accent:#ff9f43; --accent-ink:#1b1236; --glow:rgba(255,159,67,.45);
+  --ink:#23164a; --muted:rgba(35,22,74,.68); --line:rgba(35,22,74,.14);
+  --accent:#ff8a1f; --accent-deep:#c25f0d; --accent-ink:#23164a; --ring:rgba(255,138,31,.5);
   --f-ui:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --card-w:min(64vw,330px);
+  --card-w:min(72vw,330px);
 }
-:root[data-game="nb"]{ --room:#1a1236; --accent:#ff9f43; --accent-ink:#1b1236; --glow:rgba(255,159,67,.5) }
-:root[data-game="mad"]{ --room:#0d1330; --accent:#e8bf4f; --accent-ink:#141a3c; --glow:rgba(232,191,79,.45) }
+:root[data-game="nb"]{ --accent:#ff8a1f; --accent-deep:#c25f0d; --ring:rgba(255,138,31,.5) }
+:root[data-game="mad"]{ --accent:#f2c24b; --accent-deep:#9a6c10; --ring:rgba(214,160,40,.55) }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%}
-body{background:var(--room);color:var(--ink);font-family:var(--f-ui);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow:hidden;transition:background-color .5s}
+html,body{margin:0;height:100%;overscroll-behavior:none}
+html{touch-action:manipulation}   /* no double-tap zoom */
+/* iPhone Home Screen apps can get a screen one status bar too short; a page at least screen-tall gets the full one (same fix as the games) */
+@media (display-mode: standalone){html{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}}
+body{background:#ffe0e4;color:var(--ink);font-family:var(--f-ui);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow:hidden}
 button{font:inherit;color:inherit}
-button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* The selected game's own art fills the room behind everything, blurred and dimmed. */
-.room{position:fixed;inset:0;z-index:0;pointer-events:none}
-.room i{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(30px) saturate(1.25) brightness(.42);opacity:0;transition:opacity .55s ease}
+/* The room: a bright sky in the selected game's colors, with little things floating in it. */
+.room{position:fixed;left:0;right:0;top:0;bottom:-140px;z-index:0;pointer-events:none}
+.room i{position:absolute;inset:0;opacity:0;transition:opacity .6s ease}
 .room i.on{opacity:1}
-.room::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 38%,transparent 30%,rgba(0,0,0,.55) 100%)}
+/* a deeper color at the very top so the iPhone clock (always white in Home Screen apps) stays readable */
+.room i[data-game="nb"]{background:radial-gradient(70% 45% at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),linear-gradient(180deg,#ff9369 0%,#ffbfa0 9%,#ffe0e4 40%,#e4d8ff 100%)}
+.room i[data-game="mad"]{background:radial-gradient(70% 45% at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),linear-gradient(180deg,#6f79de 0%,#a3adff 9%,#dde3ff 40%,#ffe7b6 100%)}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 
-.app{position:relative;z-index:1;height:100%;display:grid;grid-template-rows:auto 1fr auto;padding:max(12px,env(safe-area-inset-top)) 0 max(14px,env(safe-area-inset-bottom))}
+.app{position:fixed;left:0;right:0;top:0;z-index:1;height:var(--app-h,100%);display:grid;grid-template-rows:auto 1fr auto;padding:max(12px,env(safe-area-inset-top)) 0 max(16px,env(safe-area-inset-bottom))}
 .top{display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-left))}
-.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:19px;letter-spacing:.005em}
-.brand img{width:30px;height:30px;border-radius:8px;box-shadow:0 2px 0 rgba(0,0,0,.35)}
-.gear{appearance:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.08);display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
-.gear svg{width:22px;height:22px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px}
+.brand img{width:34px;height:34px;border-radius:9px;box-shadow:0 3px 0 rgba(35,22,74,.25)}
+.gear{appearance:none;width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.78);box-shadow:0 3px 0 rgba(35,22,74,.14),0 6px 16px rgba(35,22,74,.12);display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
+.gear svg{width:23px;height:23px}
 
-/* The shelf: swipe sideways between games. */
-.stage{display:grid;align-content:center;min-height:0}
-.shelf{display:flex;gap:0;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:58px calc(50vw - var(--card-w) / 2);margin:-24px 0;perspective:1100px;outline:none}   /* room above and below so the glow isn't cut off */
+/* The shelf: swipe sideways between game posters. */
+.stage{display:grid;align-content:center;min-height:0;position:relative}
+.shelf{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:58px calc(50vw - var(--card-w) / 2);margin:-24px 0;perspective:1100px;outline:none}
 .shelf::-webkit-scrollbar{display:none}
 .game{flex:0 0 var(--card-w);scroll-snap-align:center;appearance:none;border:0;background:none;padding:0 4%;cursor:pointer;touch-action:pan-x;
   transform:translateZ(calc(var(--d,1) * -120px)) rotateY(calc(var(--s,0) * -24deg)) scale(calc(1 - var(--d,1) * .12));
-  opacity:calc(1 - var(--d,1) * .45);transform-style:preserve-3d;will-change:transform}
-.game .cover{display:block;width:100%;aspect-ratio:1040/1400;border-radius:24px;background:#000 center/cover;box-shadow:0 14px 30px rgba(0,0,0,.5);position:relative;transition:box-shadow .3s}
-.game .cover::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
-.game[aria-current="true"] .cover{box-shadow:0 0 0 4px var(--accent),0 0 38px 4px var(--glow),0 14px 30px rgba(0,0,0,.55)}
-.dots{display:flex;justify-content:center;gap:9px;margin-top:2px}
-.dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.3);transition:background .3s,width .3s}
-.dots i.on{width:26px;border-radius:5px;background:var(--accent)}
+  opacity:calc(1 - var(--d,1) * .35);transform-style:preserve-3d;will-change:transform}
+.game .cover{display:block;width:100%;aspect-ratio:1040/1400;border-radius:22px;background:#23164a center/cover;border:6px solid #fff;box-shadow:0 14px 30px rgba(60,30,100,.28);transition:box-shadow .3s}
+.game[aria-current="true"] .cover{box-shadow:0 0 0 5px var(--accent),0 0 40px 6px var(--ring),0 18px 36px rgba(60,30,100,.32)}
+.dots{display:flex;justify-content:center;gap:9px;margin-top:4px}
+.dots i{width:10px;height:10px;border-radius:5px;background:rgba(35,22,74,.2);transition:background .3s,width .3s}
+.dots i.on{width:28px;background:var(--accent)}
 
-.info{display:grid;justify-items:center;gap:8px;padding:6px 22px 0;text-align:center;min-height:0}
-.title{margin:0;line-height:1;font-weight:400;text-wrap:balance}
-.title[data-game="nb"]{font-family:"Bungee",var(--f-ui);font-size:clamp(34px,10vw,52px);color:#f4effe;text-shadow:4px 4px 0 #ff9f43}
-.title[data-game="nb"] span{color:#52e5ff;text-shadow:4px 4px 0 #1b8fb0}
-.title[data-game="mad"]{font-family:"Cinzel",Georgia,serif;font-weight:800;font-size:clamp(28px,8.4vw,44px);letter-spacing:.02em;color:#f3ecd9;text-shadow:0 3px 0 rgba(0,0,0,.5)}
-.blurb{margin:0;max-width:34ch;color:var(--muted);font-size:16px;line-height:1.4}
-.play{appearance:none;margin-top:8px;min-width:min(76vw,300px);padding:15px 28px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:22px;letter-spacing:.01em;cursor:pointer;touch-action:manipulation;box-shadow:0 5px 0 rgba(0,0,0,.35);transition:background-color .4s,transform .08s}
-.play:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
-.hint{margin:4px 0 0;font-size:13px;color:var(--muted);min-height:1.3em}
+.info{display:grid;justify-items:center;gap:6px;padding:4px 22px 0;text-align:center}
+.blurb{margin:0;max-width:34ch;color:var(--ink);font-size:17px;line-height:1.4;font-weight:500;min-height:2.8em;padding:8px 16px;border-radius:18px;background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.play{appearance:none;margin-top:8px;min-width:min(76vw,300px);padding:14px 28px;border-radius:999px;border:4px solid #fff;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:24px;cursor:pointer;touch-action:manipulation;box-shadow:0 6px 0 var(--accent-deep),0 12px 24px rgba(60,30,100,.2);transition:background-color .4s,box-shadow .4s,transform .08s}
+.play:active{transform:translateY(4px);box-shadow:0 2px 0 var(--accent-deep),0 6px 14px rgba(60,30,100,.2)}
+.hint{margin:6px 0 0;font-size:14px;color:var(--muted);min-height:1.3em}
 .arrow{display:none}
 
 @media (min-width:760px){
   :root{--card-w:min(30vw,340px)}
-  .arrow{display:grid;place-items:center;position:absolute;top:50%;width:52px;height:52px;margin-top:-26px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.3);cursor:pointer;z-index:2}
-  .arrow svg{width:24px;height:24px}
+  .arrow{display:grid;place-items:center;position:absolute;top:50%;width:56px;height:56px;margin-top:-28px;border-radius:50%;border:0;background:rgba(255,255,255,.85);box-shadow:0 4px 0 rgba(35,22,74,.14);cursor:pointer;z-index:2}
+  .arrow svg{width:26px;height:26px}
   .arrow.l{left:max(18px,calc(50vw - var(--card-w) - 120px))}
   .arrow.r{right:max(18px,calc(50vw - var(--card-w) - 120px))}
-  .arrow[disabled]{opacity:.25;cursor:default}
-  .stage{position:relative}
+  .arrow[disabled]{opacity:.35;cursor:default}
 }
 @media (max-height:640px) and (orientation:landscape){
   .app{grid-template-columns:1.1fr 1fr;grid-template-rows:auto 1fr;column-gap:10px}
@@ -89,38 +89,46 @@ button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid va
 }
 
 /* Settings sheet */
-.sheet{position:fixed;inset:0;z-index:5;display:grid;align-items:end;justify-items:center;background:rgba(5,3,14,.6);opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet{position:fixed;inset:0;z-index:5;display:grid;align-items:end;justify-items:center;background:rgba(35,22,74,.35);opacity:0;pointer-events:none;transition:opacity .25s}
 .sheet.open{opacity:1;pointer-events:auto}
-.panel{width:min(100%,560px);max-height:88vh;overflow:auto;background:#1d1636;border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;padding:20px 20px max(22px,env(safe-area-inset-bottom));transform:translateY(30px);transition:transform .25s;display:grid;gap:18px}
+.panel{width:min(100%,560px);max-height:88%;overflow:auto;-webkit-overflow-scrolling:touch;background:#fffdf8;border-radius:26px 26px 0 0;padding:20px 20px max(22px,env(safe-area-inset-bottom));transform:translateY(30px);transition:transform .25s;display:grid;gap:18px;box-shadow:0 -10px 40px rgba(35,22,74,.2)}
 .sheet.open .panel{transform:none}
-@media (min-width:760px){ .sheet{align-items:center} .panel{border-radius:24px;border-bottom:1px solid var(--line)} }
+@media (min-width:760px){ .sheet{align-items:center} .panel{border-radius:26px} }
 .panel header{display:flex;align-items:center;justify-content:space-between}
-.panel h2{margin:0;font-size:24px;font-weight:700}
-.panel h3{margin:0 0 4px;font-size:18px;font-weight:600}
-.panel p{margin:0;color:var(--muted);font-size:15px;line-height:1.45}
-.panel section{display:grid;gap:10px;padding-top:16px;border-top:1px solid var(--line)}
-.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.08);font-weight:600;font-size:16px;cursor:pointer;touch-action:manipulation}
-.btn.main{background:var(--accent);border-color:transparent;color:var(--accent-ink)}
-.btn[disabled]{opacity:.45;cursor:default}
+.panel h2{margin:0;font-size:26px;font-weight:700}
+.panel h3{margin:0 0 4px;font-size:19px;font-weight:600}
+.panel p{margin:0;color:var(--muted);font-size:16px;line-height:1.45}
+.panel section{display:grid;gap:10px;padding-top:16px;border-top:2px solid var(--line)}
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 18px;border-radius:14px;border:0;background:#efe9ff;color:var(--ink);font-weight:600;font-size:17px;cursor:pointer;touch-action:manipulation;box-shadow:0 3px 0 rgba(35,22,74,.14)}
+.btn.main{background:var(--accent);box-shadow:0 3px 0 var(--accent-deep)}
+.btn:active{transform:translateY(2px)}
 .row{display:flex;flex-wrap:wrap;gap:8px}
-textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--ink);font:400 13px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:10px}
-.found{display:grid;gap:6px;padding:12px;border-radius:12px;background:rgba(255,255,255,.06)}
+textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2px solid var(--line);background:#fff;color:var(--ink);font:400 16px/1.4 var(--f-ui);padding:10px}   /* 16px so iPhones don't zoom in */
+.found{display:grid;gap:6px;padding:12px;border-radius:14px;background:#f4efff}
 .found[hidden]{display:none}
-.found b{font-weight:600}
 .msg{font-weight:600;color:var(--ink)!important}
-.msg.bad{color:#ff9a9a!important}
+.msg.bad{color:#c0282d!important}
 .msg:empty{display:none}
-.steps{margin:0;padding-left:20px;color:var(--muted);line-height:1.5;font-size:15px}
-.small{font-size:13px!important}
+.steps{margin:0;padding-left:20px;color:var(--muted);line-height:1.5;font-size:16px}
+.small{font-size:14px!important}
+.switch{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:500;cursor:pointer;min-height:44px}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .track{flex:0 0 52px;height:32px;border-radius:16px;background:#d9d2ee;position:relative;transition:background .2s}
+.switch .track::after{content:"";position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}
+.switch input:checked + .track{background:#3ec46d}
+.switch input:checked + .track::after{transform:translateX(20px)}
+.switch input:focus-visible + .track{outline:3px solid var(--ink);outline-offset:2px}
+.switch[hidden]{display:none}
 
 @media (prefers-reduced-motion:reduce){
   .game{transform:none!important}
-  .room i,.sheet,.panel,body{transition:none}
+  .room i,.sheet,.panel{transition:none}
 }
 </style>
 </head>
 <body>
 <div class="room" aria-hidden="true"><i data-game="nb"></i><i data-game="mad"></i></div>
+<canvas id="fx" aria-hidden="true"></canvas>
 <div class="app">
   <header class="top">
     <div class="brand"><img src="apple-touch-icon.png" alt="">TtGamer15 Games</div>
@@ -130,14 +138,14 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
   </header>
 
   <main class="stage">
-    <button class="arrow l" id="prevBtn" type="button" aria-label="Previous game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="arrow l" id="prevBtn" type="button" aria-label="Previous game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div class="shelf" id="shelf" aria-label="Games" tabindex="0"></div>
-    <button class="arrow r" id="nextBtn" type="button" aria-label="Next game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+    <button class="arrow r" id="nextBtn" type="button" aria-label="Next game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
     <div class="dots" id="dots" aria-hidden="true"></div>
   </main>
 
   <section class="info" aria-live="polite">
-    <h1 class="title" id="title"></h1>
+    <h1 class="sr" id="title"></h1>
     <p class="blurb" id="blurb"></p>
     <button class="play" id="playBtn" type="button">Play</button>
     <p class="hint" id="hint">Swipe to pick a game</p>
@@ -151,13 +159,19 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
     <section>
       <div><h3>Bring in a save</h3><p>Moving from the old Noodle Bots or Museum After Dark app? In the old app, tap <b>Copy my save</b> on the menu. Then come back here and tap Paste.</p></div>
       <div class="row"><button class="btn main" id="pasteBtn" type="button">Paste</button><button class="btn" id="fileBtn" type="button">Load a save file</button><input type="file" id="fileIn" accept=".txt,text/plain" hidden></div>
-      <textarea id="pasteBox" placeholder="Or long-press here and choose Paste" aria-label="Paste your save here" spellcheck="false" autocomplete="off"></textarea>
+      <textarea id="pasteBox" placeholder="Or tap and hold here, then tap Paste" aria-label="Paste your save here" spellcheck="false" autocomplete="off"></textarea>
       <div class="found" id="found" hidden>
         <p id="foundList"></p>
         <p class="small" id="foundWarn" hidden></p>
         <div class="row"><button class="btn main" id="bringBtn" type="button">Bring it in</button></div>
       </div>
       <p class="msg" id="importMsg" role="status"></p>
+    </section>
+
+    <section>
+      <div><h3>Sound</h3></div>
+      <label class="switch" for="sndChk"><input type="checkbox" id="sndChk"><span class="track"></span><span>Sound effects</span></label>
+      <label class="switch" for="silentChk" id="silentRow"><input type="checkbox" id="silentChk"><span class="track"></span><span>Play sounds even when my phone is on silent</span></label>
     </section>
 
     <section>
@@ -178,16 +192,116 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
 
 <script>
 (() => {
-  // Add a game: one entry here, a cover in art/, and the game's own folder on the site.
+  // Add a game: one entry here, a poster (1040 x 1400) in art/, and the game's own folder on the site.
   const GAMES = [
-    { id: 'nb', name: 'Noodle Bots', title: 'Noodle <span>Bots</span>', url: '/noodle-bots/', art: 'art/noodle-bots.jpg',
+    { id: 'nb', name: 'Noodle Bots', url: '/noodle-bots/', art: 'art/noodle-bots.jpg?v=2',
       blurb: 'Eat, grow, and teach a bot to play exactly like you. Then hand it the controls.', key: 'noodlebots.v2' },
-    { id: 'mad', name: 'Museum After Dark', title: 'Museum After Dark', url: '/Museum-After-Dark/', art: 'art/museum-after-dark.jpg',
+    { id: 'mad', name: 'Museum After Dark', url: '/Museum-After-Dark/', art: 'art/museum-after-dark.jpg?v=2',
       blurb: 'Sneak past the night guard when nobody\'s looking, or be the guard and catch the exhibits moving.', key: 'museum-after-dark-v1' },
   ];
-  const PREFIXES = GAMES.map((g) => g.key);
   const $ = (id) => document.getElementById(id);
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } } };
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- sound: little effects for everything, and a soft sound bed for each game ---------- */
+  const snd = { ctx: null, out: null, noise: null, on: store.get('ttg.sound') !== '0', silentOk: store.get('ttg.silent') === '1', unlocked: false, tag: null, next: 0 };
+  function audioInit() {
+    if (snd.ctx) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      const c = new AC(); snd.ctx = c; snd.out = c.createGain(); snd.out.gain.value = snd.on ? 0.55 : 0; snd.out.connect(c.destination);
+      const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; snd.noise = b;
+    } catch (e) { snd.ctx = null; }
+  }
+  // iPhones only start sound from a tap, and the silent switch mutes it unless the page asks to play like music.
+  function silentWav() { const n = 4000, a = new Uint8Array(44 + n), v = new DataView(a.buffer), w = (o, t) => { for (let i = 0; i < t.length; i++) a[o + i] = t.charCodeAt(i); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true); a.fill(128, 44);
+    let s = ''; for (const x of a) s += String.fromCharCode(x); return 'data:audio/wav;base64,' + btoa(s); }
+  function applySession() {
+    try { if (navigator.audioSession) navigator.audioSession.type = snd.silentOk ? 'playback' : 'ambient'; } catch (e) { /* older phone */ }
+    if (!navigator.audioSession) {
+      if (snd.silentOk && snd.unlocked && !snd.tag) { try { snd.tag = new Audio(silentWav()); snd.tag.loop = true; snd.tag.setAttribute('playsinline', ''); const p = snd.tag.play(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ } }
+      if (!snd.silentOk && snd.tag) { try { snd.tag.pause(); snd.tag = null; } catch (e) { /* fine */ } }
+    }
+  }
+  function unlock() {
+    audioInit(); const c = snd.ctx; if (!c) return;
+    if (!snd.unlocked) { snd.unlocked = true; try { const s0 = c.createBufferSource(); s0.buffer = c.createBuffer(1, 1, 22050); s0.connect(c.destination); s0.start(0); } catch (e) { /* fine */ } }
+    applySession();
+    if (c.state !== 'running') { try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ } }
+  }
+  addEventListener('pointerdown', unlock, true); addEventListener('keydown', unlock, true); addEventListener('touchend', unlock, true);
+  const live = () => snd.on && snd.ctx && snd.ctx.state === 'running';
+  function tone(f, dur, type, vol, slide, delay = 0) {
+    if (!live()) return; const c = snd.ctx, t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(snd.out); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function hiss(dur, vol, f0, f1, delay = 0, q = 1.2) {
+    if (!live()) return; const c = snd.ctx, t = c.currentTime + delay, s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = snd.noise; bp.type = 'bandpass'; bp.Q.value = q; bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(bp); bp.connect(g); g.connect(snd.out); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
+  }
+  const SFX = {
+    tap() { tone(880, 0.06, 'triangle', 0.12, 1320); },
+    swipe() { hiss(0.28, 0.12, 700, 2600); },
+    nb() { [523, 659, 784, 1047].forEach((f, k) => tone(f, 0.16, 'square', 0.05, f * 1.02, k * 0.07)); tone(1568, 0.25, 'sine', 0.06, 2093, 0.3); },
+    mad() { tone(196, 1.1, 'sine', 0.16, 190); tone(392, 0.9, 'triangle', 0.05, 390, 0.02); [1568, 2093, 2637].forEach((f, k) => tone(f, 0.5, 'sine', 0.035, f, 0.25 + k * 0.09)); },
+    play() { [392, 523, 659, 784].forEach((f, k) => tone(f, 0.18, 'square', 0.06, f, k * 0.08)); tone(1047, 0.45, 'triangle', 0.1, 1047, 0.32); hiss(0.5, 0.06, 1500, 6000, 0.3); },
+    open() { tone(520, 0.12, 'sine', 0.12, 980); },
+    close() { tone(780, 0.12, 'sine', 0.1, 420); },
+    good() { [784, 988, 1175, 1568].forEach((f, k) => tone(f, 0.22, 'triangle', 0.08, f, k * 0.08)); },
+    bad() { tone(220, 0.25, 'square', 0.05, 160); },
+  };
+  // The sound bed: Noodle Bots blips like snacks getting eaten; Museum After Dark has a ticking clock and twinkling gems.
+  const NB_NOTES = [523, 587, 659, 784, 880, 1047, 1175, 1319];
+  let tickTock = 0;
+  setInterval(() => {
+    if (!live() || document.hidden || !GAMES[sel]) return;
+    const now = performance.now(); if (now < snd.next) return;
+    if (GAMES[sel].id === 'nb') {
+      const f = NB_NOTES[Math.floor(Math.random() * NB_NOTES.length)];
+      tone(f, 0.12, 'sine', 0.05, f * 1.6); if (Math.random() < 0.3) tone(f * 1.5, 0.1, 'sine', 0.035, f * 2.2, 0.1);
+      if (Math.random() < 0.12) hiss(0.5, 0.03, 300, 900);
+      snd.next = now + 380 + Math.random() * 700;
+    } else {
+      tickTock ^= 1; hiss(0.05, 0.08, tickTock ? 2600 : 1900, tickTock ? 2400 : 1700, 0, 6);
+      if (Math.random() < 0.22) { const f = [2093, 2349, 2637, 3136][Math.floor(Math.random() * 4)]; tone(f, 0.6, 'sine', 0.025, f); }
+      if (Math.random() < 0.08) { tone(70, 0.18, 'sine', 0.12, 50, 0.2); tone(70, 0.18, 'sine', 0.1, 50, 0.75); }
+      snd.next = now + 1000;
+    }
+  }, 60);
+  function setSound(on) { snd.on = on; store.set('ttg.sound', on ? '1' : '0'); unlock(); if (snd.out) snd.out.gain.setTargetAtTime(on ? 0.55 : 0, snd.ctx.currentTime, 0.03); if (on) SFX.good(); }
+  $('sndChk').checked = snd.on; $('sndChk').addEventListener('change', () => setSound($('sndChk').checked));
+  $('silentChk').checked = snd.silentOk;
+  $('silentChk').addEventListener('change', () => { snd.silentOk = $('silentChk').checked; store.set('ttg.silent', snd.silentOk ? '1' : '0'); unlock(); applySession(); SFX.tap(); });
+  $('silentRow').hidden = !(/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+  /* ---------- floating bits behind the posters ---------- */
+  const fx = $('fx'), fc = fx.getContext('2d'); let FW = 0, FH = 0, DPR = 1;
+  const BITS = Array.from({ length: 34 }, (_, k) => ({ x: Math.random(), y: Math.random(), r: 4 + Math.random() * 9, v: 0.012 + Math.random() * 0.02, w: Math.random() * 6.28, k }));
+  const NB_C = ['#ff9f43', '#52e5ff', '#ff6fae', '#a6e85b', '#ffd447', '#b28cff'], MAD_C = ['#e8bf4f', '#9fb3ff', '#ffffff', '#c7a0ff'];
+  let fxGame = 'nb', fxMix = 1;
+  function sizeFx() { DPR = Math.min(2, devicePixelRatio || 1); FW = innerWidth; FH = innerHeight; fx.width = Math.round(FW * DPR); fx.height = Math.round(FH * DPR); }
+  function star(x, y, r) { fc.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? r * 0.32 : r; fc.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } fc.closePath(); fc.fill(); }
+  let lastT = 0;
+  function drawFx(t) {
+    const dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0; lastT = t;
+    fc.setTransform(DPR, 0, 0, DPR, 0, 0); fc.clearRect(0, 0, FW, FH);
+    fxMix = Math.min(1, fxMix + dt * 2.5);
+    for (const b of BITS) {
+      if (!calm) { b.y -= b.v * dt * (fxGame === 'nb' ? 1 : 0.5); b.w += dt; if (b.y < -0.05) { b.y = 1.05; b.x = Math.random(); } }
+      const x = b.x * FW + Math.sin(b.w) * 14, y = b.y * FH;
+      fc.globalAlpha = 0.55 * fxMix;
+      if (fxGame === 'nb') { fc.fillStyle = NB_C[b.k % NB_C.length]; fc.beginPath(); fc.arc(x, y, b.r, 0, 6.283); fc.fill(); fc.globalAlpha = 0.35 * fxMix; fc.fillStyle = '#fff'; fc.beginPath(); fc.arc(x - b.r * 0.3, y - b.r * 0.3, b.r * 0.32, 0, 6.283); fc.fill(); }
+      else { fc.fillStyle = MAD_C[b.k % MAD_C.length]; fc.globalAlpha = (0.35 + 0.35 * Math.sin(t / 500 + b.k)) * fxMix; star(x, y, b.r * 1.3); }
+    }
+    fc.globalAlpha = 1;
+    if (!calm) requestAnimationFrame(drawFx);
+  }
+  sizeFx(); requestAnimationFrame(drawFx);
 
   /* ---------- the shelf ---------- */
   const shelf = $('shelf'), cards = [], dots = [];
@@ -195,32 +309,32 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
     const b = document.createElement('button'); b.type = 'button'; b.className = 'game'; b.dataset.i = String(i);
     b.setAttribute('aria-label', g.name);
     const cv = document.createElement('span'); cv.className = 'cover'; cv.style.backgroundImage = `url("${g.art}")`; b.append(cv);
-    b.addEventListener('click', () => { if (i === sel) play(); else go(i); });
+    b.addEventListener('click', () => { if (i === sel) play(); else { SFX.tap(); go(i); } });
     shelf.append(b); cards.push(b);
     const d = document.createElement('i'); $('dots').append(d); dots.push(d);
-    const bg = document.querySelector(`.room i[data-game="${g.id}"]`); if (bg) bg.style.backgroundImage = `url("${g.art}")`;
   }
-  let sel = -1;
+  let sel = -1, ready = false;
   const last = GAMES.findIndex((g) => g.id === store.get('ttg.last'));
   const cardStep = () => cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : 1;
   function go(i, instant) {
     i = Math.max(0, Math.min(GAMES.length - 1, i));
-    shelf.scrollTo({ left: i * cardStep(), behavior: instant || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    shelf.scrollTo({ left: i * cardStep(), behavior: instant || calm ? 'auto' : 'smooth' });
     pick(i);
   }
   function pick(i) {
-    if (i === sel) return; sel = i; const g = GAMES[i];
+    if (i === sel) return; const first = sel < 0; sel = i; const g = GAMES[i];
     document.documentElement.dataset.game = g.id;
     cards.forEach((c, k) => c.setAttribute('aria-current', String(k === i)));
     dots.forEach((d, k) => d.classList.toggle('on', k === i));
     for (const bg of document.querySelectorAll('.room i')) bg.classList.toggle('on', bg.dataset.game === g.id);
-    const t = $('title'); t.dataset.game = g.id; t.innerHTML = g.title;
-    $('blurb').textContent = g.blurb; $('playBtn').textContent = 'Play';
+    $('title').textContent = g.name; $('blurb').textContent = g.blurb;
     $('playBtn').setAttribute('aria-label', 'Play ' + g.name);
     $('prevBtn').disabled = i === 0; $('nextBtn').disabled = i === GAMES.length - 1;
+    if (fxGame !== g.id) { fxGame = g.id; fxMix = 0; }
     store.set('ttg.last', g.id);
+    if (!first && ready) { SFX.swipe(); (SFX[g.id] || SFX.tap)(); snd.next = performance.now() + 1200; }
   }
-  // As the shelf scrolls, cards lean back and shrink the further they are from the middle.
+  // As the shelf scrolls, posters lean back and shrink the further they are from the middle.
   function onScroll() {
     const mid = shelf.scrollLeft + shelf.clientWidth / 2; let best = 0, bestD = Infinity;
     cards.forEach((c, k) => {
@@ -231,13 +345,14 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
     pick(best);
   }
   shelf.addEventListener('scroll', () => requestAnimationFrame(onScroll), { passive: true });
-  addEventListener('resize', () => { go(sel, true); onScroll(); });
+  addEventListener('resize', () => { sizeFx(); go(sel, true); onScroll(); });
   $('prevBtn').addEventListener('click', () => go(sel - 1));
   $('nextBtn').addEventListener('click', () => go(sel + 1));
   function play() {
     const g = GAMES[sel]; if (!g) return;
+    SFX.play();
     try { sessionStorage.setItem('ttg.hub', '1'); } catch (e) { /* fine */ }
-    location.href = g.url + '?hub=1';
+    setTimeout(() => { location.href = g.url + '?hub=1'; }, live() ? 420 : 0);
   }
   $('playBtn').addEventListener('click', play);
 
@@ -248,7 +363,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
     else if (e.key === 'ArrowRight') { e.preventDefault(); go(sel + 1); }
     else if ((e.key === 'Enter' || e.key === ' ') && (document.activeElement === document.body || document.activeElement === shelf)) { e.preventDefault(); play(); }
   });
-  const pad = { held: {}, next: 0 };
+  const pad = { held: {}, next: 0, dir: 0 };
   function pollPads(now) {
     const ps = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
     if (ps.length) {
@@ -259,7 +374,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
         if (p.buttons[14] && p.buttons[14].pressed) x = -1; if (p.buttons[15] && p.buttons[15].pressed) x = 1;
         for (const k of [0, 9, 3, 1]) if (p.buttons[k] && p.buttons[k].pressed) press[k] = true;
       }
-      if (x && now >= pad.next) { if ($('sheet').classList.contains('open')) {} else go(sel + x); pad.next = now + (pad.dir === x ? 220 : 380); }
+      if (x && now >= pad.next && !$('sheet').classList.contains('open')) { go(sel + x); pad.next = now + (pad.dir === x ? 220 : 380); }
       pad.dir = x; if (!x) pad.next = 0;
       for (const k of [0, 9, 3, 1]) {
         if (press[k] && !pad.held[k]) {
@@ -275,8 +390,8 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
 
   /* ---------- settings: moving saves in and out ---------- */
   const sheet = $('sheet');
-  function openSheet() { sheet.classList.add('open'); $('setDone').focus(); }
-  function closeSheet() { sheet.classList.remove('open'); $('setBtn').focus(); }
+  function openSheet() { sheet.classList.add('open'); $('setDone').focus(); SFX.open(); }
+  function closeSheet() { sheet.classList.remove('open'); $('setBtn').focus(); SFX.close(); }
   $('setBtn').addEventListener('click', openSheet);
   $('setDone').addEventListener('click', closeSheet);
   sheet.addEventListener('click', (e) => { if (e.target === sheet) closeSheet(); });
@@ -310,20 +425,20 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
   function show(text) {
     $('importMsg').textContent = ''; $('importMsg').classList.remove('bad');
     const k = parse(text); pending = k;
-    if (!k) { $('found').hidden = true; if ((text || '').trim()) { $('importMsg').textContent = 'That isn\'t a TtGamer15 Games save. In the old app, tap Copy my save, then try Paste again.'; $('importMsg').classList.add('bad'); } return; }
+    if (!k) { $('found').hidden = true; if ((text || '').trim()) { $('importMsg').textContent = 'That isn\'t a TtGamer15 Games save. In the old app, tap Copy my save, then try Paste again.'; $('importMsg').classList.add('bad'); SFX.bad(); } return; }
     const games = GAMES.filter((g) => k[g.key]);
     const list = games.map((g) => { const d = describe(g, k[g.key]); return `${g.name}${d ? ` (${d})` : ''}`; });
     $('foundList').textContent = 'Found: ' + list.join(' and ') + '.';
     const here = games.filter((g) => store.get(g.key));
     $('foundWarn').hidden = !here.length;
     $('foundWarn').textContent = here.length ? `This replaces the ${here.map((g) => g.name).join(' and ')} save${here.length > 1 ? 's' : ''} already in this app.` : '';
-    $('found').hidden = false;
+    $('found').hidden = false; SFX.tap();
   }
   $('pasteBox').addEventListener('input', () => show($('pasteBox').value));
   $('pasteBtn').addEventListener('click', async () => {
     let text = '';
     try { text = await navigator.clipboard.readText(); } catch (e) { text = ''; }
-    if (!text) { $('importMsg').textContent = 'Couldn\'t read what you copied. Long-press the box below and choose Paste.'; $('importMsg').classList.add('bad'); $('pasteBox').focus(); return; }
+    if (!text || !text.includes('TTGSAVE1:')) { $('importMsg').textContent = text ? 'What you copied isn\'t a save. In the old app, tap Copy my save first.' : 'Tap and hold in the box below, then tap Paste.'; $('importMsg').classList.toggle('bad', !!text); $('pasteBox').focus(); return; }
     $('pasteBox').value = text.length > 400 ? text.slice(0, 400) + '…' : text; show(text);
   });
   $('fileBtn').addEventListener('click', () => $('fileIn').click());
@@ -337,32 +452,47 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:12px;border:1p
     try {
       for (const g of games) for (let i = localStorage.length - 1; i >= 0; i--) { const key = localStorage.key(i); if (key === g.key || key.startsWith(g.key + '.')) localStorage.removeItem(key); }
       for (const [key, v] of Object.entries(pending)) localStorage.setItem(key, v);
-    } catch (e) { $('importMsg').textContent = 'This browser wouldn\'t save it. Make sure you aren\'t in Private Browsing, then try again.'; $('importMsg').classList.add('bad'); return; }
+    } catch (e) { $('importMsg').textContent = 'This browser wouldn\'t save it. Make sure you aren\'t in Private Browsing, then try again.'; $('importMsg').classList.add('bad'); SFX.bad(); return; }
     $('found').hidden = true; $('pasteBox').value = ''; pending = null;
-    $('importMsg').textContent = `Done! ${games.map((g) => g.name).join(' and ')} ${games.length > 1 ? 'are' : 'is'} ready to play.`;
+    $('importMsg').textContent = `Done! ${games.map((g) => g.name).join(' and ')} ${games.length > 1 ? 'are' : 'is'} ready to play.`; SFX.good();
   });
-  async function copyText(text) {
-    try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* fall back */ }
-    const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
-    document.body.append(ta); ta.select(); try { ta.setSelectionRange(0, text.length); } catch (e) { /* old */ }
-    let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; } ta.remove(); return ok;
+  // iPhones are picky about copying, so copy two ways while the tap still counts.
+  function copyText(text) {
+    let ok = false;
+    try {
+      const was = document.activeElement, ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:-9999px;width:2px;height:2px;padding:0;border:0;margin:0;font-size:16px';
+      document.body.append(ta); ta.focus({ preventScroll: true }); ta.select(); ta.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy');
+      ta.blur(); ta.remove(); try { getSelection().removeAllRanges(); if (was && was.focus) was.focus({ preventScroll: true }); } catch (e) { /* fine */ }
+    } catch (e) { ok = false; }
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(() => true, () => ok);
+    return Promise.resolve(ok);
   }
   const hasSaves = () => GAMES.some((g) => store.get(g.key));
   $('copyBtn').addEventListener('click', async () => {
     if (!hasSaves()) { $('copyMsg').textContent = 'No saves here yet. Play a game first!'; return; }
-    $('copyMsg').textContent = (await copyText(exportAll())) ? 'Copied! Now paste it into TtGamer15 Games on your other device.' : 'Couldn\'t copy. Try Save a file instead.';
+    const ok = await copyText(exportAll());
+    $('copyMsg').textContent = ok ? 'Copied! Now paste it into TtGamer15 Games on your other device.' : 'Couldn\'t copy. Try Save a file instead.'; (ok ? SFX.good : SFX.bad)();
   });
   $('saveFileBtn').addEventListener('click', () => {
     if (!hasSaves()) { $('copyMsg').textContent = 'No saves here yet. Play a game first!'; return; }
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([exportAll()], { type: 'text/plain' }));
     a.download = 'ttgamer15-games-save.txt'; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    $('copyMsg').textContent = 'Saved a file. Load it in TtGamer15 Games on your other device.';
+    $('copyMsg').textContent = 'Saved a file. Load it in TtGamer15 Games on your other device.'; SFX.good();
   });
+
+  /* ---------- fit the screen ---------- */
+  // Keep the app exactly as tall as the screen the phone gives it (an iPhone Home Screen bug can leave a strip at the bottom).
+  function fitApp() { const h = window.innerHeight || document.documentElement.clientHeight || 0; if (h > 0) document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px'); }
+  fitApp(); addEventListener('resize', fitApp); addEventListener('orientationchange', () => setTimeout(fitApp, 300)); addEventListener('pageshow', fitApp);
+  try { if (window.visualViewport) visualViewport.addEventListener('resize', fitApp); } catch (e) { /* old browser */ }
+  for (const ms of [100, 500, 1500]) setTimeout(fitApp, ms);
 
   /* ---------- start ---------- */
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('hint').textContent = 'Use the arrows or ← → keys to pick a game';
   const start = last >= 0 ? last : 0;
-  requestAnimationFrame(() => { go(start, true); onScroll(); });
+  requestAnimationFrame(() => { go(start, true); onScroll(); setTimeout(() => { ready = true; }, 300); });
   if (/[?&]settings=1/.test(location.search)) openSheet();
 })();
 </script>
