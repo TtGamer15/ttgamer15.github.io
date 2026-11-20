@@ -99,6 +99,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .gen.add .plus{position:absolute;left:50%;top:22cqw;width:36cqw;height:36cqw;margin-left:-18cqw;border-radius:50%;background:var(--accent);box-shadow:0 2cqw 0 var(--accent-deep);display:grid;place-items:center;color:#fff;font-size:26cqw;font-weight:700;line-height:1}
 .gen.add .g-name{color:var(--ink);text-shadow:none;text-align:center;bottom:22cqw}
 .gen.add .g-sub{position:absolute;left:9cqw;right:9cqw;bottom:9cqw;margin:0;text-align:center;color:var(--muted);font-size:5.6cqw;font-weight:500}
+/* your own cover picture on an app or console card, with the name on it (unless you turn that off) */
+.gen.custom::before{display:none}
+.gen .c-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gen.custom .g-name,.gen.custom .g-count{z-index:2}
+.gen.custom.named::after{content:"";position:absolute;left:0;right:0;bottom:0;height:48%;background:linear-gradient(rgba(10,6,30,0),rgba(10,6,30,.66));z-index:1}
+.gen.custom:not(.named) .g-name{display:none}
 .count{margin:6px 0 0;text-align:center;font-weight:600;font-size:14px;color:var(--muted)}
 .count[hidden]{display:none}
 .dots{display:flex;justify-content:center;gap:9px;margin-top:4px}
@@ -189,7 +195,15 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 .lrow .nm b{display:block;font-size:17px}
 .lrow .nm small{display:block;color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lrow img,.lrow svg{width:42px;height:42px;border-radius:11px;flex:none}
+.lrow{flex-wrap:wrap}
+.lrow .nm{flex:1 1 150px}
 .lrow .btn{min-height:40px;padding:8px 14px;font-size:15px}
+.lrow .cov{width:42px;height:56px;border-radius:8px;object-fit:cover;flex:none}
+.editrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.preview{width:150px;flex:none}
+.preview .cover{display:block;width:100%;aspect-ratio:1040/1400;border-radius:14px;border:4px solid #fff;box-shadow:0 8px 20px rgba(60,30,100,.22)}
+.fld{display:grid;gap:6px;font-weight:600}
+.fld textarea{min-height:90px}
 .sysgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
 .sysgrid .btn{flex-direction:column;gap:6px;min-height:96px;padding:10px;text-align:center;line-height:1.15}
 .sysgrid .btn svg{width:46px;height:46px}
@@ -327,6 +341,23 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       <p class="msg" id="emuMsg" role="status"></p>
     </div>
 
+    <div class="rows" data-view="edit" hidden>
+      <button class="btn backlink" type="button" data-to="home">‹ Back</button>
+      <div><h3 id="editHead">Edit</h3><p>Give it your own cover and description. They show on its card on the menu.</p></div>
+      <div class="editrow">
+        <div class="preview" id="editPrev"></div>
+        <div class="rows">
+          <button class="btn main" id="coverPick" type="button">Choose a cover picture</button>
+          <input type="file" id="coverIn" accept="image/*" hidden>
+          <button class="btn" id="coverClear" type="button">Remove the cover</button>
+          <label class="switch" for="nameOn"><input type="checkbox" id="nameOn"><span class="track"></span><span>Show the name on the cover</span></label>
+        </div>
+      </div>
+      <label class="fld" for="editName"><span>Name</span><input class="txt" id="editName" type="text" maxlength="40" autocomplete="off"></label>
+      <label class="fld" for="editDesc"><span>Description</span><textarea id="editDesc" maxlength="200" placeholder="What's it about? This shows under the card."></textarea></label>
+      <div class="row"><button class="btn main" id="editSave" type="button">Save</button></div>
+    </div>
+
     <div class="rows" data-view="apps" hidden>
       <button class="btn backlink" type="button" id="appsBack">‹ Back</button>
       <div><h3 id="appsHead">Add an app</h3></div>
@@ -407,7 +438,16 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- the library: your games, then (in the Android app) consoles, apps and an Add card ---------- */
   const LIB = (() => { try { const o = JSON.parse(store.get('ttg.library') || 'null'); if (o && Array.isArray(o.consoles) && Array.isArray(o.apps)) return o; } catch (e) { /* new */ } return { consoles: [], apps: [] }; })();
   const saveLib = () => store.set('ttg.library', JSON.stringify(LIB));
-  const conName = (c) => c.name || (SYS[c.sys] || SYS.other).name;
+  const conName = (c) => c.title || c.name || (SYS[c.sys] || SYS.other).name;
+  // Your own cover pictures are kept in the browser's picture storage (there's much more room there than for the list itself).
+  const idb = (() => {
+    let opening = null;
+    const db = () => opening || (opening = new Promise((res, rej) => { const r = indexedDB.open('ttg', 1); r.onupgradeneeded = () => r.result.createObjectStore('covers'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+    const run = (mode, fn) => db().then((d) => new Promise((res, rej) => { const t = d.transaction('covers', mode), q = fn(t.objectStore('covers')); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); }));
+    return { get: (k) => run('readonly', (s) => s.get(k)), set: (k, v) => run('readwrite', (s) => s.put(v, k)), del: (k) => run('readwrite', (s) => s.delete(k)) };
+  })();
+  const coverUrl = {};
+  const loadCover = (key) => coverUrl[key] ? Promise.resolve(coverUrl[key]) : idb.get(key).then((b) => (b ? (coverUrl[key] = URL.createObjectURL(b)) : '')).catch(() => '');
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
   // "Pokemon - Emerald Version (USA, Europe).gba" -> "Pokemon - Emerald Version"
   const baseName = (f) => f.replace(/\.[^.]+$/, '');
@@ -415,10 +455,10 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   // Box art from the libretro thumbnails (it shows when the file is named like the real game)
   const artUrl = (sys, f) => { const s = SYS[sys]; if (!s || !s.art) return ''; return `https://thumbnails.libretro.com/${encodeURIComponent(s.art)}/Named_Boxarts/${encodeURIComponent(baseName(f).replace(/[&*/:`<>?\\|"]/g, '_'))}.png`; };
   const webEntry = (g) => ({ ...g, kind: 'web', theme: g.id });
-  const consoleEntry = (c) => ({ id: 'con:' + c.id, kind: 'console', con: c, name: conName(c), theme: sysTheme(c.sys).id,
-    blurb: c.games.length ? `${plural(c.games.length, 'game')} · plays with ${c.emu.label}` : `No games found yet. Add game files to the folder, then rescan in Your games.` });
+  const consoleEntry = (c) => ({ id: 'con:' + c.id, kind: 'console', con: c, name: conName(c), theme: sysTheme(c.sys).id, cover: !!c.cover, named: c.nameOn !== false, stamp: c.stamp || 0, ckey: 'con:' + c.id,
+    blurb: c.desc || (c.games.length ? `${plural(c.games.length, 'game')} · plays with ${c.emu.label}` : `No games found yet. Add game files to the folder, then rescan in Your games.`) });
   const romEntry = (c, r, i) => ({ id: `rom:${c.id}:${i}`, kind: 'rom', con: c, rom: r, name: niceTitle(r.n), theme: sysTheme(c.sys).id, blurb: niceTitle(r.n) });
-  const appEntry = (a) => ({ id: 'app:' + a.pkg, kind: 'app', pkg: a.pkg, name: a.name, theme: appTheme(a.name).id, blurb: `Opens ${a.name}.` });
+  const appEntry = (a) => ({ id: 'app:' + a.pkg, kind: 'app', pkg: a.pkg, name: a.name, theme: appTheme(a.name).id, blurb: a.desc || `Opens ${a.name}.`, cover: !!a.cover, named: a.nameOn !== false, stamp: a.stamp || 0, ckey: 'app:' + a.pkg });
   const ADD = { id: 'add', kind: 'add', name: 'Add your games', theme: 'add', blurb: 'Put your retro games and apps right here, next to Noodle Bots and Museum After Dark.' };
   function buildMain() {
     const list = GAMES.map(webEntry);
@@ -435,6 +475,13 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     const th = THEMES[e.theme]; cv.classList.add('gen');
     cv.style.setProperty('--c1', th.c[0]); cv.style.setProperty('--c2', th.c[1]); cv.style.setProperty('--c3', th.c[2]);
     const sys = e.con ? e.con.sys : '', s = SYS[sys] || SYS.other, name = document.createElement('b'); name.className = 'g-name'; name.textContent = e.name;
+    if ((e.kind === 'console' || e.kind === 'app') && (e.cover || e.coverSrc)) {   // your own cover picture
+      cv.classList.add('custom'); cv.classList.toggle('named', e.named !== false);
+      const im = document.createElement('img'); im.className = 'c-img'; im.alt = ''; cv.append(im, name);
+      if (e.kind === 'console') { const cnt = document.createElement('span'); cnt.className = 'g-count'; cnt.textContent = plural(e.con.games.length, 'game'); cv.append(cnt); }
+      cv._load = () => { if (e.coverSrc) im.src = e.coverSrc; else loadCover(e.ckey).then((u) => { if (u) im.src = u; }); };
+      return cv;
+    }
     if (e.kind === 'console') {
       cv.innerHTML = glyph(s.glyph, th.accent, th.deep) + '<span class="g-fan"></span>'; cv.append(name);
       const cnt = document.createElement('span'); cnt.className = 'g-count'; cnt.textContent = plural(e.con.games.length, 'game'); cv.append(cnt);
@@ -1138,7 +1185,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   const extsOf = (k) => (SYS[k] || SYS.other).ext.split(' ').filter(Boolean);
   // games are kept in A to Z order by their names (without the (USA) bits)
   const toGames = (list) => list.map((g) => ({ n: g.name, u: g.uri, p: g.path || '' })).sort((a, b) => niceTitle(a.n).localeCompare(niceTitle(b.n), undefined, { sensitivity: 'base', numeric: true }));
-  function libView(name) { libNow = name; for (const v of lib.querySelectorAll('[data-view]')) v.hidden = v.dataset.view !== name; lib.querySelector('.panel').scrollTop = 0; padFocus(null); }
+  function libView(name) { if (name !== 'edit' && editing) { if (editing.url) URL.revokeObjectURL(editing.url); editing = null; } libNow = name; for (const v of lib.querySelectorAll('[data-view]')) v.hidden = v.dataset.view !== name; lib.querySelector('.panel').scrollTop = 0; padFocus(null); }
   function openLib(name = 'home') {
     if (!NATIVE) return; closeSheetQuiet(); makeGrid(); renderLib(); libView(name); lib.classList.add('open'); SFX.open();
   }
@@ -1148,7 +1195,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   function refreshMain() {
     if (view.kind !== 'main') return;
     const id = LIST[sel] && LIST[sel].id, list = buildMain();
-    if (list.length === LIST.length && list.every((e, i) => e.id === LIST[i].id && e.blurb === LIST[i].blurb)) return;
+    if (list.length === LIST.length && list.every((e, i) => e.id === LIST[i].id && e.blurb === LIST[i].blurb && e.stamp === LIST[i].stamp)) return;
     showList(list, Math.max(0, list.findIndex((x) => x.id === id))); enter();
   }
   function rowEl(icon, title, sub, btns) {
@@ -1166,12 +1213,14 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     if (!LIB.consoles.length) cr.innerHTML = '<p class="small">No consoles yet.</p>';
     for (const c of LIB.consoles) {
       const th = sysTheme(c.sys);
-      cr.append(rowEl(svgEl(glyph((SYS[c.sys] || SYS.other).glyph, th.accent, th.deep, '')), conName(c), `${plural(c.games.length, 'game')} · ${c.emu.label}${c.folder && c.folder.label ? ' · ' + c.folder.label : ''}`,
-        [['Rescan', (b) => rescan(c, b)], ['Remove', (b) => sure(b, 'Remove', () => { LIB.consoles = LIB.consoles.filter((x) => x !== c); saveLib(); renderLib(); toast(conName(c) + ' removed.'); })]]));
+      const pic = c.cover ? coverThumb('con:' + c.id) : svgEl(glyph((SYS[c.sys] || SYS.other).glyph, th.accent, th.deep, ''));
+      cr.append(rowEl(pic, conName(c), `${plural(c.games.length, 'game')} · ${c.emu.label}${c.folder && c.folder.label ? ' · ' + c.folder.label : ''}`,
+        [['Edit', () => openEdit('con', c)], ['Rescan', (b) => rescan(c, b)], ['Remove', (b) => sure(b, 'Remove', () => { LIB.consoles = LIB.consoles.filter((x) => x !== c); idb.del('con:' + c.id).catch(() => {}); saveLib(); renderLib(); toast(conName(c) + ' removed.'); })]]));
     }
     const ar = $('appRows'); ar.textContent = '';
     if (!LIB.apps.length) ar.innerHTML = '<p class="small">No apps yet.</p>';
-    for (const a of LIB.apps) ar.append(rowEl(imgEl(appIcon(a.pkg)), a.name, 'App', [['Remove', (b) => sure(b, 'Remove', () => { LIB.apps = LIB.apps.filter((x) => x !== a); saveLib(); renderLib(); })]]));
+    for (const a of LIB.apps) ar.append(rowEl(a.cover ? coverThumb('app:' + a.pkg) : imgEl(appIcon(a.pkg)), a.name, a.desc || 'App',
+      [['Edit', () => openEdit('app', a)], ['Remove', (b) => sure(b, 'Remove', () => { LIB.apps = LIB.apps.filter((x) => x !== a); idb.del('app:' + a.pkg).catch(() => {}); saveLib(); renderLib(); })]]));
     let info = {}; try { info = JSON.parse(NATIVE.info()) || {}; } catch (e) { info = {}; }
     $('homeText').textContent = info.home ? 'TtGamer15 Games is your home screen right now. To switch back, pick another home app.' : 'Make TtGamer15 Games the first thing you see when this device turns on. You can switch back any time.';
   }
@@ -1258,6 +1307,53 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     SFX.good(); toast(a.label + ' added.'); renderLib(); libView('home');
   }
   $('addAppBtn').addEventListener('click', () => openApps('add'));
+  // Edit: your own name, description and cover picture for an app or a console
+  const coverThumb = (key) => { const im = document.createElement('img'); im.className = 'cov'; im.alt = ''; loadCover(key).then((u) => { if (u) im.src = u; }); return im; };
+  let editing = null;   // { kind, ref, key, blob (a new picture), clear (cover removed), url }
+  function openEdit(kind, ref) {
+    editing = { kind, ref, key: kind === 'app' ? 'app:' + ref.pkg : 'con:' + ref.id, blob: null, clear: false, url: '' };
+    const nm = kind === 'app' ? ref.name : conName(ref);
+    $('editHead').textContent = 'Edit ' + nm; $('editName').value = nm; $('editDesc').value = ref.desc || ''; $('nameOn').checked = ref.nameOn !== false;
+    libView('edit'); drawPreview();
+  }
+  function draftEntry() {
+    const ed = editing, base = ed.kind === 'app' ? appEntry(ed.ref) : consoleEntry(ed.ref);
+    return { ...base, name: $('editName').value.trim() || base.name, cover: ed.blob ? true : ed.clear ? false : !!ed.ref.cover, coverSrc: ed.url, named: $('nameOn').checked };
+  }
+  function drawPreview() {
+    if (!editing) return; const d = draftEntry(), cv = coverFor(d), box = $('editPrev'); box.textContent = ''; box.append(cv);
+    if (cv._load) { const f = cv._load; cv._load = null; f(); }
+    $('coverClear').hidden = !d.cover; $('nameOn').closest('label').hidden = !d.cover;
+  }
+  // the picture, cropped to the poster's shape and shrunk so it doesn't take much room
+  async function shrink(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+      const W = 780, H = 1050, k = Math.max(W / im.naturalWidth, H / im.naturalHeight), w = im.naturalWidth * k, h = im.naturalHeight * k;
+      const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+      g.fillStyle = '#23164a'; g.fillRect(0, 0, W, H); g.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
+      return await new Promise((res) => c.toBlob(res, 'image/jpeg', 0.86));
+    } finally { URL.revokeObjectURL(url); }
+  }
+  $('coverPick').addEventListener('click', () => $('coverIn').click());
+  $('coverIn').addEventListener('change', async () => {
+    const f = $('coverIn').files[0]; $('coverIn').value = ''; if (!f || !editing) return;
+    try { const b = await shrink(f); if (!b) throw new Error('no picture'); if (editing.url) URL.revokeObjectURL(editing.url); Object.assign(editing, { blob: b, url: URL.createObjectURL(b), clear: false }); SFX.tap(); drawPreview(); }
+    catch (e) { SFX.bad(); toast('That picture didn\'t work. Try another one.'); }
+  });
+  $('coverClear').addEventListener('click', () => { if (!editing) return; if (editing.url) URL.revokeObjectURL(editing.url); Object.assign(editing, { blob: null, url: '', clear: true }); SFX.tap(); drawPreview(); });
+  $('nameOn').addEventListener('change', drawPreview); $('editName').addEventListener('input', drawPreview);
+  $('editSave').addEventListener('click', async () => {
+    const ed = editing; if (!ed) return; const r = ed.ref, name = $('editName').value.trim();
+    if (ed.kind === 'app') r.name = name || r.name; else r.title = name && name !== (SYS[r.sys] || SYS.other).name ? name : '';
+    r.desc = $('editDesc').value.trim().slice(0, 200); r.nameOn = $('nameOn').checked; r.stamp = Date.now();
+    try { if (ed.blob) { await idb.set(ed.key, ed.blob); r.cover = true; } else if (ed.clear) { await idb.del(ed.key); r.cover = false; } }
+    catch (e) { toast('Couldn\'t keep the picture on this device.'); }
+    if (coverUrl[ed.key]) { URL.revokeObjectURL(coverUrl[ed.key]); delete coverUrl[ed.key]; }
+    if (ed.url) URL.revokeObjectURL(ed.url);
+    editing = null; saveLib(); SFX.good(); toast('Saved.'); renderLib(); libView('home');
+  });
   $('appsBack').addEventListener('click', () => (appsMode === 'emu' ? showEmu() : libView('home')));
   for (const b of lib.querySelectorAll('.backlink[data-to]')) b.addEventListener('click', () => libView(b.dataset.to));
   $('homeBtn').addEventListener('click', () => { try { NATIVE.homeSettings(); } catch (e) { /* fine */ } });
