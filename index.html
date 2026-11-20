@@ -60,6 +60,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .brand img{width:34px;height:34px;border-radius:9px;box-shadow:0 3px 0 rgba(35,22,74,.25)}
 .gear{appearance:none;width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.78);box-shadow:0 3px 0 rgba(35,22,74,.14),0 6px 16px rgba(35,22,74,.12);display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
 .gear svg{width:23px;height:23px}
+.back{appearance:none;display:none;align-items:center;gap:4px;height:46px;padding:0 18px 0 12px;border:0;border-radius:23px;background:rgba(255,255,255,.82);box-shadow:0 3px 0 rgba(35,22,74,.14),0 6px 16px rgba(35,22,74,.12);font-weight:700;font-size:17px;cursor:pointer;touch-action:manipulation}
+.back svg{width:22px;height:22px}
+.inside .back{display:inline-flex}
+.inside .brand{display:none}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 82px);z-index:6;max-width:min(90vw,440px);padding:12px 18px;border-radius:14px;background:#23164a;color:#fff;font-weight:600;font-size:16px;text-align:center;opacity:0;transform:translate(-50%,-12px);transition:opacity .25s,transform .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 
 /* The shelf: posters on a track that follows your finger. The script places each poster. */
 .stage,.info{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -72,6 +78,29 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .game .cover{display:block;width:100%;aspect-ratio:1040/1400;border-radius:22px;background:#23164a center/cover;border:6px solid #fff;box-shadow:0 14px 30px rgba(60,30,100,.28);transition:box-shadow .45s}
 .game[aria-current="true"] .cover{box-shadow:0 0 0 5px var(--accent),0 0 40px 6px var(--ring),0 18px 36px rgba(60,30,100,.32)}
 .pw{display:grid;justify-items:center}
+/* Cards made right here (in the Android app): consoles, the games inside a console, apps, and the Add card. They scale with the card. */
+.cover.gen{position:relative;overflow:hidden;container-type:inline-size;background:linear-gradient(160deg,var(--c1) 0%,var(--c2) 58%,var(--c3) 100%)}
+.cover.gen::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.2) 17%,transparent 18%);background-size:7cqw 7cqw;opacity:.7}
+.gen .g-glyph{position:absolute;left:50%;top:13cqw;width:58cqw;transform:translateX(-50%);filter:drop-shadow(0 2cqw 0 rgba(0,0,0,.18))}
+.gen .g-name{position:absolute;left:7cqw;right:7cqw;bottom:17cqw;margin:0;font-weight:700;font-size:10.5cqw;line-height:1.04;color:#fff;text-shadow:0 .9cqw 0 rgba(0,0,0,.28);text-wrap:balance;text-align:left}
+.gen .g-count{position:absolute;left:7cqw;bottom:6.5cqw;padding:1.6cqw 4.2cqw;border-radius:99px;background:rgba(255,255,255,.92);color:var(--c1);font-weight:700;font-size:5.2cqw}
+.gen .g-fan{position:absolute;left:0;right:0;top:8cqw;height:66cqw}
+.gen .g-fan img{position:absolute;top:2cqw;left:50%;width:42cqw;height:56cqw;object-fit:cover;border-radius:3cqw;border:1.2cqw solid #fff;box-shadow:0 2cqw 5cqw rgba(0,0,0,.3);background:#fff}
+.gen .g-fan img:nth-child(1){transform:translateX(-96%) rotate(-11deg) translateY(5cqw)}
+.gen .g-fan img:nth-child(2){transform:translateX(-4%) rotate(11deg) translateY(5cqw)}
+.gen .g-fan img:nth-child(3){transform:translateX(-50%);z-index:1}
+.gen.has-art .g-glyph{display:none}
+.gen.rom .g-name{font-size:8.2cqw;bottom:7cqw}
+.gen .r-art{position:absolute;left:7cqw;right:7cqw;top:7cqw;bottom:30cqw;display:grid;place-items:center}
+.gen .r-art img{max-width:100%;max-height:100%;object-fit:contain;border-radius:2.4cqw;border:1.2cqw solid #fff;box-shadow:0 2.5cqw 6cqw rgba(0,0,0,.32);background:#fff}
+.gen .a-icon{position:absolute;left:50%;top:20cqw;width:46cqw;height:46cqw;transform:translateX(-50%);border-radius:23%;box-shadow:0 2cqw 0 rgba(0,0,0,.18),0 4cqw 9cqw rgba(0,0,0,.25);background:#fff}
+.gen.add{background:#fff8f2}
+.gen.add::before{inset:4cqw;border:1.4cqw dashed var(--c2);border-radius:5cqw;background:none}
+.gen.add .plus{position:absolute;left:50%;top:22cqw;width:36cqw;height:36cqw;margin-left:-18cqw;border-radius:50%;background:var(--accent);box-shadow:0 2cqw 0 var(--accent-deep);display:grid;place-items:center;color:#fff;font-size:26cqw;font-weight:700;line-height:1}
+.gen.add .g-name{color:var(--ink);text-shadow:none;text-align:center;bottom:22cqw}
+.gen.add .g-sub{position:absolute;left:9cqw;right:9cqw;bottom:9cqw;margin:0;text-align:center;color:var(--muted);font-size:5.6cqw;font-weight:500}
+.count{margin:6px 0 0;text-align:center;font-weight:600;font-size:14px;color:var(--muted)}
+.count[hidden]{display:none}
 .dots{display:flex;justify-content:center;gap:9px;margin-top:4px}
 .dots i{width:10px;height:10px;border-radius:5px;background:rgba(35,22,74,.2);transition:background .3s,width .3s}
 .dots i.on{width:28px;background:var(--accent)}
@@ -85,6 +114,9 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 
 @media (min-width:760px){
   :root{--card-w:min(40vw,380px,calc((var(--app-h,100vh) - 350px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) * .78))}
+}
+@media (min-width:700px) and (orientation:portrait){   /* tablets held upright: bigger posters */
+  :root{--card-w:min(56vw,480px,calc((var(--app-h,100vh) - 350px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) * .78))}
 }
 @media (min-width:760px) and (hover:hover){
   .arrow{display:grid;place-items:center;position:absolute;top:50%;width:56px;height:56px;margin-top:-28px;border-radius:50%;border:0;background:rgba(255,255,255,.85);box-shadow:0 4px 0 rgba(35,22,74,.14);cursor:pointer;z-index:20;transition:opacity .3s}
@@ -150,6 +182,25 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 .switch input:focus-visible + .track{outline:3px solid var(--ink);outline-offset:2px}
 .switch[hidden]{display:none}
 
+/* Your games (Android app): consoles, apps, and adding them */
+.rows{display:grid;gap:8px}
+.lrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:#f4efff}
+.lrow .nm{flex:1;min-width:0}
+.lrow .nm b{display:block;font-size:17px}
+.lrow .nm small{display:block;color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrow img,.lrow svg{width:42px;height:42px;border-radius:11px;flex:none}
+.lrow .btn{min-height:40px;padding:8px 14px;font-size:15px}
+.sysgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+.sysgrid .btn{flex-direction:column;gap:6px;min-height:96px;padding:10px;text-align:center;line-height:1.15}
+.sysgrid .btn svg{width:46px;height:46px}
+.applist{display:grid;gap:6px}
+.appbtn{justify-content:flex-start;gap:12px;text-align:left}
+.appbtn img{width:38px;height:38px;border-radius:10px;flex:none;background:#fff}
+.appbtn small{display:block;color:var(--muted);font-size:13px;font-weight:500}
+.txt{width:100%;min-height:46px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--ink);font:400 16px/1.3 var(--f-ui);padding:8px 12px}
+.pick.on{outline:3px solid var(--accent);outline-offset:2px;background:#fff3e6}
+.backlink{justify-self:start}
+[data-view][hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){
   .sheet,.panel{transition:none}
 }
@@ -160,6 +211,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
 <canvas id="fx" aria-hidden="true"></canvas>
 <div class="app">
   <header class="top">
+    <button class="back" id="backBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>All games</button>
     <div class="brand"><img src="apple-touch-icon.png" alt="">TtGamer15 Games</div>
     <button class="gear" id="setBtn" type="button" aria-label="Settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -171,6 +223,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     <div class="shelf" id="shelf" aria-label="Games" tabindex="0"></div>
     <button class="arrow r" id="nextBtn" type="button" aria-label="Next game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
     <div class="dots" id="dots" aria-hidden="true"></div>
+    <p class="count" id="count" hidden></p>
   </main>
 
   <section class="info" aria-live="polite">
@@ -203,6 +256,11 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       <p class="msg" id="importMsg" role="status"></p>
     </section>
 
+    <section id="libEntry" hidden>
+      <div><h3>Your games</h3><p>Add your retro consoles and apps to the menu, or make this your home screen.</p></div>
+      <div class="row"><button class="btn main" id="libOpenBtn" type="button">Open Your games</button></div>
+    </section>
+
     <section>
       <div><h3>Sound</h3></div>
       <label class="switch" for="sndChk"><input type="checkbox" id="sndChk"><span class="track"></span><span>Sound effects</span></label>
@@ -215,7 +273,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       <p class="msg" id="copyMsg" role="status"></p>
     </section>
 
-    <section>
+    <section id="a2hs">
       <div><h3>Put it on your Home Screen</h3></div>
       <ul class="steps">
         <li><b>iPhone:</b> open this page in Safari, tap Share, then Add to Home Screen.</li>
@@ -224,6 +282,60 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     </section>
   </div>
 </div>
+
+<div class="sheet" id="libSheet" role="dialog" aria-modal="true" aria-labelledby="libTitle">
+  <div class="panel">
+    <header><h2 id="libTitle">Your games</h2><button class="btn" id="libDone" type="button">Done</button></header>
+
+    <div class="rows" data-view="home">
+      <section>
+        <div><h3>Consoles</h3><p>Each console gets a card on the menu. Open it to see all its games.</p></div>
+        <div class="rows" id="conRows"></div>
+        <div class="row"><button class="btn main" id="addConBtn" type="button">Add a console</button></div>
+      </section>
+      <section>
+        <div><h3>Apps</h3><p>Put any app on this device in the menu: emulators, Android games, anything.</p></div>
+        <div class="rows" id="appRows"></div>
+        <div class="row"><button class="btn" id="addAppBtn" type="button">Add an app</button></div>
+      </section>
+      <section>
+        <div><h3>Home screen</h3><p id="homeText">Make TtGamer15 Games the first thing you see when this device turns on. You can switch back any time.</p></div>
+        <div class="row"><button class="btn" id="homeBtn" type="button">Choose the home screen app</button></div>
+      </section>
+    </div>
+
+    <div class="rows" data-view="sys" hidden>
+      <button class="btn backlink" type="button" data-to="home">‹ Back</button>
+      <div><h3>Which console?</h3></div>
+      <div class="sysgrid" id="sysGrid"></div>
+    </div>
+
+    <div class="rows" data-view="folder" hidden>
+      <button class="btn backlink" type="button" data-to="sys">‹ Back</button>
+      <div><h3 id="folderHead">Where are the games?</h3><p>Pick the folder that has the game files. Folders inside it count too.</p></div>
+      <div class="row"><button class="btn main" id="folderBtn" type="button">Choose a folder</button></div>
+      <p class="msg" id="folderMsg" role="status"></p>
+      <div class="row"><button class="btn" id="folderNext" type="button" hidden>Next</button></div>
+    </div>
+
+    <div class="rows" data-view="emu" hidden>
+      <button class="btn backlink" type="button" data-to="folder">‹ Back</button>
+      <div><h3>Play them with</h3><p id="emuText">Pick the emulator that runs these games.</p></div>
+      <div class="applist" id="emuList"></div>
+      <div id="coreRow" hidden><p class="small">RetroArch core (the part that plays this console)</p><input class="txt" id="coreIn" type="text" spellcheck="false" autocomplete="off" autocapitalize="off"></div>
+      <div class="row"><button class="btn main" id="conSave" type="button">Add it</button></div>
+      <p class="msg" id="emuMsg" role="status"></p>
+    </div>
+
+    <div class="rows" data-view="apps" hidden>
+      <button class="btn backlink" type="button" id="appsBack">‹ Back</button>
+      <div><h3 id="appsHead">Add an app</h3></div>
+      <input class="txt" id="appFind" type="search" placeholder="Search apps" aria-label="Search apps" spellcheck="false" autocomplete="off">
+      <div class="applist" id="appList"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
 
 <script>
 (() => {
@@ -238,6 +350,107 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   const $ = (id) => document.getElementById(id);
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } } };
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Inside the TtGamer15 Games Android app, the app hands the page a bridge for consoles, emulators and apps.
+  const NATIVE = (() => { try { return window.TTGAndroid || null; } catch (e) { return null; } })();
+
+  /* ---------- looks: every card has a theme (colors, floating bits, jingle and sound bed) ---------- */
+  const NB_C = ['#ff9f43', '#52e5ff', '#ff6fae', '#a6e85b', '#ffd447', '#b28cff'], MAD_C = ['#e8bf4f', '#9fb3ff', '#ffffff', '#c7a0ff'];
+  const THEMES = {};
+  const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+  function theme(id, c, accent, deep, fx, fxc, jingle, bed, ring) { return (THEMES[id] = { id, c, accent, deep, ring: ring || hexA(accent, 0.5), fx, fxc, jingle, bed }); }
+  theme('nb', ['#ff9369', '#ffbfa0', '#ffe0e4', '#e4d8ff'], '#ff8a1f', '#c25f0d', 'dots', NB_C, 'nb', 'bedNb');
+  theme('mad', ['#6f79de', '#a3adff', '#dde3ff', '#ffe7b6'], '#f2c24b', '#9a6c10', 'stars', MAD_C, 'mad', 'bedMad', 'rgba(214,160,40,.55)');
+  theme('add', ['#ff8fb8', '#ffc6a8', '#fff2e0', '#dff3ff'], '#ff6fae', '#c2346f', 'dots', NB_C, 'app', 'bedSoft');
+  const hsl = (h, s, l) => { s /= 100; l /= 100; const f = (n) => { const k = (n + h / 30) % 12, c = l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)); return Math.round(c * 255).toString(16).padStart(2, '0'); }; return '#' + f(0) + f(8) + f(4); };
+  function appTheme(name) {   // apps get colors picked from their name, so each one always looks the same
+    let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 360;
+    const id = 'app-' + h; return THEMES[id] || theme(id, [hsl(h, 55, 42), hsl(h, 80, 74), hsl(h, 90, 93), hsl(h + 40, 80, 93)], hsl(h, 70, 55), hsl(h, 60, 36), 'dots', [hsl(h, 80, 65), hsl(h + 40, 80, 70), '#ffffff', hsl(h - 40, 80, 70)], 'app', 'bedSoft');
+  }
+  // Retro consoles: the files each one plays, the RetroArch core it starts with, its box-art folder, its picture and colors.
+  const SYS = {
+    nes: { name: 'NES', ext: 'nes fds unf unif', core: 'fceumm', art: 'Nintendo - Nintendo Entertainment System', glyph: 'pad', c: ['#c92f3a', '#ff8f8f', '#ffe4e4', '#e6e8ff'], a: '#e8414a', d: '#9e1f26' },
+    snes: { name: 'Super Nintendo', ext: 'sfc smc fig swc bs', core: 'snes9x', art: 'Nintendo - Super Nintendo Entertainment System', glyph: 'pad', c: ['#6a4fc2', '#ab98ff', '#ede7ff', '#ffe7f2'], a: '#8a6cf0', d: '#5a3fb5' },
+    n64: { name: 'Nintendo 64', ext: 'n64 z64 v64', core: 'mupen64plus_next_gles3', art: 'Nintendo - Nintendo 64', glyph: 'pad', c: ['#1c8f4f', '#7fdca6', '#e2fbec', '#fff3d6'], a: '#22b363', d: '#14773f' },
+    gc: { name: 'GameCube', ext: 'iso gcm rvz gcz ciso', core: 'dolphin', art: 'Nintendo - GameCube', glyph: 'pad', c: ['#4b3a9e', '#9a8cf2', '#ebe8ff', '#e0f4ff'], a: '#6f5be0', d: '#3f2f8f' },
+    wii: { name: 'Wii', ext: 'iso wbfs rvz gcz ciso', core: 'dolphin', art: 'Nintendo - Wii', glyph: 'pad', c: ['#2f86cf', '#96cbff', '#e8f4ff', '#f4f4f4'], a: '#3f9be8', d: '#2a6cab' },
+    gb: { name: 'Game Boy', ext: 'gb', core: 'gambatte', art: 'Nintendo - Game Boy', glyph: 'gb', c: ['#56761a', '#a8c84c', '#eef6d4', '#e4ecff'], a: '#86ad2a', d: '#56761a' },
+    gbc: { name: 'Game Boy Color', ext: 'gbc', core: 'gambatte', art: 'Nintendo - Game Boy Color', glyph: 'gb', c: ['#7a3fb6', '#c99cff', '#f3e8ff', '#d9fbf2'], a: '#9b59e0', d: '#6a2fa8' },
+    gba: { name: 'Game Boy Advance', ext: 'gba', core: 'mgba', art: 'Nintendo - Game Boy Advance', glyph: 'gba', c: ['#3943c2', '#8e97ff', '#e4e7ff', '#ffe6f5'], a: '#5865f2', d: '#2f39a8' },
+    nds: { name: 'Nintendo DS', ext: 'nds', core: 'melonds', art: 'Nintendo - Nintendo DS', glyph: 'ds', c: ['#475a7c', '#a9badb', '#eef3fb', '#fff0e0'], a: '#6b85b8', d: '#3e4f6e' },
+    n3ds: { name: 'Nintendo 3DS', ext: '3ds cci cia cxi', core: '', art: 'Nintendo - Nintendo 3DS', glyph: 'ds', c: ['#b8323e', '#ff9aa3', '#ffe8ea', '#e8eeff'], a: '#e0454f', d: '#9e2530' },
+    md: { name: 'Sega Genesis', ext: 'md gen smd bin', core: 'genesis_plus_gx', art: 'Sega - Mega Drive - Genesis', glyph: 'pad', c: ['#1f2a52', '#6276dc', '#e6eaff', '#ffe4e0'], a: '#3f5ae0', d: '#26359e' },
+    sms: { name: 'Master System', ext: 'sms', core: 'genesis_plus_gx', art: 'Sega - Master System - Mark III', glyph: 'pad', c: ['#2b2b33', '#d64545', '#ffe6e6', '#eef0ff'], a: '#d64545', d: '#8f2626' },
+    gg: { name: 'Game Gear', ext: 'gg', core: 'genesis_plus_gx', art: 'Sega - Game Gear', glyph: 'gba', c: ['#2a2f3a', '#5f86d8', '#e4ecff', '#e6fff4'], a: '#3f6fd6', d: '#264a99' },
+    dc: { name: 'Dreamcast', ext: 'cdi gdi chd', core: 'flycast', art: 'Sega - Dreamcast', glyph: 'pad', c: ['#d0571f', '#ffab7c', '#fff0e6', '#e6f0ff'], a: '#f07a2e', d: '#a8441a' },
+    psx: { name: 'PlayStation', ext: 'cue chd pbp m3u', core: 'pcsx_rearmed', art: 'Sony - PlayStation', glyph: 'pad', c: ['#4c5566', '#a6b2c8', '#edf1f7', '#f2eaff'], a: '#5f7ab0', d: '#3c4f78' },
+    ps2: { name: 'PlayStation 2', ext: 'iso chd', core: '', art: 'Sony - PlayStation 2', glyph: 'pad', c: ['#1b2a6b', '#5d73d6', '#e4e9ff', '#e8f6ff'], a: '#3b55c9', d: '#22348a' },
+    psp: { name: 'PSP', ext: 'iso cso pbp chd', core: 'ppsspp', art: 'Sony - PlayStation Portable', glyph: 'gba', c: ['#20232b', '#5d6fa8', '#e7ebf6', '#f0e8ff'], a: '#4a63b8', d: '#2e3f78' },
+    pce: { name: 'TurboGrafx-16', ext: 'pce', core: 'mednafen_pce_fast', art: 'NEC - PC Engine - TurboGrafx 16', glyph: 'pad', c: ['#e0582a', '#ffad8a', '#fff0e8', '#eaeaff'], a: '#f06a35', d: '#a83f1a' },
+    a2600: { name: 'Atari 2600', ext: 'a26 bin', core: 'stella', art: 'Atari - 2600', glyph: 'pad', c: ['#8a4b1c', '#e0a060', '#fbeedd', '#ffe8d8'], a: '#c96f2c', d: '#8a4b1c' },
+    arcade: { name: 'Arcade', ext: 'zip 7z', core: 'fbneo', art: 'FBNeo - Arcade Games', glyph: 'stick', c: ['#c2187a', '#ff7fc4', '#ffe6f4', '#e2f2ff'], a: '#e0309a', d: '#9a1360' },
+    other: { name: 'Other games', ext: '', core: '', art: '', glyph: 'pad', c: ['#2f7f8f', '#8fd3e0', '#e6f8fb', '#fff1e6'], a: '#2fa3b8', d: '#1f6e7d' },
+  };
+  const sysTheme = (k) => { const s = SYS[k] || SYS.other; return THEMES['sys-' + k] || theme('sys-' + k, s.c, s.a, s.d, 'pixels', [s.a, s.c[1], '#ffffff', s.c[0]], 'retro', 'bedRetro'); };
+  // A little drawing of each kind of console, in its colors.
+  function glyph(kind, a, d, cls = 'g-glyph') {
+    const dp = (x, y, r) => `<path d="M${x - r / 3} ${y - r}h${2 * r / 3}v${2 * r / 3}h${2 * r / 3}v${2 * r / 3}h${-2 * r / 3}v${2 * r / 3}h${-2 * r / 3}v${-2 * r / 3}h${-2 * r / 3}v${-2 * r / 3}h${2 * r / 3}z" fill="${d}"/>`;
+    const bt = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${a}" stroke="${d}" stroke-width="1.5"/>`;
+    let g = '';
+    if (kind === 'gb') g = `<rect x="24" y="6" width="52" height="88" rx="7" fill="#fff" stroke="${d}" stroke-width="3"/><rect x="31" y="13" width="38" height="32" rx="3" fill="${d}"/><rect x="35" y="17" width="30" height="24" rx="1.5" fill="${a}" opacity=".85"/>${dp(38, 64, 7)}${bt(60, 66, 4.2)}${bt(68, 59, 4.2)}`;
+    else if (kind === 'gba') g = `<rect x="4" y="24" width="92" height="52" rx="22" fill="#fff" stroke="${d}" stroke-width="3"/><rect x="31" y="31" width="38" height="38" rx="3" fill="${d}"/><rect x="34.5" y="34.5" width="31" height="31" rx="1.5" fill="${a}" opacity=".85"/>${dp(18, 50, 7)}${bt(80, 54, 4.2)}${bt(87, 46, 4.2)}`;
+    else if (kind === 'ds') g = `<rect x="20" y="4" width="60" height="44" rx="6" fill="#fff" stroke="${d}" stroke-width="3"/><rect x="31" y="10" width="38" height="32" rx="2" fill="${a}" opacity=".85"/><rect x="20" y="52" width="60" height="44" rx="6" fill="#fff" stroke="${d}" stroke-width="3"/><rect x="34" y="58" width="32" height="32" rx="2" fill="${a}" opacity=".6"/>${dp(27, 74, 4.6)}${bt(73, 72, 2.8)}`;
+    else if (kind === 'stick') g = `<rect x="8" y="56" width="84" height="32" rx="9" fill="#fff" stroke="${d}" stroke-width="3"/><rect x="29" y="28" width="6" height="34" fill="${d}"/><circle cx="32" cy="26" r="12" fill="${a}" stroke="${d}" stroke-width="3"/>${bt(58, 70, 5.5)}${bt(73, 66, 5.5)}${bt(64, 79, 5.5)}${bt(79, 76, 5.5)}`;
+    else g = `<path d="M22 32h56c11 0 18 9 19 21l2 19c1 10-9 16-17 9l-12-11H30L18 81c-8 7-18 1-17-9l2-19c1-12 8-21 19-21z" fill="#fff" stroke="${d}" stroke-width="3"/>${dp(25, 52, 8)}${bt(72, 46, 4.6)}${bt(81, 54, 4.6)}${bt(63, 54, 4.6)}${bt(72, 62, 4.6)}`;
+    return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${g}</svg>`;
+  }
+
+  /* ---------- the library: your games, then (in the Android app) consoles, apps and an Add card ---------- */
+  const LIB = (() => { try { const o = JSON.parse(store.get('ttg.library') || 'null'); if (o && Array.isArray(o.consoles) && Array.isArray(o.apps)) return o; } catch (e) { /* new */ } return { consoles: [], apps: [] }; })();
+  const saveLib = () => store.set('ttg.library', JSON.stringify(LIB));
+  const conName = (c) => c.name || (SYS[c.sys] || SYS.other).name;
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  // "Pokemon - Emerald Version (USA, Europe).gba" -> "Pokemon - Emerald Version"
+  const baseName = (f) => f.replace(/\.[^.]+$/, '');
+  const niceTitle = (f) => baseName(f).replace(/\s*[([][^)\]]*[)\]]/g, '').trim() || baseName(f);
+  // Box art from the libretro thumbnails (it shows when the file is named like the real game)
+  const artUrl = (sys, f) => { const s = SYS[sys]; if (!s || !s.art) return ''; return `https://thumbnails.libretro.com/${encodeURIComponent(s.art)}/Named_Boxarts/${encodeURIComponent(baseName(f).replace(/[&*/:`<>?\\|"]/g, '_'))}.png`; };
+  const webEntry = (g) => ({ ...g, kind: 'web', theme: g.id });
+  const consoleEntry = (c) => ({ id: 'con:' + c.id, kind: 'console', con: c, name: conName(c), theme: sysTheme(c.sys).id,
+    blurb: c.games.length ? `${plural(c.games.length, 'game')} · plays with ${c.emu.label}` : `No games found yet. Add game files to the folder, then rescan in Your games.` });
+  const romEntry = (c, r, i) => ({ id: `rom:${c.id}:${i}`, kind: 'rom', con: c, rom: r, name: niceTitle(r.n), theme: sysTheme(c.sys).id, blurb: niceTitle(r.n) });
+  const appEntry = (a) => ({ id: 'app:' + a.pkg, kind: 'app', pkg: a.pkg, name: a.name, theme: appTheme(a.name).id, blurb: `Opens ${a.name}.` });
+  const ADD = { id: 'add', kind: 'add', name: 'Add your games', theme: 'add', blurb: 'Put your retro games and apps right here, next to Noodle Bots and Museum After Dark.' };
+  function buildMain() {
+    const list = GAMES.map(webEntry);
+    if (NATIVE) { for (const c of LIB.consoles) list.push(consoleEntry(c)); for (const a of LIB.apps) list.push(appEntry(a)); list.push(ADD); }
+    return list;
+  }
+  const romList = (c) => c.games.length ? c.games.map((r, i) => romEntry(c, r, i)) : [{ id: 'empty:' + c.id, kind: 'empty', con: c, name: 'No games yet', theme: sysTheme(c.sys).id, blurb: 'No games in this folder yet. Add some game files, then tap Rescan in Your games.' }];
+  const iconCache = {};
+  const appIcon = (pkg) => { if (!(pkg in iconCache)) { try { iconCache[pkg] = NATIVE ? NATIVE.icon(pkg, 192) || '' : ''; } catch (e) { iconCache[pkg] = ''; } } return iconCache[pkg]; };
+  // The poster on a card. Your games have painted posters; the rest are made here, with box art when it can be found.
+  function coverFor(e) {
+    const cv = document.createElement('span'); cv.className = 'cover';
+    if (e.kind === 'web') { cv.style.backgroundImage = `url("${e.art}")`; return cv; }
+    const th = THEMES[e.theme]; cv.classList.add('gen');
+    cv.style.setProperty('--c1', th.c[0]); cv.style.setProperty('--c2', th.c[1]); cv.style.setProperty('--c3', th.c[2]);
+    const sys = e.con ? e.con.sys : '', s = SYS[sys] || SYS.other, name = document.createElement('b'); name.className = 'g-name'; name.textContent = e.name;
+    if (e.kind === 'console') {
+      cv.innerHTML = glyph(s.glyph, th.accent, th.deep) + '<span class="g-fan"></span>'; cv.append(name);
+      const cnt = document.createElement('span'); cnt.className = 'g-count'; cnt.textContent = plural(e.con.games.length, 'game'); cv.append(cnt);
+      cv._load = () => { const fan = cv.querySelector('.g-fan'); for (const r of e.con.games.slice(0, 3)) { const u = artUrl(sys, r.n); if (!u) continue; const im = new Image(); im.alt = ''; im.onload = () => cv.classList.add('has-art'); im.onerror = () => { im.remove(); if (!fan.children.length) cv.classList.remove('has-art'); }; im.src = u; fan.append(im); } };
+    } else if (e.kind === 'rom' || e.kind === 'empty') {
+      cv.classList.add('rom'); cv.innerHTML = glyph(s.glyph, th.accent, th.deep) + '<span class="r-art"></span>'; cv.append(name);
+      if (e.kind === 'rom') cv._load = () => { const u = artUrl(sys, e.rom.n); if (!u) return; const im = new Image(); im.alt = ''; im.onload = () => cv.classList.add('has-art'); im.onerror = () => im.remove(); im.src = u; cv.querySelector('.r-art').append(im); };
+    } else if (e.kind === 'app') {
+      const im = document.createElement('img'); im.className = 'a-icon'; im.alt = ''; cv.append(im, name);
+      cv._load = () => { const u = appIcon(e.pkg); if (u) im.src = u; else im.replaceWith(document.createRange().createContextualFragment(glyph('pad', th.accent, th.deep))); };
+    } else if (e.kind === 'add') {
+      cv.classList.add('add'); cv.innerHTML = '<span class="plus" aria-hidden="true">+</span>'; cv.append(name);
+      const sub = document.createElement('p'); sub.className = 'g-sub'; sub.textContent = 'Retro games and apps'; cv.append(sub);
+    }
+    return cv;
+  }
 
   /* ---------- sound ---------- */
   // Every sound is made once, ahead of time, and then just played back. Building sounds while they play made them lag on phones.
@@ -272,6 +485,8 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     close: [0.2, (t) => t(780, 0.12, 'sine', 0.12, 420)],
     good: [0.6, (t) => [784, 988, 1175, 1568].forEach((f, k) => t(f, 0.22, 'triangle', 0.09, f, k * 0.08))],
     bad: [0.35, (t) => t(220, 0.25, 'square', 0.05, 160)],
+    retro: [0.75, (t) => { [262, 330, 392, 523, 659].forEach((f, k) => t(f, 0.09, 'square', 0.05, f, k * 0.06)); t(784, 0.3, 'square', 0.05, 784, 0.34); }],
+    app: [0.45, (t) => { t(660, 0.12, 'sine', 0.12, 990); t(990, 0.2, 'sine', 0.08, 1320, 0.09); }],
     // the sound beds: 8 seconds each, looped
     bedNb: [8, (t, h) => {
       const notes = [523, 587, 659, 784, 880, 1047, 1175, 1319];
@@ -285,6 +500,13 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       t(2349, 0.6, 'sine', 0.03, 2349, 2.45); t(3136, 0.6, 'sine', 0.025, 3136, 6.2);
       t(70, 0.18, 'sine', 0.12, 50, 4.6); t(70, 0.18, 'sine', 0.1, 50, 5.15);
     }],
+    // consoles: a soft 8-bit arpeggio; apps and the Add card: slow chimes
+    bedRetro: [8, (t) => {
+      const prog = [[262, 330, 392], [220, 262, 330], [175, 220, 262], [196, 247, 294]];
+      for (let k = 0; k < 32; k++) { const ch = prog[k >> 3], f = ch[k % 3] * 2; t(f, 0.07, 'square', 0.016, f, k * 0.25); }
+      prog.forEach((ch, i) => t(ch[0] / 2, 0.6, 'triangle', 0.05, ch[0] / 2, i * 2));
+    }],
+    bedSoft: [8, (t) => { [[0.4, 523], [2.1, 659], [3.3, 784], [5.2, 587], [6.4, 880]].forEach(([at, f]) => { t(f, 0.5, 'sine', 0.035, f, at); t(f * 2, 0.4, 'sine', 0.012, f * 2, at + 0.05); }); }],
   };
   const made = Promise.all(Object.entries(MAKE).map(([k, [dur, fn]]) => render(dur, fn).then((b) => { BUF[k] = b; })));
   function audioInit() {
@@ -309,15 +531,15 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   }
   // The two sound beds loop the whole time; switching games just fades one down and the other up.
   function startBeds() {
-    const c = snd.ctx; if (!c || snd.beds.nb) return;
-    for (const [id, key] of [['nb', 'bedNb'], ['mad', 'bedMad']]) {
+    const c = snd.ctx; if (!c || snd.bedsOn) return; snd.bedsOn = true;
+    for (const key of Object.keys(MAKE).filter((k) => k.startsWith('bed'))) {
       if (!BUF[key]) continue;
       const s = c.createBufferSource(), g = c.createGain(); s.buffer = BUF[key]; s.loop = true; g.gain.value = 0;
-      s.connect(g); g.connect(snd.out); s.start(c.currentTime + 0.05); snd.beds[id] = g;
+      s.connect(g); g.connect(snd.out); s.start(c.currentTime + 0.05); snd.beds[key] = g;
     }
     fadeBeds();
   }
-  function fadeBeds() { const c = snd.ctx; if (!c) return; for (const id in snd.beds) snd.beds[id].gain.setTargetAtTime(landed === id ? 1 : 0, c.currentTime, 0.4); }
+  function fadeBeds() { const c = snd.ctx; if (!c) return; const want = (THEMES[landedTheme] || {}).bed; for (const k in snd.beds) snd.beds[k].gain.setTargetAtTime(want === k ? 1 : 0, c.currentTime, 0.4); }
   function unlock() {
     audioInit(); const c = snd.ctx; if (!c) return;
     applySession();
@@ -334,7 +556,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown']) addEventListener(ev, unlock, true);
   // Once a tap has let sound in, it comes back by itself: after switching apps, and after coming back from a game.
   function wake() {
-    const c = snd.ctx; if (!c || !snd.unlocked || document.hidden || c.state === 'running' || c.state === 'closed' || (open && open.shown)) return;
+    const c = snd.ctx; if (!c || !snd.unlocked || document.hidden || c.state === 'running' || c.state === 'closed' || (open && open.shown) || away) return;
     snd.waking = performance.now(); applySession();
     try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fine */ }
   }
@@ -355,7 +577,6 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- floating bits behind the posters ---------- */
   const fx = $('fx'), fc = fx.getContext('2d'); let FW = 0, FH = 0, DPR = 1;
   const BITS = Array.from({ length: 34 }, (_, k) => ({ x: Math.random(), y: Math.random(), r: 4 + Math.random() * 9, v: 0.012 + Math.random() * 0.02, w: Math.random() * 6.28, k }));
-  const NB_C = ['#ff9f43', '#52e5ff', '#ff6fae', '#a6e85b', '#ffd447', '#b28cff'], MAD_C = ['#e8bf4f', '#9fb3ff', '#ffffff', '#c7a0ff'];
   let fxGame = 'nb', fxNext = 'nb', fxMix = 1;
   function sizeFx() { DPR = Math.min(2, devicePixelRatio || 1); FW = innerWidth; FH = innerHeight; fx.width = Math.round(FW * DPR); fx.height = Math.round(FH * DPR); }
   function star(x, y, r) { fc.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? r * 0.32 : r; fc.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } fc.closePath(); fc.fill(); }
@@ -366,12 +587,14 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     fc.setTransform(DPR, 0, 0, DPR, 0, 0); fc.clearRect(0, 0, FW, FH);
     // when the game changes, the old bits fade away first, then the new ones fade in
     if (fxNext !== fxGame) { fxMix -= dt * 2.4; if (fxMix <= 0) { fxMix = 0; fxGame = fxNext; } } else fxMix = Math.min(1, fxMix + dt * 1.1);
+    const th = THEMES[fxGame] || THEMES.nb, cs = th.fxc;
     for (const b of BITS) {
-      if (!calm) { b.y -= b.v * dt * (fxGame === 'nb' ? 1 : 0.5); b.w += dt; if (b.y < -0.05) { b.y = 1.05; b.x = Math.random(); } }
+      if (!calm) { b.y -= b.v * dt * (th.fx === 'stars' ? 0.5 : th.fx === 'pixels' ? 0.8 : 1); b.w += dt; if (b.y < -0.05) { b.y = 1.05; b.x = Math.random(); } }
       const x = b.x * FW + Math.sin(b.w) * 14, y = b.y * FH;
-      fc.globalAlpha = 0.55 * fxMix;
-      if (fxGame === 'nb') { fc.fillStyle = NB_C[b.k % NB_C.length]; fc.beginPath(); fc.arc(x, y, b.r, 0, 6.283); fc.fill(); fc.globalAlpha = 0.35 * fxMix; fc.fillStyle = '#fff'; fc.beginPath(); fc.arc(x - b.r * 0.3, y - b.r * 0.3, b.r * 0.32, 0, 6.283); fc.fill(); }
-      else { fc.fillStyle = MAD_C[b.k % MAD_C.length]; fc.globalAlpha = (0.35 + 0.35 * Math.sin(t / 500 + b.k)) * fxMix; star(x, y, b.r * 1.3); }
+      fc.globalAlpha = 0.55 * fxMix; fc.fillStyle = cs[b.k % cs.length];
+      if (th.fx === 'stars') { fc.globalAlpha = (0.35 + 0.35 * Math.sin(t / 500 + b.k)) * fxMix; star(x, y, b.r * 1.3); }
+      else if (th.fx === 'pixels') { const r = Math.round(b.r * 1.1); fc.fillRect(Math.round(x - r), Math.round(y - r), r * 2, r * 2); fc.globalAlpha = 0.35 * fxMix; fc.fillStyle = '#fff'; fc.fillRect(Math.round(x - r), Math.round(y - r), Math.ceil(r * 0.6), Math.ceil(r * 0.6)); }
+      else { fc.beginPath(); fc.arc(x, y, b.r, 0, 6.283); fc.fill(); fc.globalAlpha = 0.35 * fxMix; fc.fillStyle = '#fff'; fc.beginPath(); fc.arc(x - b.r * 0.3, y - b.r * 0.3, b.r * 0.32, 0, 6.283); fc.fill(); }
     }
     fc.globalAlpha = 1;
     if (!calm) requestAnimationFrame(drawFx);
@@ -382,25 +605,34 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   // The posters sit on a track that follows your finger. Switching games plays one little show: the game you're
   // leaving slides off piece by piece (poster, words, Play button, hint, each a moment after the last), the new
   // game slides in from the other side the same way, and then the room slowly changes color.
-  const shelf = $('shelf'), cards = [], dots = [], N = GAMES.length;
-  for (const [i, g] of GAMES.entries()) {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'game'; b.dataset.g = g.id;
-    b.setAttribute('aria-label', g.name);
-    const cv = document.createElement('span'); cv.className = 'cover'; cv.style.backgroundImage = `url("${g.art}")`; b.append(cv);
-    b.addEventListener('click', () => { if (i === sel) play(); else { SFX.tap(); go(i); } });
-    shelf.append(b); cards.push(b);
-    const d = document.createElement('i'); $('dots').append(d); dots.push(d);
+  // The same swipe menu shows either the main list or the games inside one console.
+  const shelf = $('shelf'), cards = [], dots = [];
+  let LIST = [], N = 0, view = { kind: 'main', con: null };
+  let sel = -1, pos = 0, ready = false, landed = '', landedTheme = '';
+  function showList(list, idx) {
+    for (const c of cards) c.remove(); cards.length = 0; $('dots').textContent = ''; dots.length = 0;
+    LIST = list; N = list.length;
+    list.forEach((e, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'game'; b.dataset.g = e.id; b.setAttribute('aria-label', e.name);
+      const th = THEMES[e.theme]; if (th) { b.style.setProperty('--accent', th.accent); b.style.setProperty('--ring', th.ring); }
+      b.append(coverFor(e)); b.addEventListener('click', () => { if (i === sel) play(); else { SFX.tap(); go(i); } });
+      shelf.append(b); cards.push(b);
+    });
+    const many = N > 12; $('count').hidden = !many; $('dots').hidden = many;   // long lists show "7 / 120" instead of dots
+    if (!many) for (let i = 0; i < N; i++) { const d = document.createElement('i'); $('dots').append(d); dots.push(d); }
+    sel = -1; go(Math.max(0, Math.min(N - 1, idx | 0)), { instant: true });
   }
-  let sel = -1, pos = 0, ready = false, landed = '';
-  const last = GAMES.findIndex((g) => g.id === store.get('ttg.last'));
-  const step = () => cards[0].offsetWidth || 280;   // how far apart the posters sit
+  const lastKey = () => view.kind === 'main' ? 'ttg.last' : 'ttg.last.' + view.con.id;
+  const step = () => (cards[0] && cards[0].offsetWidth) || 280;   // how far apart the posters sit
   // Put every poster in its spot for a track position (0 = first game in the middle, 0.5 = halfway to the second).
   // Posters to the side lean in and shrink, and the whole row shrinks a little while it's between spots.
   function setPos(p) {
     pos = p; const st = step(), m = 1 - 0.07 * Math.abs(p - Math.round(p)) * 2;
     cards.forEach((c, k) => {
       const o = k - p, a = Math.abs(o), d = Math.min(1, a), s = Math.max(-1, Math.min(1, o));
-      c.style.visibility = a > 2.2 ? 'hidden' : '';
+      if (a > 2.2) { if (!c._far) { c._far = true; c.style.visibility = 'hidden'; } return; }   // far-off posters just stay hidden
+      c._far = false; c.style.visibility = '';
+      const cv = c.firstChild; if (cv && cv._load) { const f = cv._load; cv._load = null; f(); }   // box art loads as a poster gets close
       c.style.transform = `translateX(${(o * st * m).toFixed(1)}px) translateZ(${(-120 * d).toFixed(1)}px) rotateY(${(-24 * s).toFixed(2)}deg) scale(${((1 - 0.12 * d) * m).toFixed(4)})`;
       c.style.opacity = (1 - 0.35 * d).toFixed(3); c.style.zIndex = String(10 - Math.round(a * 2));
     });
@@ -423,7 +655,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   const looks = (el) => { const cs = getComputedStyle(el); return { transform: cs.transform === 'none' ? 'translateX(0px)' : cs.transform, opacity: cs.opacity }; };
   let flow = 0;
   function settle(dir) {   // dir 1: the new game came from the right, so everything moves left
-    const me = ++flow, g = GAMES[sel], rest = { transform: 'translateX(0px)', opacity: 1 };
+    const me = ++flow, g = LIST[sel], rest = { transform: 'translateX(0px)', opacity: 1 };
     PIECES.forEach((el, k) => {
       const from = looks(el); el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = '';
       if (calm) { fill(el, g); return; }
@@ -443,32 +675,40 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     PIECES.forEach((el, k) => { el.getAnimations().forEach((a) => a.cancel()); el.style.transform = `translateX(${(-f * SHIFT * (1 - k * 0.15)).toFixed(1)}px)`; el.style.opacity = (1 - Math.abs(f) * 0.7).toFixed(3); });
   }
   // The new game has arrived: its colors, its floating bits and its sound bed fade in.
+  // The room only changes when the theme does: moving between games on the same console keeps its colors.
+  const roomCss = (c) => `radial-gradient(70% 45% at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),linear-gradient(180deg,${c[0]} 0%,${c[1]} 9%,${c[2]} 40%,${c[3]} 100%)`;
   function land(g) {
-    if (landed === g.id) return; const first = !landed; landed = g.id;
+    if (landed === g.id) return; landed = g.id;
     document.documentElement.dataset.game = g.id;
+    clearTimeout(warmT); if (g.kind === 'web') warmT = setTimeout(() => warm(g), 1200);
+    const th = THEMES[g.theme] || THEMES.nb; if (landedTheme === th.id) return;
+    const first = !landedTheme; landedTheme = th.id;
+    const r = document.documentElement.style; r.setProperty('--accent', th.accent); r.setProperty('--accent-deep', th.deep); r.setProperty('--ring', th.ring);
+    let mine = document.querySelector(`.room i[data-game="${th.id}"]`);
+    if (!mine) { mine = document.createElement('i'); mine.dataset.game = th.id; mine.style.background = roomCss(th.c); document.querySelector('.room').append(mine); void mine.offsetWidth; }
     for (const bg of document.querySelectorAll('.room i')) {
       if (first) bg.style.transition = 'none';
-      bg.classList.toggle('on', bg.dataset.game === g.id);
+      bg.classList.toggle('on', bg === mine);
       if (first) { void bg.offsetWidth; requestAnimationFrame(() => { bg.style.transition = ''; }); }
     }
-    fxNext = g.id; if (first || calm) { fxGame = g.id; fxMix = 1; if (calm) requestAnimationFrame(drawFx); }
+    fxNext = th.id; if (first || calm) { fxGame = th.id; fxMix = 1; if (calm) requestAnimationFrame(drawFx); }
     fadeBeds();
-    if (!first && ready) SFX[g.id]();
-    clearTimeout(warmT); warmT = setTimeout(() => warm(g), 1200);
+    if (!first && ready && !leaving) SFX[th.jingle]();
   }
   function go(i, how = {}) {
     i = Math.max(0, Math.min(N - 1, i));
     const dir = i > sel ? 1 : i < sel ? -1 : pos > i ? -1 : 1;
     if (i !== sel) {
-      const first = sel < 0; sel = i; const g = GAMES[i];
+      const first = sel < 0; sel = i; const g = LIST[i];
       cards.forEach((c, k) => c.setAttribute('aria-current', String(k === i)));
-      dots.forEach((d, k) => d.classList.toggle('on', k === i));
-      $('title').textContent = g.name; $('playBtn').setAttribute('aria-label', 'Play ' + g.name);
+      dots.forEach((d, k) => d.classList.toggle('on', k === i)); $('count').textContent = `${i + 1} / ${N}`;
+      $('title').textContent = g.name; $('playBtn').setAttribute('aria-label', (g.kind === 'console' ? 'Open ' : g.kind === 'add' || g.kind === 'empty' ? '' : 'Play ') + g.name);
+      $('playBtn').textContent = g.kind === 'console' ? 'Open' : g.kind === 'add' ? 'Add games' : g.kind === 'app' ? 'Open' : g.kind === 'empty' ? 'Your games' : 'Play';
       $('prevBtn').disabled = i === 0; $('nextBtn').disabled = i === N - 1;
-      store.set('ttg.last', g.id);
+      store.set(lastKey(), g.id);
       if (!first && ready) SFX.swipe();
     }
-    if (how.instant) { tw = null; setPos(i); PIECES.forEach((el) => fill(el, GAMES[i])); return; }
+    if (how.instant) { tw = null; setPos(i); PIECES.forEach((el) => fill(el, LIST[i])); return; }
     tweenTo(i, how.drag ? 520 : 760, how.drag ? ease.back : ease.inOut);
     settle(dir);
   }
@@ -499,7 +739,8 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     const [t0, x0] = drag.pts[0], [t1, x1] = drag.pts[drag.pts.length - 1], v = t1 > t0 ? (x1 - x0) / (t1 - t0) : 0;   // px per ms
     let to = Math.round(pos - (v * 160) / step());
     if (to === sel && Math.abs(pos - sel) > 0.14) to = sel + Math.sign(pos - sel);
-    if (Math.abs(to - sel) > 1) to = sel + Math.sign(to - sel);
+    const jump = N > 12 ? 8 : 1;   // a hard flick through a long list of games skips ahead
+    if (Math.abs(to - sel) > jump) to = sel + Math.sign(to - sel) * jump;
     go(to, { drag: true });
   }
   addEventListener('pointerup', endDrag); addEventListener('pointercancel', endDrag);
@@ -521,25 +762,31 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   let leaving = false;
   const PARTS = () => [document.querySelector('.top'), shelf, $('dots'), ...PIECES];
   // The menu slides off to the right, piece by piece. Returns how long that takes.
-  function takeApartHub() {
+  function takeApartHub(dir = 1) {   // 1: everything slides off to the right (going in), -1: to the left (going back)
     if (calm) return 0;
     tw = null; ++flow;
     PARTS().forEach((el, k) => { const from = looks(el); el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = '';
-      el.animate([from, { transform: `translateX(${SHIFT * 1.4}px)`, opacity: 0 }], { duration: 300, delay: k * 70, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' }); });
+      el.animate([from, { transform: `translateX(${dir * SHIFT * 1.4}px)`, opacity: 0 }], { duration: 300, delay: k * 70, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' }); });
     $('fx').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: 'forwards' });
     return PARTS().length * 70 + 300;
   }
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '5';   // bump when the games change, so phones get the new copies
+  const V = '6';   // bump when the games change, so phones get the new copies
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
   const probe = document.createElement('div'); probe.className = 'probe'; document.body.append(probe);
   function safe() { const cs = getComputedStyle(probe); return { top: parseFloat(cs.paddingTop) || 0, right: parseFloat(cs.paddingRight) || 0, bottom: parseFloat(cs.paddingBottom) || 0, left: parseFloat(cs.paddingLeft) || 0 }; }
   let open = null;   // the game that's open: { g, frame, api, t0, exitMs, bg, shown, live, backMs }
+  let away = null;   // an emulator or app we opened (Android app)
   function play() {
-    const g = GAMES[sel]; if (!g || leaving || open) return; leaving = true;
+    const g = LIST[sel]; if (!g || leaving || open || away) return;
+    if (g.kind === 'web') playWeb(g); else if (g.kind === 'console') enterConsole(g);
+    else if (g.kind === 'add' || g.kind === 'empty') { SFX.tap(); openLib('home'); } else launchNative(g);
+  }
+  function playWeb(g) {
+    leaving = true;
     SFX.play();
     const on = document.querySelector('.room i.on'), bg = on ? getComputedStyle(on).backgroundImage : '';
     try { sessionStorage.setItem('ttg.hub', '1'); } catch (e) { /* fine */ }
@@ -585,6 +832,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   }
   window.TTG_HOST = {
     safe,
+    native: !!NATIVE, pads: () => navigator.getGamepads(),
     padInUse: () => pad.on,
     ready(api) { const o = open; if (!o || !api || api.win !== o.frame.contentWindow) return; o.api = api; reveal(o); },
     back(info) { const o = open; if (!o || (info && info.win && info.win !== o.frame.contentWindow)) return; o.backMs = (info && info.ms) || 0; if (history.state && history.state.ttgGame) history.back(); else closeGame(); },
@@ -593,22 +841,60 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   addEventListener('popstate', () => { if (open) closeGame(); });
   addEventListener('resize', () => { if (open && open.api) { try { open.api.win.dispatchEvent(new Event('resize')); } catch (e) { /* fine */ } } });
   // The menu's sound beds fade out while a game plays, and come back after.
-  function bedsDown() { const c = snd.ctx; if (!c) return; for (const id in snd.beds) snd.beds[id].gain.setTargetAtTime(0, c.currentTime, 0.25); clearTimeout(snd.napT); snd.napT = setTimeout(() => { if (open) nap(); }, 1500); }
+  function bedsDown() { const c = snd.ctx; if (!c) return; for (const id in snd.beds) snd.beds[id].gain.setTargetAtTime(0, c.currentTime, 0.25); clearTimeout(snd.napT); snd.napT = setTimeout(() => { if (open || away) nap(); }, 1500); }
   function bedsUp() { clearTimeout(snd.napT); fadeBeds(); }
   // Fetch the game you're looking at ahead of time, so Play opens it quickly.
   const warmed = {}; let warmT = 0;
   function warm(g) { if (warmed[g.id] || !window.fetch) return; warmed[g.id] = true; fetch(frameUrl(g), { credentials: 'same-origin' }).catch(() => { warmed[g.id] = false; }); }
-  function buildIn(t) {
+  function buildIn(t) {   // t.dir 1: pieces come in from the left (going in), otherwise from the right (coming back)
     leaving = false;
     PARTS().forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = ''; });
     if (!t) { enter(); return; }
     const veil = document.createElement('div'); veil.className = 'veil'; veil.style.background = t.bg || '#1b1236'; if (!t.noVeil) $('fx').after(veil);
-    fxMix = 0;
-    if (!calm) PARTS().forEach((el, k) => el.animate([{ transform: `translateX(${SHIFT * 1.4}px)`, opacity: 0 }, { transform: 'translateX(0px)', opacity: 1 }], { duration: 520, delay: 60 + k * 70, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));
+    $('fx').getAnimations().forEach((a) => a.cancel()); fxMix = 0;
+    const from = (t.dir === 1 ? -1 : 1) * SHIFT * 1.4;
+    if (!calm) PARTS().forEach((el, k) => el.animate([{ transform: `translateX(${from}px)`, opacity: 0 }, { transform: 'translateX(0px)', opacity: 1 }], { duration: 520, delay: 60 + k * 70, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));
     if (t.noVeil) return;
     const fade = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 400 : 1500, delay: calm ? 0 : 520, easing: 'ease-in-out', fill: 'both' });
     fade.finished.then(() => veil.remove(), () => veil.remove());
   }
+  // Into a console: the menu slides off to the right and the console's games build in from the left. Back is the reverse.
+  function enterConsole(e) {
+    if (leaving) return; leaving = true; SFX.play();
+    const ms = takeApartHub(1);
+    setTimeout(() => {
+      view = { kind: 'console', con: e.con }; document.body.classList.add('inside');
+      const list = romList(e.con), lastId = store.get(lastKey());
+      showList(list, Math.max(0, list.findIndex((x) => x.id === lastId))); hintUpdate(); buildIn({ dir: 1, noVeil: true });
+    }, ms);
+  }
+  function exitConsole() {
+    if (leaving || view.kind !== 'console') return; leaving = true; SFX.close();
+    const con = view.con, ms = takeApartHub(-1);
+    setTimeout(() => {
+      view = { kind: 'main', con: null }; document.body.classList.remove('inside');
+      const list = buildMain(); showList(list, Math.max(0, list.findIndex((x) => x.id === 'con:' + con.id))); hintUpdate(); buildIn({ dir: -1, noVeil: true });
+    }, ms);
+  }
+  // A retro game or an app: the menu takes itself apart, then the Android app opens the emulator or app. Coming back builds it in again.
+  function launchNative(g) {
+    if (!NATIVE) return; leaving = true; SFX.play(); appEl.classList.add('busy');
+    const ms = takeApartHub(1); bedsDown();
+    setTimeout(() => {
+      let r = null;
+      try {
+        r = JSON.parse(g.kind === 'app' ? NATIVE.launchApp(g.pkg) : NATIVE.launchRom(JSON.stringify({ mode: g.con.emu.type, pkg: g.con.emu.pkg, core: g.con.emu.core || '', uri: g.rom.u, path: g.rom.p || '', name: g.rom.n })));
+      } catch (e) { r = null; }
+      if (r && r.ok) { away = { g, at: Date.now() }; return; }
+      comeBack(); SFX.bad(); toast((r && r.error) || 'That didn\'t open. Check the emulator in Your games.');
+    }, ms);
+  }
+  function comeBack() {
+    away = null; appEl.classList.remove('busy');
+    if (sel >= 0) setPos(sel); buildIn({ dir: -1, noVeil: true }); wakeSoon(); bedsUp(); pad.seen = false;
+  }
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3600); }
+  $('backBtn').addEventListener('click', () => { SFX.tap(); exitConsole(); });
   function arrive() {
     let t = null; try { t = JSON.parse(sessionStorage.getItem('ttg.trip') || 'null'); if (t && t.dir === -1) sessionStorage.removeItem('ttg.trip'); } catch (e) { t = null; }
     buildIn(t && t.dir === -1 && Date.now() - t.at < 8000 ? t : null);
@@ -620,8 +906,10 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- keyboard and controllers ---------- */
   addEventListener('keydown', (e) => {
     if (titleUp) { if (!e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); start(); } return; }
-    if (open) return;
+    if (open || away) return;
+    if ($('libSheet').classList.contains('open')) { if (e.key === 'Escape') libBackStep(); return; }
     if ($('sheet').classList.contains('open')) { if (e.key === 'Escape') closeSheet(); return; }
+    if ((e.key === 'Escape' || e.key === 'Backspace') && view.kind === 'console') { e.preventDefault(); exitConsole(); return; }
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(sel - 1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); go(sel + 1); }
     else if ((e.key === 'Enter' || e.key === ' ') && (document.activeElement === document.body || document.activeElement === shelf)) { e.preventDefault(); play(); }
@@ -640,7 +928,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   const HINT0 = $('hint').textContent;
   function hintUpdate() {
     const ph = (k, t) => `<span class="ph">${padIcon(k)}${t}</span>`;
-    if (pad.on) $('hint').innerHTML = ph('DPAD', 'Pick') + ph('S', 'Play') + ph('N', 'Settings');
+    if (pad.on) $('hint').innerHTML = ph('DPAD', 'Pick') + ph('S', 'Play') + (view.kind === 'console' ? ph('E', 'Back') : ph('N', 'Settings'));
     else $('hint').textContent = HINT0;
   }
   function padUse() { if (pad.on) return; pad.on = true; document.documentElement.classList.add('pad'); hintUpdate(); }
@@ -650,7 +938,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   addEventListener('keydown', () => padOff(), true);
   function padGet() { let ps = []; try { ps = navigator.getGamepads ? navigator.getGamepads() : []; } catch (e) { return null; } let best = null; for (const p of ps || []) if (p && p.connected !== false && (!best || p.timestamp > best.timestamp)) best = p; return best; }
   function padFocus(el) { if (pad.focus && pad.focus !== el) pad.focus.classList.remove('padfocus'); pad.focus = el; if (el) { el.classList.add('padfocus'); try { el.scrollIntoView({ block: 'nearest' }); } catch (e) { /* fine */ } } }
-  function padTargets() { return [...$('sheet').querySelectorAll('button, textarea, label.switch')].filter((el) => !el.disabled && el.getClientRects().length && !el.closest('[hidden]')); }
+  function padTargets(root) { return [...root.querySelectorAll('button, textarea, input.txt, label.switch')].filter((el) => !el.disabled && el.getClientRects().length && !el.closest('[hidden]')); }
   function padMove(list, dir) {   // the closest control in that direction, staying in the same row or column when there is one
     const cur = pad.focus; if (!cur) { padFocus(list[0] || null); return; }
     const r0 = cur.getBoundingClientRect(), x0 = r0.left + r0.width / 2, y0 = r0.top + r0.height / 2; let best = null, bs = 1e9;
@@ -664,7 +952,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     }
     if (best) { padFocus(best); SFX.tap(); }
   }
-  function padPress(el) { if (!el) return; if (el.tagName === 'TEXTAREA') { el.focus(); return; } el.click(); }
+  function padPress(el) { if (!el) return; if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') { el.focus(); return; } el.click(); }
   function pollPads(now) {
     requestAnimationFrame(pollPads);
     if (open) { pad.prev = []; return; }   // the game has the controller now
@@ -684,18 +972,21 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       : sx || sy ? (Math.abs(sx) > Math.abs(sy) ? (sx > 0 ? 'right' : 'left') : sy > 0 ? 'down' : 'up') : '';
     let dirHit = '';
     if (dir !== pad.dir) { pad.dir = dir; pad.dirAt = now + 380; dirHit = dir; } else if (dir && now >= pad.dirAt) { pad.dirAt = now + 200; dirHit = dir; }
-    if ($('sheet').classList.contains('open')) {
-      const list = padTargets();
+    const sh = $('libSheet').classList.contains('open') ? $('libSheet') : $('sheet').classList.contains('open') ? $('sheet') : null;
+    if (sh) {
+      const list = padTargets(sh);
       if (pad.focus && !list.includes(pad.focus)) padFocus(null);
-      if (!pad.focus && list.length) padFocus(list.find((el) => el.id === 'pasteBtn') || list[0]);
+      if (!pad.focus && list.length) padFocus(list.find((el) => el.id === 'pasteBtn' || el.classList.contains('main')) || list[0]);
       if (dirHit) padMove(list, dirHit);
       if (hit(PB.S)) { pad.hold.add(PB.S); padPress(pad.focus); }
-      if (hit(PB.E) || hit(PB.N) || hit(PB.BACK)) { closeSheet(); padFocus(null); }
-    } else if (!leaving) {
+      if (hit(PB.E) || hit(PB.N) || hit(PB.BACK)) { if (sh === $('libSheet')) libBackStep(); else closeSheet(); padFocus(null); }
+    } else if (!leaving && !away) {
       if (pad.focus) padFocus(null);
-      if (dirHit === 'left' || hit(PB.LB)) go(sel - 1);
-      else if (dirHit === 'right' || hit(PB.RB)) go(sel + 1);
+      const jumpN = N > 12 ? 5 : 1;   // the bumpers skip ahead in a long list of games
+      if (dirHit === 'left') go(sel - 1); else if (dirHit === 'right') go(sel + 1);
+      else if (hit(PB.LB)) go(sel - jumpN); else if (hit(PB.RB)) go(sel + jumpN);
       if (hit(PB.S) || hit(PB.START)) { pad.hold.add(PB.S); play(); }
+      else if (hit(PB.E) && view.kind === 'console') exitConsole();
       else if (hit(PB.N) || hit(PB.BACK)) openSheet();
     }
     pad.prev = cur;
@@ -708,6 +999,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   const sheet = $('sheet');
   function openSheet() { sheet.classList.add('open'); $('setDone').focus(); SFX.open(); }
   function closeSheet() { sheet.classList.remove('open'); $('setBtn').focus(); SFX.close(); }
+  function closeSheetQuiet() { sheet.classList.remove('open'); }
   $('setBtn').addEventListener('click', openSheet);
   $('setDone').addEventListener('click', closeSheet);
   sheet.addEventListener('click', (e) => { if (e.target === sheet) closeSheet(); });
@@ -753,7 +1045,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   $('pasteBox').addEventListener('input', () => show($('pasteBox').value));
   $('pasteBtn').addEventListener('click', async () => {
     let text = '';
-    try { text = await navigator.clipboard.readText(); } catch (e) { text = ''; }
+    try { text = NATIVE && NATIVE.paste ? NATIVE.paste() || '' : await navigator.clipboard.readText(); } catch (e) { text = ''; }
     if (!text || !text.includes('TTGSAVE1:')) { $('importMsg').textContent = text ? 'What you copied isn\'t a save. In the old app, tap Copy my save first.' : 'Tap and hold in the box below, then tap Paste.'; $('importMsg').classList.toggle('bad', !!text); $('pasteBox').focus(); return; }
     $('pasteBox').value = text.length > 400 ? text.slice(0, 400) + '…' : text; show(text);
   });
@@ -774,6 +1066,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   });
   // iPhones are picky about copying, so copy two ways while the tap still counts.
   function copyText(text) {
+    if (NATIVE && NATIVE.copy) { try { return Promise.resolve(!!NATIVE.copy(text)); } catch (e) { /* try the other ways */ } }
     let ok = false;
     try {
       const was = document.activeElement, ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
@@ -793,10 +1086,185 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   });
   $('saveFileBtn').addEventListener('click', () => {
     if (!hasSaves()) { $('copyMsg').textContent = 'No saves here yet. Play a game first!'; return; }
+    if (NATIVE && NATIVE.saveFile) { let ok = false; try { ok = !!NATIVE.saveFile('ttgamer15-games-save.txt', exportAll()); } catch (e) { ok = false; } $('copyMsg').textContent = ok ? 'Saved a file in your Downloads folder. Load it in TtGamer15 Games on your other device.' : 'Couldn\'t save the file. Try Copy my saves instead.'; (ok ? SFX.good : SFX.bad)(); return; }
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([exportAll()], { type: 'text/plain' }));
     a.download = 'ttgamer15-games-save.txt'; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
     $('copyMsg').textContent = 'Saved a file. Load it in TtGamer15 Games on your other device.'; SFX.good();
   });
+
+  /* ---------- the Android app ---------- */
+  // The app sends its controller here (so it works the same in the menu and in every game), asks about the back button,
+  // and says when you come back from an emulator. Slow jobs (folders, app lists) answer later through done().
+  const waits = {}; let waitN = 0;
+  const ask = (fn) => new Promise((res) => { const id = 'w' + (++waitN); waits[id] = res; try { fn(id); } catch (e) { delete waits[id]; res(null); } });
+  const NP = { b: new Array(17).fill(0), ax: [0, 0, 0, 0], t: 0, live: false };
+  const npPad = () => ({ id: 'TtGamer15 controller (STANDARD GAMEPAD)', index: 0, connected: true, mapping: 'standard', timestamp: NP.t, axes: NP.ax.slice(), buttons: NP.b.map((v) => ({ pressed: v > 0.5, touched: v > 0, value: v })) });
+  if (NATIVE) {
+    const real = navigator.getGamepads ? navigator.getGamepads.bind(navigator) : () => [];
+    try { Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: () => { let r = []; try { r = [...(real() || [])].filter(Boolean); } catch (e) { r = []; } return NP.live ? [npPad(), ...r] : r; } }); } catch (e) { /* fine */ }
+  }
+  function npSeen() {
+    NP.t = performance.now(); if (NP.live) return; NP.live = true;
+    dispatchEvent(new Event('gamepadconnected'));
+    if (open && open.api) { try { open.api.win.dispatchEvent(new Event('gamepadconnected')); } catch (e) { /* fine */ } }
+  }
+  window.TTGNative = {
+    pad(i, down) { NP.b[i] = down ? 1 : 0; npSeen(); },
+    trig(i, v) { NP.b[i] = v; npSeen(); },
+    axes(x, y, rx, ry) { NP.ax = [x, y, rx, ry]; npSeen(); },
+    done(id, json) { const r = waits[id]; delete waits[id]; let v = null; try { v = JSON.parse(json); } catch (e) { v = null; } if (r) r(v); },
+    // the phone's back button or gesture: step back one thing; false means there's nothing left to step back from
+    back() {
+      if (titleUp) { start(); return true; }
+      if ($('libSheet').classList.contains('open')) { libBackStep(); return true; }
+      if ($('sheet').classList.contains('open')) { closeSheet(); return true; }
+      if (open) {
+        let r = 'none'; try { const w = open.api && open.api.win; if (w && w.ttgBackKey) r = w.ttgBackKey(); } catch (e) { r = 'none'; }
+        if (r === 'none') { if (history.state && history.state.ttgGame) history.back(); else closeGame(); }
+        return true;
+      }
+      if (away || leaving) return true;
+      if (view.kind === 'console') { exitConsole(); return true; }
+      return false;
+    },
+    resumed() { if (away) comeBack(); else wakeSoon(); },
+    paused() { nap(); },
+  };
+
+  /* ---------- Your games (Android app): consoles, apps, home screen ---------- */
+  const lib = $('libSheet');
+  let libNow = 'home', appsMode = 'add', allApps = null, gridMade = false;
+  const draft = { sys: '', folder: null, games: [], emu: null };
+  const extsOf = (k) => (SYS[k] || SYS.other).ext.split(' ').filter(Boolean);
+  // games are kept in A to Z order by their names (without the (USA) bits)
+  const toGames = (list) => list.map((g) => ({ n: g.name, u: g.uri, p: g.path || '' })).sort((a, b) => niceTitle(a.n).localeCompare(niceTitle(b.n), undefined, { sensitivity: 'base', numeric: true }));
+  function libView(name) { libNow = name; for (const v of lib.querySelectorAll('[data-view]')) v.hidden = v.dataset.view !== name; lib.querySelector('.panel').scrollTop = 0; padFocus(null); }
+  function openLib(name = 'home') {
+    if (!NATIVE) return; closeSheetQuiet(); makeGrid(); renderLib(); libView(name); lib.classList.add('open'); SFX.open();
+  }
+  function closeLib() { lib.classList.remove('open'); padFocus(null); SFX.close(); refreshMain(); }
+  function libBackStep() { const b = libNow === 'apps' ? $('appsBack') : lib.querySelector(`[data-view="${libNow}"] .backlink`); if (b) b.click(); else closeLib(); }
+  // after adding or removing things, the main menu catches up (and keeps your place)
+  function refreshMain() {
+    if (view.kind !== 'main') return;
+    const id = LIST[sel] && LIST[sel].id, list = buildMain();
+    if (list.length === LIST.length && list.every((e, i) => e.id === LIST[i].id && e.blurb === LIST[i].blurb)) return;
+    showList(list, Math.max(0, list.findIndex((x) => x.id === id))); enter();
+  }
+  function rowEl(icon, title, sub, btns) {
+    const r = document.createElement('div'); r.className = 'lrow'; if (icon) r.append(icon);
+    const nm = document.createElement('div'); nm.className = 'nm'; const b = document.createElement('b'); b.textContent = title; const sm = document.createElement('small'); sm.textContent = sub; nm.append(b, sm); r.append(nm);
+    for (const [label, fn] of btns) { const x = document.createElement('button'); x.type = 'button'; x.className = 'btn'; x.textContent = label; x.addEventListener('click', () => fn(x)); r.append(x); }
+    return r;
+  }
+  const svgEl = (html) => document.createRange().createContextualFragment(html).firstChild;
+  const imgEl = (src) => { if (!src) return null; const im = document.createElement('img'); im.alt = ''; im.src = src; return im; };
+  // Remove asks "Sure?" first, like Exit in Noodle Bots
+  const sure = (btn, label, fn) => { if (btn.dataset.sure) { fn(); return; } btn.dataset.sure = '1'; btn.textContent = 'Sure?'; setTimeout(() => { if (btn.isConnected) { delete btn.dataset.sure; btn.textContent = label; } }, 3000); };
+  function renderLib() {
+    const cr = $('conRows'); cr.textContent = '';
+    if (!LIB.consoles.length) cr.innerHTML = '<p class="small">No consoles yet.</p>';
+    for (const c of LIB.consoles) {
+      const th = sysTheme(c.sys);
+      cr.append(rowEl(svgEl(glyph((SYS[c.sys] || SYS.other).glyph, th.accent, th.deep, '')), conName(c), `${plural(c.games.length, 'game')} · ${c.emu.label}${c.folder && c.folder.label ? ' · ' + c.folder.label : ''}`,
+        [['Rescan', (b) => rescan(c, b)], ['Remove', (b) => sure(b, 'Remove', () => { LIB.consoles = LIB.consoles.filter((x) => x !== c); saveLib(); renderLib(); toast(conName(c) + ' removed.'); })]]));
+    }
+    const ar = $('appRows'); ar.textContent = '';
+    if (!LIB.apps.length) ar.innerHTML = '<p class="small">No apps yet.</p>';
+    for (const a of LIB.apps) ar.append(rowEl(imgEl(appIcon(a.pkg)), a.name, 'App', [['Remove', (b) => sure(b, 'Remove', () => { LIB.apps = LIB.apps.filter((x) => x !== a); saveLib(); renderLib(); })]]));
+    let info = {}; try { info = JSON.parse(NATIVE.info()) || {}; } catch (e) { info = {}; }
+    $('homeText').textContent = info.home ? 'TtGamer15 Games is your home screen right now. To switch back, pick another home app.' : 'Make TtGamer15 Games the first thing you see when this device turns on. You can switch back any time.';
+  }
+  async function rescan(c, btn) {
+    btn.textContent = 'Looking…';
+    const games = await ask((id) => NATIVE.scan(id, c.folder.uri, JSON.stringify(extsOf(c.sys))));
+    if (!Array.isArray(games)) { toast('Couldn\'t read that folder. Remove the console and add it again.'); renderLib(); return; }
+    c.games = toGames(games); saveLib(); renderLib(); toast(`${conName(c)}: ${plural(c.games.length, 'game')}.`);
+  }
+  function makeGrid() {
+    if (gridMade) return; gridMade = true;
+    for (const [k, s] of Object.entries(SYS)) {
+      const th = sysTheme(k), b = document.createElement('button'); b.type = 'button'; b.className = 'btn';
+      b.append(svgEl(glyph(s.glyph, th.accent, th.deep, '')), s.name);
+      b.addEventListener('click', () => { Object.assign(draft, { sys: k, folder: null, games: [], emu: null }); $('folderHead').textContent = `Where are your ${s.name} games?`; $('folderMsg').textContent = ''; $('folderNext').hidden = true; libView('folder'); });
+      $('sysGrid').append(b);
+    }
+  }
+  $('addConBtn').addEventListener('click', () => { Object.assign(draft, { sys: '', folder: null, games: [], emu: null }); libView('sys'); });
+  $('folderBtn').addEventListener('click', async () => {
+    const f = await ask((id) => NATIVE.pickFolder(id)); if (!f || !f.uri) return;
+    draft.folder = f; $('folderMsg').textContent = 'Looking for games…';
+    const games = await ask((id) => NATIVE.scan(id, f.uri, JSON.stringify(extsOf(draft.sys))));
+    draft.games = Array.isArray(games) ? games : [];
+    const n = draft.games.length, s = SYS[draft.sys], where = f.label || 'that folder';
+    $('folderMsg').textContent = n ? `Found ${plural(n, 'game')} in ${where}.` : `No ${s.name} games in ${where}${s.ext ? ` (looking for .${s.ext.split(' ').join(', .')} files)` : ''}. You can add it anyway and rescan later.`;
+    $('folderNext').hidden = false; padFocus(null); (n ? SFX.good : SFX.tap)();
+  });
+  $('folderNext').addEventListener('click', () => showEmu());
+  function pickBtn(o) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn appbtn pick'; const im = imgEl(appIcon(o.pkg)); if (im) b.append(im);
+    const sp = document.createElement('span'); sp.textContent = o.label; const sm = document.createElement('small'); sm.textContent = o.sub || ''; sp.append(sm); b.append(sp);
+    b.addEventListener('click', () => chooseEmu(o, b)); return b;
+  }
+  async function showEmu() {
+    libView('emu'); const list = $('emuList'), s = SYS[draft.sys]; list.textContent = ''; $('emuMsg').textContent = '';
+    let ra = ''; try { ra = NATIVE.retroarch() || ''; } catch (e) { ra = ''; }
+    if (!allApps) allApps = (await ask((id) => NATIVE.apps(id))) || [];
+    const opts = [];
+    if (ra) opts.push({ type: 'retroarch', pkg: ra, label: 'RetroArch', sub: s.core ? 'Recommended' : 'Type the core below', core: s.core });
+    for (const a of allApps) if (a.emu && !/retroarch/i.test(a.pkg)) opts.push({ type: 'app', pkg: a.pkg, label: a.label, sub: 'Emulator' });
+    if (draft.emu && !opts.some((o) => o.pkg === draft.emu.pkg && o.type === draft.emu.type)) opts.unshift({ ...draft.emu, sub: 'Your pick' });
+    const btns = opts.map((o) => { const b = pickBtn(o); list.append(b); return b; });
+    const other = document.createElement('button'); other.type = 'button'; other.className = 'btn appbtn'; other.textContent = 'Another app…'; other.addEventListener('click', () => openApps('emu')); list.append(other);
+    const at = draft.emu ? opts.findIndex((o) => o.pkg === draft.emu.pkg && o.type === draft.emu.type) : 0;
+    if (opts.length) chooseEmu(opts[Math.max(0, at)], btns[Math.max(0, at)]); else { draft.emu = null; $('coreRow').hidden = true; }
+    $('emuText').textContent = opts.length ? 'Pick the emulator that runs these games.' : 'No emulators found yet. Install RetroArch or an emulator app, or pick any app below.';
+    $('conSave').textContent = `Add ${s.name}`;
+  }
+  function chooseEmu(o, b) {
+    draft.emu = { type: o.type, pkg: o.pkg, label: o.label, core: o.core || '' };
+    for (const x of $('emuList').querySelectorAll('.pick')) x.classList.toggle('on', x === b);
+    $('coreRow').hidden = o.type !== 'retroarch'; if (o.type === 'retroarch') $('coreIn').value = draft.emu.core;
+  }
+  $('conSave').addEventListener('click', () => {
+    if (!draft.emu) { $('emuMsg').textContent = 'Pick an emulator first.'; SFX.bad(); return; }
+    const emu = { ...draft.emu };
+    if (emu.type === 'retroarch') { emu.core = $('coreIn').value.trim().replace(/_libretro(_android)?\.so$/, ''); if (!emu.core) { $('emuMsg').textContent = 'Type the RetroArch core, like mgba.'; SFX.bad(); return; } emu.label = `RetroArch (${emu.core})`; }
+    const f = draft.folder || {}, c = { id: Date.now().toString(36), sys: draft.sys, folder: { uri: f.uri || '', path: f.path || '', label: f.label || '' }, emu, games: toGames(draft.games) };
+    LIB.consoles.push(c); saveLib(); SFX.good(); toast(`${conName(c)} added with ${plural(c.games.length, 'game')}.`); renderLib(); libView('home');
+  });
+  async function openApps(mode) {
+    appsMode = mode; libView('apps'); $('appsHead').textContent = mode === 'emu' ? 'Which app plays them?' : 'Add an app'; $('appFind').value = '';
+    $('appList').innerHTML = '<p class="small">Loading your apps…</p>';
+    if (!allApps) allApps = (await ask((id) => NATIVE.apps(id))) || [];
+    drawApps();
+  }
+  function drawApps() {
+    const q = $('appFind').value.trim().toLowerCase(), list = $('appList'), have = new Set(LIB.apps.map((a) => a.pkg)); list.textContent = '';
+    const shown = allApps.filter((a) => !q || a.label.toLowerCase().includes(q));
+    if (!shown.length) list.innerHTML = '<p class="small">No apps found.</p>';
+    const icons = [];
+    for (const a of shown) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn appbtn'; const im = document.createElement('img'); im.alt = ''; b.append(im);
+      const sp = document.createElement('span'); sp.textContent = a.label; const sm = document.createElement('small'); sm.textContent = appsMode === 'add' && have.has(a.pkg) ? 'Already in your games' : a.emu ? 'Emulator' : ''; sp.append(sm); b.append(sp);
+      b.addEventListener('click', () => pickApp(a)); list.append(b); icons.push([im, a.pkg]);
+    }
+    let k = 0; const more = () => { const end = Math.min(icons.length, k + 8); for (; k < end; k++) { const u = appIcon(icons[k][1]); if (u) icons[k][0].src = u; } if (k < icons.length && lib.classList.contains('open')) setTimeout(more, 16); }; more();
+  }
+  $('appFind').addEventListener('input', drawApps);
+  function pickApp(a) {
+    if (appsMode === 'emu') { draft.emu = { type: 'app', pkg: a.pkg, label: a.label, core: '' }; showEmu(); return; }
+    if (!LIB.apps.some((x) => x.pkg === a.pkg)) { LIB.apps.push({ pkg: a.pkg, name: a.label }); saveLib(); }
+    SFX.good(); toast(a.label + ' added.'); renderLib(); libView('home');
+  }
+  $('addAppBtn').addEventListener('click', () => openApps('add'));
+  $('appsBack').addEventListener('click', () => (appsMode === 'emu' ? showEmu() : libView('home')));
+  for (const b of lib.querySelectorAll('.backlink[data-to]')) b.addEventListener('click', () => libView(b.dataset.to));
+  $('homeBtn').addEventListener('click', () => { try { NATIVE.homeSettings(); } catch (e) { /* fine */ } });
+  $('libDone').addEventListener('click', closeLib);
+  lib.addEventListener('click', (e) => { if (e.target === lib) closeLib(); });
+  $('libEntry').hidden = !NATIVE; $('a2hs').hidden = !!NATIVE;
+  $('libOpenBtn').addEventListener('click', () => openLib('home'));
 
   /* ---------- fit the screen ---------- */
   // Keep the app exactly as tall as the screen the phone gives it (an iPhone Home Screen bug can leave a strip at the bottom).
@@ -845,10 +1313,13 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   }
   titleEl.addEventListener('click', start);
 
-  go(last >= 0 ? last : 0, { instant: true }); if (!showTitle()) arrive(); setTimeout(() => { ready = true; }, 400);
+  const MAIN0 = buildMain(), last0 = store.get('ttg.last');
+  showList(MAIN0, Math.max(0, MAIN0.findIndex((x) => x.id === last0))); if (!showTitle()) arrive(); setTimeout(() => { ready = true; }, 400);
   // for the site's own checks
-  window.TTG_HUB = { sound: () => ({ state: snd.ctx && snd.ctx.state, beds: Object.keys(snd.beds), made: Object.keys(BUF).filter((k) => BUF[k]).length, of: Object.keys(MAKE).length }), pos: () => pos, open: () => open && { id: open.g.id, shown: open.shown, live: open.live }, title: () => titleUp };
+  window.TTG_HUB = { sound: () => ({ state: snd.ctx && snd.ctx.state, beds: Object.keys(snd.beds), made: Object.keys(BUF).filter((k) => BUF[k]).length, of: Object.keys(MAKE).length }), pos: () => pos, open: () => open && { id: open.g.id, shown: open.shown, live: open.live }, title: () => titleUp, list: () => LIST.map((e) => e.id), view: () => view.kind, away: () => !!away };
   if (/[?&]settings=1/.test(location.search)) openSheet();
+  // works offline after the first visit
+  if ('serviceWorker' in navigator) addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
 })();
 </script>
 </body>
