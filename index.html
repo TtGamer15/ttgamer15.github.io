@@ -112,6 +112,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 @keyframes t-pulse{50%{transform:scale(1.06)}}
 @media (prefers-reduced-motion:reduce){.t-icon,.t-go{animation:none}}
 
+/* Controllers: a highlight shows what A will press, and the hint shows the buttons. */
+.pad .padfocus{outline:4px solid var(--accent);outline-offset:3px;box-shadow:0 0 0 9px var(--ring)}
+.pad label.switch.padfocus{border-radius:14px}
+.hint .ph{display:inline-flex;align-items:center;gap:5px;margin:0 7px;white-space:nowrap}
+.hint .padico{width:20px;height:20px;flex:none}
+
 /* Settings sheet */
 .sheet{position:fixed;inset:0;z-index:5;display:grid;align-items:end;justify-items:center;background:rgba(35,22,74,.35);opacity:0;pointer-events:none;transition:opacity .25s}
 .sheet.open{opacity:1;pointer-events:auto}
@@ -526,7 +532,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '4';   // bump when the games change, so phones get the new copies
+  const V = '5';   // bump when the games change, so phones get the new copies
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
   const probe = document.createElement('div'); probe.className = 'probe'; document.body.append(probe);
@@ -572,12 +578,14 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       buildIn({ dir: -1, noVeil: true });   // the menu slides back in from the right, over the game
       $('fx').getAnimations().forEach((a) => a.cancel()); fxMix = 0;
       wakeSoon(); bedsUp();
+      pad.seen = false; try { window.focus(); } catch (e) { /* fine */ }   // the controller comes back to the menu; a button still down from the game won't act here
       // then the game's colors slowly fade into the menu's
       setTimeout(() => { o.frame.classList.add('fading'); o.frame.classList.remove('shown'); setTimeout(() => o.frame.remove(), 1600); }, calm ? 0 : 420);
     }, calm ? 0 : ms * 0.5);
   }
   window.TTG_HOST = {
     safe,
+    padInUse: () => pad.on,
     ready(api) { const o = open; if (!o || !api || api.win !== o.frame.contentWindow) return; o.api = api; reveal(o); },
     back(info) { const o = open; if (!o || (info && info.win && info.win !== o.frame.contentWindow)) return; o.backMs = (info && info.ms) || 0; if (history.state && history.state.ttgGame) history.back(); else closeGame(); },
     home() { if (open) { open.backMs = 0; closeGame(); } },
@@ -618,31 +626,82 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     else if (e.key === 'ArrowRight') { e.preventDefault(); go(sel + 1); }
     else if ((e.key === 'Enter' || e.key === ' ') && (document.activeElement === document.body || document.activeElement === shelf)) { e.preventDefault(); play(); }
   });
-  const pad = { held: {}, next: 0, dir: 0 };
-  function pollPads(now) {
-    if (open) { requestAnimationFrame(pollPads); return; }
-    if (titleUp) { const ps0 = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; if (ps0.some((g) => g.buttons.some((b) => b.pressed))) start(); requestAnimationFrame(pollPads); return; }
-    const ps = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
-    if (ps.length) {
-      $('hint').textContent = 'Left and right to pick · A to play';
-      let x = 0; const press = {};
-      for (const p of ps) {
-        const ax = p.axes[0] || 0; if (Math.abs(ax) > 0.5) x = Math.sign(ax);
-        if (p.buttons[14] && p.buttons[14].pressed) x = -1; if (p.buttons[15] && p.buttons[15].pressed) x = 1;
-        for (const k of [0, 9, 3, 1]) if (p.buttons[k] && p.buttons[k].pressed) press[k] = true;
-      }
-      if (x && now >= pad.next && !$('sheet').classList.contains('open')) { go(sel + x); pad.next = now + (pad.dir === x ? 220 : 380); }
-      pad.dir = x; if (!x) pad.next = 0;
-      for (const k of [0, 9, 3, 1]) {
-        if (press[k] && !pad.held[k]) {
-          if ($('sheet').classList.contains('open')) { if (k === 1 || k === 3) closeSheet(); }
-          else if (k === 0 || k === 9) play(); else if (k === 3) openSheet();
-        }
-        pad.held[k] = !!press[k];
-      }
-    }
-    requestAnimationFrame(pollPads);
+  /* Controllers. On the menu: the d-pad, left stick or bumpers pick a game, A or Start plays, Y or View opens Settings.
+     In Settings: move with the d-pad or stick, A picks, B closes. Works with any controller the phone or computer sees. */
+  const PB = { S: 0, E: 1, W: 2, N: 3, LB: 4, RB: 5, BACK: 8, START: 9, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
+  const pad = { prev: [], hold: new Set(), seen: false, dir: '', dirAt: 0, focus: null, on: false };
+  function padIcon(k) {
+    let inner = '';
+    if ('NESW'.includes(k)) { const at = { N: [12, 5], E: [19, 12], S: [12, 19], W: [5, 12] }; for (const [n, [x, y]] of Object.entries(at)) inner += n === k ? `<circle cx="${x}" cy="${y}" r="3.9" fill="currentColor"/>` : `<circle cx="${x}" cy="${y}" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".5"/>`; }
+    else if (k === 'DPAD') inner = '<path d="M9 2.5h6v6.5h6.5v6H15v6.5H9V15H2.5V9H9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.5 12l2-1.6v3.2zM18.5 12l-2-1.6v3.2z" fill="currentColor"/>';
+    return `<svg class="padico" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
   }
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('hint').textContent = 'Use the arrows or ← → keys to pick a game';
+  const HINT0 = $('hint').textContent;
+  function hintUpdate() {
+    const ph = (k, t) => `<span class="ph">${padIcon(k)}${t}</span>`;
+    if (pad.on) $('hint').innerHTML = ph('DPAD', 'Pick') + ph('S', 'Play') + ph('N', 'Settings');
+    else $('hint').textContent = HINT0;
+  }
+  function padUse() { if (pad.on) return; pad.on = true; document.documentElement.classList.add('pad'); hintUpdate(); }
+  function padOff() { if (!pad.on) return; pad.on = false; document.documentElement.classList.remove('pad'); padFocus(null); hintUpdate(); }
+  // touching the screen, the mouse or the keyboard switches back
+  addEventListener('pointerdown', (e) => { if (e.pointerType) padOff(); }, true);
+  addEventListener('keydown', () => padOff(), true);
+  function padGet() { let ps = []; try { ps = navigator.getGamepads ? navigator.getGamepads() : []; } catch (e) { return null; } let best = null; for (const p of ps || []) if (p && p.connected !== false && (!best || p.timestamp > best.timestamp)) best = p; return best; }
+  function padFocus(el) { if (pad.focus && pad.focus !== el) pad.focus.classList.remove('padfocus'); pad.focus = el; if (el) { el.classList.add('padfocus'); try { el.scrollIntoView({ block: 'nearest' }); } catch (e) { /* fine */ } } }
+  function padTargets() { return [...$('sheet').querySelectorAll('button, textarea, label.switch')].filter((el) => !el.disabled && el.getClientRects().length && !el.closest('[hidden]')); }
+  function padMove(list, dir) {   // the closest control in that direction, staying in the same row or column when there is one
+    const cur = pad.focus; if (!cur) { padFocus(list[0] || null); return; }
+    const r0 = cur.getBoundingClientRect(), x0 = r0.left + r0.width / 2, y0 = r0.top + r0.height / 2; let best = null, bs = 1e9;
+    for (const el of list) {
+      if (el === cur) continue;
+      const r = el.getBoundingClientRect(), dx = r.left + r.width / 2 - x0, dy = r.top + r.height / 2 - y0;
+      const along = dir === 'right' ? dx : dir === 'left' ? -dx : dir === 'down' ? dy : -dy; if (along <= 6) continue;
+      const flat = dir === 'left' || dir === 'right', side = flat ? Math.abs(dy) : Math.abs(dx);
+      const overlap = flat ? r.bottom > r0.top + 4 && r.top < r0.bottom - 4 : r.right > r0.left + 4 && r.left < r0.right - 4;
+      const sc = along + side * 2.4 - (overlap ? 400 : 0); if (sc < bs) { bs = sc; best = el; }
+    }
+    if (best) { padFocus(best); SFX.tap(); }
+  }
+  function padPress(el) { if (!el) return; if (el.tagName === 'TEXTAREA') { el.focus(); return; } el.click(); }
+  function pollPads(now) {
+    requestAnimationFrame(pollPads);
+    if (open) { pad.prev = []; return; }   // the game has the controller now
+    const p = padGet(); if (!p) return;
+    const cur = p.buttons.map((b) => !!b && (b.pressed || b.value > 0.5));
+    const fresh = (i) => cur[i] && !pad.prev[i];
+    if (titleUp) { if (cur.some((v, i) => fresh(i))) { padUse(); cur.forEach((v, i) => { if (v) pad.hold.add(i); }); start(); } pad.prev = cur; pad.seen = true; return; }
+    if (!pad.seen) { pad.seen = true; cur.forEach((v, i) => { if (v) pad.hold.add(i); }); }   // a button already down (say, from a game) doesn't act by itself
+    for (const i of [...pad.hold]) if (!cur[i]) pad.hold.delete(i);
+    const hit = (i) => fresh(i) && !pad.hold.has(i);
+    const ax = p.axes || [], lx = ax[0] || 0, ly = ax[1] || 0, lm = Math.hypot(lx, ly);
+    if (cur.some(Boolean) || lm > 0.5) padUse();
+    if (!pad.on) { pad.prev = cur; return; }
+    const dx = (cur[PB.RIGHT] ? 1 : 0) - (cur[PB.LEFT] ? 1 : 0), dy = (cur[PB.DOWN] ? 1 : 0) - (cur[PB.UP] ? 1 : 0);
+    const sx = lm > 0.6 ? lx : 0, sy = lm > 0.6 ? ly : 0;
+    const dir = dx || dy ? (Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up')
+      : sx || sy ? (Math.abs(sx) > Math.abs(sy) ? (sx > 0 ? 'right' : 'left') : sy > 0 ? 'down' : 'up') : '';
+    let dirHit = '';
+    if (dir !== pad.dir) { pad.dir = dir; pad.dirAt = now + 380; dirHit = dir; } else if (dir && now >= pad.dirAt) { pad.dirAt = now + 200; dirHit = dir; }
+    if ($('sheet').classList.contains('open')) {
+      const list = padTargets();
+      if (pad.focus && !list.includes(pad.focus)) padFocus(null);
+      if (!pad.focus && list.length) padFocus(list.find((el) => el.id === 'pasteBtn') || list[0]);
+      if (dirHit) padMove(list, dirHit);
+      if (hit(PB.S)) { pad.hold.add(PB.S); padPress(pad.focus); }
+      if (hit(PB.E) || hit(PB.N) || hit(PB.BACK)) { closeSheet(); padFocus(null); }
+    } else if (!leaving) {
+      if (pad.focus) padFocus(null);
+      if (dirHit === 'left' || hit(PB.LB)) go(sel - 1);
+      else if (dirHit === 'right' || hit(PB.RB)) go(sel + 1);
+      if (hit(PB.S) || hit(PB.START)) { pad.hold.add(PB.S); play(); }
+      else if (hit(PB.N) || hit(PB.BACK)) openSheet();
+    }
+    pad.prev = cur;
+  }
+  addEventListener('gamepadconnected', () => { pad.seen = false; padUse(); });
+  addEventListener('gamepaddisconnected', () => { if (!padGet()) padOff(); });
   requestAnimationFrame(pollPads);
 
   /* ---------- settings: moving saves in and out ---------- */
@@ -747,7 +806,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   for (const ms of [100, 500, 1500]) setTimeout(fitApp, ms);
 
   /* ---------- start ---------- */
-  if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('hint').textContent = 'Use the arrows or ← → keys to pick a game';
+
   /* ---------- tap to start ---------- */
   // An iPhone won't play any sound until you tap the page (a swipe doesn't count), so the app opens on a title screen.
   // That first tap starts the music while the menu builds itself in. Skipped when sound is off or already allowed.
