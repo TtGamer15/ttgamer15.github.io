@@ -51,6 +51,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .gameframe.fading{transition:opacity 1.5s ease-in-out}
 .app.busy{pointer-events:none}
 .app.away{visibility:hidden}
+html.native .blurb{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.84)}
 .probe{position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 
 .app{position:fixed;left:0;right:0;top:0;z-index:1;height:var(--app-h,100%);display:grid;grid-template-rows:auto 1fr auto;padding:calc(env(safe-area-inset-top,0px) + 20px) 0 max(16px,env(safe-area-inset-bottom))}   /* + room below the iPhone's blur under the clock */
@@ -85,14 +86,14 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .gen .g-name{position:absolute;left:7cqw;right:7cqw;bottom:17cqw;margin:0;font-weight:700;font-size:10.5cqw;line-height:1.04;color:#fff;text-shadow:0 .9cqw 0 rgba(0,0,0,.28);text-wrap:balance;text-align:left}
 .gen .g-count{position:absolute;left:7cqw;bottom:6.5cqw;padding:1.6cqw 4.2cqw;border-radius:99px;background:rgba(255,255,255,.92);color:var(--c1);font-weight:700;font-size:5.2cqw}
 .gen .g-fan{position:absolute;left:0;right:0;top:8cqw;height:66cqw}
-.gen .g-fan img{position:absolute;top:2cqw;left:50%;width:42cqw;height:56cqw;object-fit:cover;border-radius:3cqw;border:1.2cqw solid #fff;box-shadow:0 2cqw 5cqw rgba(0,0,0,.3);background:#fff}
+.gen .g-fan img{position:absolute;top:2cqw;left:50%;width:42cqw;height:56cqw;object-fit:contain;border-radius:3cqw;filter:drop-shadow(0 2cqw 3cqw rgba(0,0,0,.3))}
 .gen .g-fan img:nth-child(1){transform:translateX(-96%) rotate(-11deg) translateY(5cqw)}
 .gen .g-fan img:nth-child(2){transform:translateX(-4%) rotate(11deg) translateY(5cqw)}
 .gen .g-fan img:nth-child(3){transform:translateX(-50%);z-index:1}
 .gen.has-art .g-glyph{display:none}
 .gen.rom .g-name{font-size:8.2cqw;bottom:7cqw}
 .gen .r-art{position:absolute;left:7cqw;right:7cqw;top:7cqw;bottom:30cqw;display:grid;place-items:center}
-.gen .r-art img{max-width:100%;max-height:100%;object-fit:contain;border-radius:2.4cqw;border:1.2cqw solid #fff;box-shadow:0 2.5cqw 6cqw rgba(0,0,0,.32);background:#fff}
+.gen .r-art img{max-width:100%;max-height:100%;object-fit:contain;border-radius:2.4cqw;filter:drop-shadow(0 2.5cqw 3.5cqw rgba(0,0,0,.32))}   /* box art often has see-through edges: no white backing, the shadow follows its shape */
 .gen .a-icon{position:absolute;left:50%;top:20cqw;width:46cqw;height:46cqw;transform:translateX(-50%);border-radius:23%;box-shadow:0 2cqw 0 rgba(0,0,0,.18),0 4cqw 9cqw rgba(0,0,0,.25);background:#fff}
 .gen.add{background:#fff8f2}
 .gen.add::before{inset:4cqw;border:1.4cqw dashed var(--c2);border-radius:5cqw;background:none}
@@ -136,7 +137,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   .top{grid-column:1/-1}
   :root{--card-w:min(260px,calc((var(--app-h,100vh) - 140px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) * .75))}
   .shelf{margin:-18px 0}
-  .stage{z-index:1;overflow-x:clip}   /* posters stay in their own half; the next one peeks in from the edge */
+  .stage{z-index:1;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 74%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 74%,transparent 100%)}   /* posters stay in their own half; the next one fades out at the edge instead of being cut off */
   .info{align-content:center;position:relative;z-index:2}   /* the next posters slide behind the words and Play, not over them */
   .arrow{display:none}
 }
@@ -396,6 +397,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   // Inside the TtGamer15 Games Android app, the app hands the page a bridge for consoles, emulators and apps.
   const NATIVE = (() => { try { return window.TTGAndroid || null; } catch (e) { return null; } })();
+  if (NATIVE) document.documentElement.classList.add('native');
 
   /* ---------- looks: every card has a theme (colors, floating bits, jingle and sound bed) ---------- */
   const NB_C = ['#ff9f43', '#52e5ff', '#ff6fae', '#a6e85b', '#ffd447', '#b28cff'], MAD_C = ['#e8bf4f', '#9fb3ff', '#ffffff', '#c7a0ff'];
@@ -867,7 +869,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '7';   // bump when the games change, so phones get the new copies
+  const V = '8';   // bump when the games change, so phones get the new copies
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
   const probe = document.createElement('div'); probe.className = 'probe'; document.body.append(probe);
@@ -955,9 +957,15 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     $('fx').getAnimations().forEach((a) => a.cancel()); fxMix = 0;
     const from = (t.dir === 1 ? -1 : 1) * SHIFT * 1.4;
     if (!calm) PARTS().forEach((el, k) => el.animate([{ transform: `translateX(${from}px)`, opacity: 0 }, { transform: 'translateX(0px)', opacity: 1 }], { duration: 520, delay: 60 + k * 70, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));
+    clearTimeout(buildIn.safe); buildIn.safe = setTimeout(unstick, 60 + PARTS().length * 70 + 900);
     if (t.noVeil) return;
     const fade = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 400 : 1500, delay: calm ? 0 : 520, easing: 'ease-in-out', fill: 'both' });
     fade.finished.then(() => veil.remove(), () => veil.remove());
+  }
+  // If an animation got stuck (Android can freeze them while another app has the screen), put every piece back in place.
+  function unstick() {
+    if (open || away || leaving) return;
+    for (const el of PARTS()) { if (el.getAnimations().some((a) => a.playState === 'running')) continue; el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
   }
   // Into a console: the menu slides off to the right and the console's games build in from the left. Back is the reverse.
   function enterConsole(e) {
@@ -992,7 +1000,14 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   }
   function comeBack() {
     away = null; appEl.classList.remove('busy');
+    freshPaint();
     if (sel >= 0) setPos(sel); buildIn({ dir: -1, noVeil: true }); wakeSoon(); bedsUp(); pad.seen = false;
+  }
+  // After an emulator has had the screen, Android's web view can come back with blank or white patches
+  // (pictures and panels it lost while away). Taking the menu off the page for a moment makes it draw everything again.
+  function freshPaint() {
+    appEl.style.display = 'none'; void appEl.offsetHeight; appEl.style.display = '';
+    for (const im of document.querySelectorAll('.app img')) { if (im.complete && im.naturalWidth && im.decode) im.decode().catch(() => {}); }
   }
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3600); }
   $('backBtn').addEventListener('click', () => { SFX.tap(); exitConsole(); });
