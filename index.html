@@ -639,7 +639,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   }
   const wakeSoon = () => { wake(); setTimeout(wake, 300); setTimeout(wake, 1000); };
   function nap() { const c = snd.ctx; if (c && snd.unlocked && c.state === 'running') { try { c.suspend(); } catch (e) { /* fine */ } } }
-  document.addEventListener('visibilitychange', () => { if (document.hidden) nap(); else wakeSoon(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) nap(); else { wakeSoon(); setTimeout(() => unstick(), 600); } });
   addEventListener('pagehide', nap); addEventListener('pageshow', wakeSoon); addEventListener('focus', wake);
   // sounds asked for while the sound is just waking up still play, the moment it's awake
   const live = () => snd.on && snd.ctx && (snd.ctx.state === 'running' || (snd.unlocked && performance.now() - (snd.waking || 0) < 1500));
@@ -747,7 +747,9 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   function fill(el, g) { el.dataset.shown = g.id; if (el.id === 'blurb') el.textContent = g.blurb; if (el.id === 'playWrap') land(g); }
   const looks = (el) => { const cs = getComputedStyle(el); return { transform: cs.transform === 'none' ? 'translateX(0px)' : cs.transform, opacity: cs.opacity }; };
   let flow = 0;
+  let swapAt = -1e9;   // when the words last started swapping to another game
   function settle(dir) {   // dir 1: the new game came from the right, so everything moves left
+    swapAt = performance.now();
     const me = ++flow, g = LIST[sel], rest = { transform: 'translateX(0px)', opacity: 1 };
     PIECES.forEach((el, k) => {
       const from = looks(el); el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = '';
@@ -869,7 +871,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '8';   // bump when the games change, so phones get the new copies
+  const V = '9';   // bump when the games change, so phones get the new copies
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
   const probe = document.createElement('div'); probe.className = 'probe'; document.body.append(probe);
@@ -962,11 +964,21 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     const fade = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 400 : 1500, delay: calm ? 0 : 520, easing: 'ease-in-out', fill: 'both' });
     fade.finished.then(() => veil.remove(), () => veil.remove());
   }
-  // If an animation got stuck (Android can freeze them while another app has the screen), put every piece back in place.
+  // Android's web view can freeze an animation halfway (after an emulator, or after a game closes), which leaves parts of
+  // the menu invisible: no posters, no top bar, or nothing but the background. Whenever the menu is just sitting there,
+  // anything still see-through is put straight back in place (and the words catch up with the game you're on).
   function unstick() {
-    if (open || away || leaving) return;
-    for (const el of PARTS()) { if (el.getAnimations().some((a) => a.playState === 'running')) continue; el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
+    if (open || away || leaving || drag.on || document.hidden) return;
+    const g = LIST[sel], swapping = performance.now() - swapAt < 1400;
+    for (const el of [...PARTS(), $('fx')]) {
+      if (+getComputedStyle(el).opacity > 0.99) continue;
+      if (swapping && PIECES.includes(el)) continue;
+      el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = '';
+      if (el === $('fx')) fxMix = 0;
+      if (g && PIECES.includes(el) && el.dataset.shown !== g.id) fill(el, g);
+    }
   }
+  setInterval(unstick, 1500);
   // Into a console: the menu slides off to the right and the console's games build in from the left. Back is the reverse.
   function enterConsole(e) {
     if (leaving) return; leaving = true; SFX.play();
@@ -999,9 +1011,13 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     }, ms);
   }
   function comeBack() {
-    away = null; appEl.classList.remove('busy');
+    away = null; appEl.classList.remove('busy'); leaving = false;
     freshPaint();
-    if (sel >= 0) setPos(sel); buildIn({ dir: -1, noVeil: true }); wakeSoon(); bedsUp(); pad.seen = false;
+    if (sel >= 0) setPos(sel);
+    // straight back in place, no build-in: right after an emulator, Android's web view can freeze animations halfway
+    for (const el of [...PARTS(), $('fx')]) { el.getAnimations().forEach((a) => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
+    fxMix = 0; wakeSoon(); bedsUp(); pad.seen = false;
+    setTimeout(unstick, 500); setTimeout(unstick, 1500);
   }
   // After an emulator has had the screen, Android's web view can come back with blank or white patches
   // (pictures and panels it lost while away). Taking the menu off the page for a moment makes it draw everything again.
