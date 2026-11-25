@@ -422,6 +422,8 @@ body.ramp .ttstats b{color:#ffd86a}
 
 .ver{margin:0;font-size:11px;font-weight:700;color:var(--ink2);opacity:.75;text-align:center}
 @media (max-height:760px) and (orientation:landscape){.menucard>.ver{grid-column:1}}
+/* in the park the controller hint is a small list under the ☰ button, clear of the tools along the bottom */
+.padhint.side{bottom:auto;flex-direction:column;align-items:flex-start;gap:3px;padding:6px 9px;font-size:11.5px}
 </style>
 </head>
 <body>
@@ -6398,7 +6400,7 @@ const Props = (() => {
   });
   $('setBtn').addEventListener('click', () => { auInit(); SFX.tap(); openSettings(); });
   for (const k of ['paleo', 'dino', 'ice']) $('eraPills').append(eraPill(k));
-  const GAME_VERSION = '1.4';   // shown under the title, so you can tell which copy a device has
+  const GAME_VERSION = '1.5';   // shown under the title, so you can tell which copy a device has
   // (on Android it also says which web view the device has and how it's drawing, to help fix problems)
   function showVer() { $('verTag').textContent = 'Version ' + GAME_VERSION + (GFX.simple ? ' · simple graphics' : '') + (GFX.android ? ' · web view ' + (GFX.chrome || '?') + (GFX.cpu ? '' : ' (no cpu)') : '') + (GFX.stuck ? ' · got stuck at: ' + GFX.stuckAt : ''); }
   showVer();
@@ -6413,6 +6415,10 @@ const Props = (() => {
     const scope = padScope();
     $('cursor').hidden = !!scope || !playing || mode === 'tt';
     $('padhint').hidden = !$('title').hidden && $('panel').hidden;   // not on the title screen, where it would peek out from behind the menu
+    // in the park it's a small list under the ☰ button, so it never covers the tools along the bottom
+    const side = !scope && playing && mode !== 'tt' && $('title').hidden && $('hud').style.visibility !== 'hidden';
+    $('padhint').classList.toggle('side', side);
+    $('padhint').style.top = side ? Math.round($('menuChip').getBoundingClientRect().bottom + 10) + 'px' : '';
     $('padhint').innerHTML = scope ? `<span>${dia('s')} Choose</span><span>${dia('e')} Back</span>` : mode === 'tt' ? `<span>${dia('s')} Eat / attack</span><span>${dia('e')} Roar</span><span>START Go home</span>` : `<span>${dia('s')} Use</span><span>${dia('e')} Back</span><span>LB/RB Tools</span><span>${dia('w')} Options</span><span>LT/RT Zoom</span>`;
     if (scope) { const cur = scope.querySelector('.pad-focus'); if (reset || !cur || !scope.contains(cur)) focusFirst(scope); }
   }
@@ -6503,6 +6509,7 @@ const Props = (() => {
   }
   // inside the TtGamer15 Games app, a controller in use there works here right away
   window.ttgPadWake = () => { pad.on = true; pad.fresh = true; pad.cx = W / 2; pad.cy = H / 2; padRefresh(true); };
+  addEventListener('resize', () => { if (pad.on) padRefresh(); });   // keeps the controller hint under the ☰ button
   // Android's back button inside TtGamer15 Games: step back one thing at a time; 'none' lets the app close the game
   window.ttgBackKey = () => {
     if (!$('panel').hidden) { closePanel(); return 'done'; }
