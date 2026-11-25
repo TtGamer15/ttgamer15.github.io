@@ -897,7 +897,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '18';   // bump when the games change, so phones get the new copies
+  const V = '19';   // bump when the games change, so phones get the new copies
   try { document.getElementById('menuVer').textContent = 'Menu version ' + V; } catch (e) { /* fine */ }
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
@@ -954,11 +954,28 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       $('fx').getAnimations().forEach((a) => a.cancel()); fxMix = 0;
       wakeSoon(); bedsUp();
       pad.seen = false; try { window.focus(); } catch (e) { /* fine */ }   // the controller comes back to the menu; a button still down from the game won't act here
-      // then the game's colors slowly fade into the menu's. In the Android app the menu is drawn fresh once the game is gone
-      // (not before: while a game is still on the page, the web view can run out of room, and the posters came back invisible).
-      setTimeout(() => {
+      // then the game's colors slowly fade into the menu's.
+      // In the Android app, fading the whole game out (with the menu on top) needs so much room that the web view drops the
+      // menu's pictures and everything but the background disappears. So there, a plain sheet in the menu's colors fades in
+      // over the game instead, the game is taken off the page underneath it, and the sheet fades away. Then the menu is
+      // drawn fresh.
+      if (NATIVE) {
+        const veil = document.createElement('div'); veil.className = 'veil'; veil.style.background = (() => { const on = document.querySelector('.room i.on'); return on ? getComputedStyle(on).backgroundImage : o.bg || '#ffe0e4'; })();
+        veil.style.opacity = '0'; veil.style.bottom = '-140px'; o.frame.after(veil);   // (as tall as the background, so it lines up)
+        const gone = () => {
+          o.frame.remove();
+          const out = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 0 : 400, fill: 'forwards' });
+          const done = () => { veil.remove(); setTimeout(redraw, 200); setTimeout(redraw, 1200); };
+          out.finished.then(done, done); setTimeout(() => { if (veil.isConnected) done(); }, 1500);   // in case the web view never finishes it
+        };
+        setTimeout(() => {
+          const fade = veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: calm ? 0 : 600, easing: 'ease-in-out', fill: 'forwards' });
+          let once = false; const go = () => { if (!once) { once = true; gone(); } };
+          fade.finished.then(go, go); setTimeout(go, 1300);
+        }, calm ? 0 : 250);
+      } else setTimeout(() => {
         o.frame.classList.add('fading'); o.frame.classList.remove('shown');
-        setTimeout(() => { o.frame.remove(); if (NATIVE) { setTimeout(redraw, 200); setTimeout(redraw, 1200); } }, 1600);
+        setTimeout(() => o.frame.remove(), 1600);
       }, calm ? 0 : 420);
     }, calm ? 0 : ms * 0.5);
   }
