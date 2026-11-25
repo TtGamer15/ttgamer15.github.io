@@ -2,6 +2,10 @@
   "name": "TtGamer15 Games",
   "short_name": "TtGamer15",
   "description": "All of TtGamer15's games in one place.",
+  "categories": [
+    "games",
+    "entertainment"
+  ],
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

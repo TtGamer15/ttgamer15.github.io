@@ -1,8 +1,8 @@
 // TtGamer15 Games keeps working without internet after the first visit (handy on a handheld):
 // pages and pictures come from the internet when it's there, and from a saved copy when it isn't.
-const CACHE = 'ttg-v1';
+const CACHE = 'ttg-v2';
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/apple-touch-icon.png', '/art/noodle-bots.jpg?v=3', '/art/museum-after-dark.jpg?v=3']).catch(() => {})).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/apple-touch-icon.png', '/art/noodle-bots.jpg?v=3', '/art/museum-after-dark.jpg?v=3', '/art/ancient-bird.jpg?v=1']).catch(() => {})).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
 self.addEventListener('fetch', (e) => {

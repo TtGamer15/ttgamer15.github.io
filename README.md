@@ -7,6 +7,7 @@ Play: https://ttgamer15.github.io/
 Games:
 - Noodle Bots (https://ttgamer15.github.io/noodle-bots/)
 - Museum After Dark (https://ttgamer15.github.io/Museum-After-Dark/)
+- Ancient Bird (https://ttgamer15.github.io/ancient-bird/)
 
 To add a game, add it to the `GAMES` list in `index.html` and put its cover (1040 x 1400) in `art/`.
 
