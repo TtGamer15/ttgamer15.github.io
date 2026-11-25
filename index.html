@@ -37,8 +37,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 
 /* The room: a bright sky in the selected game's colors, with little things floating in it. */
 .room{position:fixed;left:0;right:0;top:0;bottom:-140px;z-index:0;pointer-events:none}
-.room i{position:absolute;inset:0;opacity:0;transition:opacity 1.5s ease}
-.room i.on{opacity:1}
+.room i{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity 1.5s ease,visibility 0s linear 1.5s}   /* faded-out backgrounds aren't kept as pictures */
+.room i.on{opacity:1;visibility:visible;transition:opacity 1.5s ease,visibility 0s}
 /* a deeper color at the very top so the iPhone clock (always white in Home Screen apps) stays readable */
 .room i[data-game="nb"]{background:radial-gradient(70% 45% at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),linear-gradient(180deg,#ff9369 0%,#ffbfa0 9%,#ffe0e4 40%,#e4d8ff 100%)}
 .room i[data-game="mad"]{background:radial-gradient(70% 45% at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),linear-gradient(180deg,#6f79de 0%,#a3adff 9%,#dde3ff 40%,#ffe7b6 100%)}
@@ -885,7 +885,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '14';   // bump when the games change, so phones get the new copies
+  const V = '15';   // bump when the games change, so phones get the new copies
   try { document.getElementById('menuVer').textContent = 'Menu version ' + V; } catch (e) { /* fine */ }
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
@@ -939,8 +939,11 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       $('fx').getAnimations().forEach((a) => a.cancel()); fxMix = 0;
       wakeSoon(); bedsUp();
       pad.seen = false; try { window.focus(); } catch (e) { /* fine */ }   // the controller comes back to the menu; a button still down from the game won't act here
-      // then the game's colors slowly fade into the menu's
-      setTimeout(() => { o.frame.classList.add('fading'); o.frame.classList.remove('shown'); setTimeout(() => o.frame.remove(), 1600); }, calm ? 0 : 420);
+      // then the game's colors slowly fade into the menu's.
+      // In the Android app the game goes away at once instead: while a game is still on the page, the web view can run out of
+      // room for pictures, and the menu's posters come back invisible. Once it's gone, the menu is drawn fresh.
+      if (NATIVE) setTimeout(() => { o.frame.remove(); setTimeout(redraw, 200); setTimeout(redraw, 1200); }, calm ? 0 : 900);
+      else setTimeout(() => { o.frame.classList.add('fading'); o.frame.classList.remove('shown'); setTimeout(() => o.frame.remove(), 1600); }, calm ? 0 : 420);
     }, calm ? 0 : ms * 0.5);
   }
   window.TTG_HOST = {
@@ -997,7 +1000,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   // Android's web view can also keep showing an old, faded picture of a piece that is really back in place (so even
   // unstick sees nothing wrong). Taking each piece off the page for an instant makes the web view draw it fresh.
   function redraw() {
-    if (!NATIVE || open || away || leaving || drag.on || document.hidden) return;
+    if (!NATIVE || open || away || leaving || drag.on || document.hidden || document.querySelector('.gameframe')) return;   // not while a game is still on the page
     for (const el of [...PARTS(), $('fx')]) { if (!el) continue; const d = el.style.display; el.style.display = 'none'; void el.offsetWidth; el.style.display = d; }
     setPos(pos);
   }
