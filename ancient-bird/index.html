@@ -150,7 +150,7 @@ input.name{width:100%;height:38px;border-radius:10px;border:2px solid rgba(60,40
   .panel{top:calc(44px + var(--sa-t))}
   .padhint{bottom:calc(62px + var(--sa-b))}
 }
-@media (max-height:520px) and (orientation:landscape){
+@media (max-height:760px) and (orientation:landscape){
   .menucard{display:grid;grid-template-columns:1.15fr 1fr;grid-auto-flow:row dense;width:min(720px,94vw);column-gap:16px;row-gap:8px;align-items:center;padding:14px 18px}
   .menucard>.logo,.menucard>.eras,.menucard>.ttg-back,.menucard>.ttg-move{grid-column:1}
   .menucard>.logo{grid-row:span 3}
@@ -390,7 +390,7 @@ input,textarea,select{font-size:16px !important}
 #logoTitle{display:block;width:min(340px,86vw);height:auto;aspect-ratio:2/1;margin:2px 0 0}
 .sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (orientation:landscape) and (max-height:500px){#logoTitle{width:min(290px,40vw)}}
-@media (max-height:520px) and (orientation:landscape){
+@media (max-height:760px) and (orientation:landscape){
   .menucard{align-content:center}
   .menucard>.logo{grid-row:1 / span 4}
   .menucard>.eras{grid-row:5}
@@ -419,6 +419,9 @@ body.ttwatching .wtools{display:flex;position:absolute;left:calc(8px + var(--sa-
 .rstats{display:flex;flex-wrap:wrap;gap:4px 10px;font-weight:800;font-size:14px;margin-top:3px}
 body.rampwatch .ttbtns,body.rampwatch .ttjoy{display:none!important}
 body.ramp .ttstats b{color:#ffd86a}
+
+.ver{margin:0;font-size:11px;font-weight:700;color:var(--ink2);opacity:.75;text-align:center}
+@media (max-height:760px) and (orientation:landscape){.menucard>.ver{grid-column:1}}
 </style>
 </head>
 <body>
@@ -450,6 +453,7 @@ body.ramp .ttstats b{color:#ffd86a}
   <div class="menucard" id="menucard">
     <div class="logo" id="logo"><canvas id="logoTitle" role="img" aria-label="Ancient Bird"></canvas><h1 class="sr">Ancient Bird</h1><p>Build a park of real prehistoric animals</p></div>
     <div class="eras" id="eraPills"></div>
+    <p class="ver" id="verTag"></p>
     <button class="btn big" id="playBtn" type="button">Play</button>
     <button class="btn alt" id="newBtn" type="button"><span class="ico" data-ic="globe"></span> World map</button>
     <button class="btn alt" id="ttBtn" type="button"><span class="ico" data-ic="hourglass"></span> Time Travel</button>
@@ -2549,7 +2553,7 @@ const DinoArt = (() => {
     const R = resolve(key), id = (typeof key === 'string' ? key : JSON.stringify(key)) + (fly ? ':fly' : '');
     if (bcache[id]) return bcache[id];
     const cv = document.createElement('canvas'), S = 2; cv.width = 900; cv.height = fly ? 800 : 500;
-    const c = cv.getContext('2d'); c.translate(450, fly ? 400 : 470); c.scale(S, S);
+    const c = cv.getContext('2d', { willReadFrequently: true }); c.translate(450, fly ? 400 : 470); c.scale(S, S);   // read back once: keep it in normal memory (much faster on Android)
     if (fly) { draw(c, key, 0, 0, 1, { noShadow: true, t: 0.6, age: 1, fly: 1, alt: 0, flapPh: Math.PI / 2 }); draw(c, key, 0, 0, 1, { noShadow: true, t: 0.6, age: 1, fly: 1, alt: 0, flapPh: -Math.PI / 2 }); }
     else draw(c, key, 0, 0, 1, { noShadow: true, t: 0.6, age: 1 });
     const d = c.getImageData(0, 0, cv.width, cv.height).data;
@@ -3467,10 +3471,10 @@ const Props = (() => {
 
   /* =================== camera and canvas =================== */
   const cv = $('cv'), ctx = cv.getContext('2d');
-  let W = 0, H = 0, DPR = 1;
+  let W = 0, H = 0, DPR = 1, lowGfx = false;
   const cam = { x: GATE.x * T, y: (MH - 8) * T, z: 1 };
   function resize() {
-    DPR = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    DPR = Math.min(lowGfx ? 1.25 : 2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     uiPad = [0, 0]; if (typeof $ === 'function' && $('tools')) measureUi();
     clampCam();
@@ -6260,12 +6264,12 @@ const Props = (() => {
     const Wd = Math.round(cssW * dpr), Hd = Math.round(cssW * 0.5 * dpr), U = Wd / 600;   // drawn in a 600 x 300 space
     c.width = Wd; c.height = Hd;
     let sd = 90217; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-    const mk = () => { const k = document.createElement('canvas'); k.width = Wd; k.height = Hd; return [k, k.getContext('2d')]; };
+    const mk = (read) => { const k = document.createElement('canvas'); k.width = Wd; k.height = Hd; return [k, k.getContext('2d', read ? { willReadFrequently: true } : undefined)]; };
     const FONT = '"AncientTitle","Alfa Slab One","Rockwell Extra Bold","Arial Black",serif';
     const TEAR = []; for (let i = 0; i <= 64; i++) { const t = i / 64; TEAR.push([-12 + t * 624, 92 + t * 118 + Math.sin(t * 9) * 7 + (rnd() - 0.5) * 9]); }
 
     // 1. the letters, in a warm gold that darkens toward the bottom
-    const [L, lx] = mk(); lx.setTransform(U, 0, 0, U, 0, 0); lx.textAlign = 'center';
+    const [L, lx] = mk(true); lx.setTransform(U, 0, 0, U, 0, 0); lx.textAlign = 'center';
     for (const [t, size, base] of [['ANCIENT', 100, 116], ['BIRD', 156, 270]]) {
       lx.font = `${size}px ${FONT}`; const fit = Math.min(1, 548 / lx.measureText(t).width);
       lx.save(); lx.translate(300, base); lx.scale(fit, 1);
@@ -6337,6 +6341,8 @@ const Props = (() => {
   });
   $('setBtn').addEventListener('click', () => { auInit(); SFX.tap(); openSettings(); });
   for (const k of ['paleo', 'dino', 'ice']) $('eraPills').append(eraPill(k));
+  const GAME_VERSION = '1.2';   // shown under the title, so you can tell which copy a device has
+  $('verTag').textContent = 'Version ' + GAME_VERSION;
 
   /* =================== controller =================== */
   const pad = { on: false, prev: {}, rep: {}, cx: 0, cy: 0, down: false };
@@ -6449,9 +6455,16 @@ const Props = (() => {
 
   /* =================== main loop =================== */
   let lastT = performance.now(), hudT = 0, refT = 0;
+  // If the game runs slowly on this device (an older handheld, say), it draws at a lower sharpness so it stays smooth.
+  const perf = { t: 0, n: 0, slow: 0 };
+  function watchSpeed(dt) {
+    if (lowGfx || document.hidden || !(playing || mode === 'tt')) { perf.t = perf.n = 0; return; }
+    perf.t += dt; perf.n++;
+    if (perf.t >= 3) { const fps = perf.n / perf.t; perf.t = perf.n = 0; perf.slow = fps < 32 ? perf.slow + 1 : 0; if (perf.slow >= 2) { lowGfx = true; resize(); } }
+  }
   function frame(now) {
     const rdt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
-    time += rdt;
+    time += rdt; watchSpeed((now - (frame.prev || now)) / 1000); frame.prev = now;
     padPoll(rdt);
     if (mode === 'tt') { if (!(TT && TT.over && !$('panel').hidden)) ttStep(rdt); }
     else if (S && S.rampage && !S.rampage.over && (ttHudT += 1) % 6 === 0) rampHud();
