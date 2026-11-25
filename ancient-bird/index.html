@@ -476,6 +476,44 @@ body.ramp .ttstats b{color:#ffd86a}
     this.moveTo(x + tl, y); this.lineTo(x + w - tr, y); this.arcTo(x + w, y, x + w, y + tr, tr); this.lineTo(x + w, y + h - br); this.arcTo(x + w, y + h, x + w - br, y + h, br);
     this.lineTo(x + bl, y + h); this.arcTo(x, y + h, x, y + h - bl, bl); this.lineTo(x, y + tl); this.arcTo(x, y, x + tl, y, tl); this.closePath();
   };
+  /* How this device draws. Inside the Android app (TtGamer15 Games), the app's own screen and the game share the graphics chip,
+     and a big pile of drawing at once can jam the whole app ("isn't responding"). So on Android every picture is drawn by the
+     main processor instead, and the graphics chip only has to show the finished frame. And if the game ever gets stuck while
+     it starts, it remembers, and uses simple graphics next time (Settings can switch back). */
+  window.ABGFX = (function () {
+    var ua = navigator.userAgent || '', ls = null;
+    try { ls = window.localStorage; ls.getItem('ab.gfx'); } catch (e) { ls = null; }
+    function get(k) { try { return ls ? ls.getItem(k) : null; } catch (e) { return null; } }
+    function put(k, v) { try { if (ls) ls.setItem(k, v); } catch (e) { /* fine */ } }
+    var prev = get('ab.boot') || '', pref = get('ab.gfx') || '', stuck = prev.indexOf('start') === 0;
+    if (stuck) { pref = 'simple'; put('ab.gfx', 'simple'); }
+    var g = { android: /Android/i.test(ua), stuck: stuck, stuckAt: stuck ? prev.slice(6) : '', pref: pref, cpu: false,
+      chrome: (ua.match(/Chrome\/(\d+)/) || [])[1] || '' };
+    var P2 = window.HTMLCanvasElement && HTMLCanvasElement.prototype, orig = P2 && P2.getContext;
+    if (g.android && orig) {
+      P2.getContext = function (type, opts) {
+        if (type !== '2d') return orig.apply(this, arguments);
+        var o = { willReadFrequently: true }; if (opts) for (var k in opts) if (k !== 'willReadFrequently') o[k] = opts[k];
+        return orig.call(this, type, o);
+      };
+      try { var t = document.createElement('canvas').getContext('2d'), at = t && t.getContextAttributes && t.getContextAttributes(); g.cpu = !!(at && at.willReadFrequently); } catch (e) { g.cpu = false; }
+    }
+    // the settings that follow from that (Settings can change them while playing)
+    g.set = function (mode) {
+      if (mode) { g.pref = mode; put('ab.gfx', mode); }
+      g.simple = g.pref === 'simple';
+      g.blur = !g.simple && (!g.android || g.cpu);              // soft shading (blurs are heavy for the graphics chip)
+      g.dpr = g.simple ? 1 : g.android ? 1.5 : 2;               // how sharp the park is drawn
+      g.ground = g.simple ? 0.75 : g.android ? 1 : 1.5;         // how sharp the ground picture is
+      g.sprites = g.simple ? 3e6 : g.android ? 5e6 : 9e6;       // how many animal pictures are kept ready
+      g.title = g.simple ? 1.25 : g.android ? 2 : 3;
+    };
+    g.set();
+    g.stage = function (s) { put('ab.boot', 'start:' + s); };   // how far it got, in case it gets stuck
+    g.ok = function () { put('ab.boot', 'ok'); };
+    g.stage('loading');
+    return g;
+  })();
   // If something still goes wrong, say so on screen (instead of just freezing), so it can be fixed.
   var shown = 0;
   function show(msg) {
@@ -1244,6 +1282,7 @@ const Icon = (() => {
    a = { ph: step phase, mv: walking 0..1, hd: head down 0..1, up: head up 0..1, roar: mouth open 0..1,
          blink, sleep, age 0..1, swim 0..1, t: time, seed, size } */
 const DinoArt = (() => {
+  const GFXR = window.ABGFX || {};   // this device's graphics settings (see the start of the page)
   const TAU = Math.PI * 2;
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -1761,7 +1800,7 @@ const DinoArt = (() => {
   let curK = 1;   // how much the animal is being scaled up while drawn (for blur sizes)
   function stripes(ctx, R, sp, col) {   // soft, blurry bands down the sides that fade out (no hard edges or points)
     const n = R.pattern.n || 6;
-    ctx.save(); if (blurOK) ctx.filter = `blur(${(0.4 * curK).toFixed(2)}px)`;
+    ctx.save(); if (blurOK && GFXR.blur !== false) ctx.filter = `blur(${(0.4 * curK).toFixed(2)}px)`;
     ctx.lineCap = 'round';
     for (let i = 0; i < n; i++) {
       const [x, y] = along(sp, R.pattern.from + i * R.pattern.step), L = R.depth * (0.3 + 0.07 * Math.sin(i * 2.1)), wd = 2.4 + 0.6 * Math.sin(i * 1.3 + 1);
@@ -1949,7 +1988,7 @@ const DinoArt = (() => {
     const r = rnd(7);
     for (let i = 0; i < 40; i++) { const x = lerp(-R.depth * 0.4, R.bodyLen + R.depth * 0.3, r()), y = -R.hipH + bob + (r() - 0.65) * R.depth * 0.9, rr = 0.8 + r() * 1.3; ell(ctx, x, y, rr * 1.2, rr, 0, 'rgba(40,25,10,.13)'); ell(ctx, x - rr * 0.3, y - rr * 0.35, rr * 0.45, rr * 0.3, 0, 'rgba(255,245,225,.12)'); }
   }
-  function featherMarks(ctx, R, bob) { ctx.save(); if (blurOK) ctx.filter = `blur(${(0.35 * curK).toFixed(2)}px)`; ctx.lineCap = 'round'; ctx.strokeStyle = rgba(dk(R.c.base, 0.3), 0.26); ctx.lineWidth = 1.5; for (let i = 0; i < 12; i++) { const x = -R.depth * 0.4 + i * (R.bodyLen + R.depth * 0.6) / 12, y = -R.hipH + bob - R.depth * 0.15 + (i % 2) * 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x - 1.2, y + 2, x - 2.6, y + 3.2); ctx.stroke(); } ctx.restore(); }
+  function featherMarks(ctx, R, bob) { ctx.save(); if (blurOK && GFXR.blur !== false) ctx.filter = `blur(${(0.35 * curK).toFixed(2)}px)`; ctx.lineCap = 'round'; ctx.strokeStyle = rgba(dk(R.c.base, 0.3), 0.26); ctx.lineWidth = 1.5; for (let i = 0; i < 12; i++) { const x = -R.depth * 0.4 + i * (R.bodyLen + R.depth * 0.6) / 12, y = -R.hipH + bob - R.depth * 0.15 + (i % 2) * 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x - 1.2, y + 2, x - 2.6, y + 3.2); ctx.stroke(); } ctx.restore(); }
   function fluff(ctx, R, sp, col) { for (let i = 0; i < 9; i++) { const [x, y] = along(sp, i / 9 * 0.7); ell(ctx, x, y + 1.2, 2.6, 1.8, -0.3, col); } }
   function tucked(ctx, R, c) {   // legs folded under a resting animal
     const y = -R.hipH * 0.15;
@@ -2585,7 +2624,7 @@ const DinoArt = (() => {
     const f = Math.max(3, Math.min(9, Math.round(r * 1.7))), sw = Math.ceil(cw / f) + 2, shh = Math.ceil(ch / f) + 2;
     if (soft.width < sw) soft.width = sw; if (soft.height < shh) soft.height = shh;
     so.setTransform(1, 0, 0, 1, 0, 0); so.clearRect(0, 0, soft.width, soft.height); so.imageSmoothingEnabled = true; so.imageSmoothingQuality = 'high';
-    if (blurOK) so.filter = 'blur(1.4px)';
+    if (blurOK && GFXR.blur !== false) so.filter = 'blur(1.4px)';
     so.drawImage(scr, 0, 0, cw, ch, 1, 1, cw / f, ch / f); so.filter = 'none';
     const blurAt = (dx, dy) => { lx.imageSmoothingEnabled = true; lx.drawImage(soft, 1, 1, cw / f, ch / f, dx, dy, cw, ch); };
     lx.setTransform(1, 0, 0, 1, 0, 0); sx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2597,7 +2636,7 @@ const DinoArt = (() => {
     };
     const D = Math.max(2, R.depth * sc * k * 0.2), hard = (dx, dy, col, alpha, soften) => {
       lx.globalCompositeOperation = 'source-over'; lx.clearRect(0, 0, cw + 4, ch + 4); lx.drawImage(scr, 0, 0);
-      lx.globalCompositeOperation = 'destination-out'; if (blurOK) lx.filter = `blur(${Math.max(0.8, soften).toFixed(2)}px)`; lx.drawImage(scr, dx, dy); lx.filter = 'none';
+      lx.globalCompositeOperation = 'destination-out'; if (blurOK && GFXR.blur !== false) lx.filter = `blur(${Math.max(0.8, soften).toFixed(2)}px)`; lx.drawImage(scr, dx, dy); lx.filter = 'none';
       lx.globalCompositeOperation = 'source-in'; lx.fillStyle = col; lx.fillRect(0, 0, cw + 4, ch + 4);
       sx.globalCompositeOperation = 'source-atop'; sx.globalAlpha = alpha; sx.drawImage(lit, 0, 0);
     };
@@ -2622,7 +2661,11 @@ const DinoArt = (() => {
   }
   /* Animals are drawn once per pose into a picture that's kept, then just copied each frame (much faster on phones and
      handhelds). Poses are rounded a little: 12 steps per stride, 16 steps of idle sway, and so on. */
-  const SPR = new Map(); let sprPx = 0; const SPR_BUDGET = 9e6;   // about 36 MB of kept pictures at most
+  const SPR = new Map(); let sprPx = 0; const sprBudget = () => GFXR.sprites || 9e6;   // about 36 MB of kept pictures at most
+  // Making a new picture is the slow part, so only a few are made each frame (at the start lots of animals need one at once);
+  // an animal that has to wait keeps showing its last picture for a frame or two.
+  const LAST = new Map(), MADE_MAX = 4; let made = 0;
+  const newFrame = () => { made = 0; if (LAST.size > 400) LAST.clear(); };
   const q = (v, n) => Math.round((v || 0) * n) / n, wrap = (v) => ((v % TAU) + TAU) % TAU;
   function pose(R, a) {
     const mv = a.sleep ? 0 : (a.mv || 0) > 0.25 ? 1 : 0, seed = a.seed || 0;
@@ -2655,11 +2698,15 @@ const DinoArt = (() => {
       return;
     }
     let spr = SPR.get(id);
+    const base = (typeof key === 'string' ? key : JSON.stringify(key)) + '|' + dir + '|' + k + '|' + a.size + '|' + (flying ? 1 : 0);
     if (spr) { SPR.delete(id); SPR.set(id, spr); }
+    else if (made >= MADE_MAX && LAST.has(base)) spr = LAST.get(base);   // enough new pictures this frame: show its last one for a moment
     else {
+      made++;
       spr = render(R, key, dir, a, k, b, sc, cw, ch, cx, cy, flying, E);
-      if (id) { SPR.set(id, spr); sprPx += spr.width * spr.height; for (const [kk, v] of SPR) { if (sprPx <= SPR_BUDGET) break; SPR.delete(kk); sprPx -= v.width * v.height; } }
+      if (id) { SPR.set(id, spr); sprPx += spr.width * spr.height; for (const [kk, v] of SPR) { if (sprPx <= sprBudget()) break; SPR.delete(kk); sprPx -= v.width * v.height; } }
     }
+    LAST.set(base, spr);
     ctx.drawImage(spr, ox - E / k, oy - E / k, spr.width / k, spr.height / k);
   }
   // draw the animal (with its lighting) and one smooth outline around the whole shape, into a picture of its own
@@ -2703,7 +2750,7 @@ const DinoArt = (() => {
   // add a hybrid as an animal of its own, so it can be drawn by name like any other
   function register(key, parts) { if (!SP[parts.body] || !SP[parts.head] || !SP[parts.tail]) return false; SP[key] = Object.assign(JSON.parse(JSON.stringify(hybrid(parts))), { isHybrid: true }); return true; }
   const hasBack = (k) => { const b = SP[k] && SP[k].back; return !!(b && (b.plates || b.sail || b.armor)); };
-  return { draw, drawClean, icon, size, hybrid, register, rigKeys, hasBack, keys: Object.keys(SP), spec: (k) => SP[k], sprites: () => ({ n: SPR.size, px: sprPx }) };
+  return { draw, drawClean, icon, size, hybrid, register, rigKeys, hasBack, keys: Object.keys(SP), spec: (k) => SP[k], sprites: () => ({ n: SPR.size, px: sprPx }), flush: () => { SPR.clear(); LAST.clear(); sprPx = 0; }, newFrame };
 })();
 </script>
 <script>/* ---------- Drawings for everything that isn't an animal: plants, buildings, fences, people ---------- */
@@ -3134,6 +3181,7 @@ const Props = (() => {
 <script>/* ---------- Ancient Bird (a prehistoric park game) ---------- */
 (() => {
   'use strict';
+  const GFX = window.ABGFX || { dpr: 2, ground: 1.5, title: 3, blur: true, set() {}, stage() {}, ok() {} };   // this device's graphics settings (see the start of the page)
   const T = 40, MW = 56, MH = 40, GATE = { x: 28, y: MH - 1 };
   const PLOT = 8, PW = MW / PLOT, PH = MH / PLOT;   // land is sold in 8 x 8 plots
   const OLD_KEY = 'dinopark.v1', PREF_KEY = 'dinopark.v1.prefs', WORLD_KEY = 'dinopark.world', PARK_KEY = (id) => 'dinopark.park.' + id;
@@ -3474,7 +3522,7 @@ const Props = (() => {
   let W = 0, H = 0, DPR = 1, lowGfx = false;
   const cam = { x: GATE.x * T, y: (MH - 8) * T, z: 1 };
   function resize() {
-    DPR = Math.min(lowGfx ? 1.25 : 2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    DPR = Math.min(lowGfx ? Math.min(1.25, GFX.dpr) : GFX.dpr, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     uiPad = [0, 0]; if (typeof $ === 'function' && $('tools')) measureUi();
     clampCam();
@@ -3509,7 +3557,7 @@ const Props = (() => {
   const toScreen = (wx, wy) => [(wx - cam.x) * cam.z + W / 2, (wy - cam.y) * cam.z + H / 2];
 
   /* =================== ground picture =================== */
-  const GSC = 1.5;
+  const GSC = GFX.ground;
   const gcv = document.createElement('canvas'); gcv.width = MW * T * GSC; gcv.height = MH * T * GSC;
   const gx = gcv.getContext('2d');
   const LQ = 4, lowcv = document.createElement('canvas'); lowcv.width = MW * LQ; lowcv.height = MH * LQ;
@@ -5380,6 +5428,8 @@ const Props = (() => {
       b.append(btn((PREF.attacks ? '🦖 Escaped animals attack: on' : '🦖 Escaped animals attack: off'), 'alt', () => { PREF.attacks = !PREF.attacks; savePrefs(); openSettings(); }));
       b.append(el('p', 'help', 'When it\'s off, escaped animals only scare guests away.'));
       b.append(btn((PREF.hints === false ? 'Helper arrows: off' : 'Helper arrows: on'), 'alt', () => { PREF.hints = PREF.hints === false; savePrefs(); openSettings(); }));
+      b.append(btn((GFX.simple ? '🖼️ Graphics: simple' : '🖼️ Graphics: sharp'), 'alt', () => { GFX.set(GFX.simple ? 'sharp' : 'simple'); DinoArt.flush && DinoArt.flush(); resize(); drawTitle(); showVer(); openSettings(); }));
+      b.append(el('p', 'help', 'Simple graphics are lighter, for devices where the game freezes or runs slowly.'));
       b.append(el('p', 'help', 'Your park saves by itself on this device.'));
     });
   }
@@ -6260,7 +6310,7 @@ const Props = (() => {
      Letters use a small part of the font "Alfa Slab One" (SIL Open Font License), renamed AncientTitle. */
   function drawTitle() {
     const c = $('logoTitle'); if (!c || !c.clientWidth) return;
-    const cssW = c.clientWidth, dpr = Math.min(3, window.devicePixelRatio || 1);
+    const cssW = c.clientWidth, dpr = Math.min(GFX.title, window.devicePixelRatio || 1);
     const Wd = Math.round(cssW * dpr), Hd = Math.round(cssW * 0.5 * dpr), U = Wd / 600;   // drawn in a 600 x 300 space
     c.width = Wd; c.height = Hd;
     let sd = 90217; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
@@ -6341,8 +6391,10 @@ const Props = (() => {
   });
   $('setBtn').addEventListener('click', () => { auInit(); SFX.tap(); openSettings(); });
   for (const k of ['paleo', 'dino', 'ice']) $('eraPills').append(eraPill(k));
-  const GAME_VERSION = '1.2';   // shown under the title, so you can tell which copy a device has
-  $('verTag').textContent = 'Version ' + GAME_VERSION;
+  const GAME_VERSION = '1.3';   // shown under the title, so you can tell which copy a device has
+  // (on Android it also says which web view the device has and how it's drawing, to help fix problems)
+  function showVer() { $('verTag').textContent = 'Version ' + GAME_VERSION + (GFX.simple ? ' · simple graphics' : '') + (GFX.android ? ' · web view ' + (GFX.chrome || '?') + (GFX.cpu ? '' : ' (no cpu)') : '') + (GFX.stuck ? ' · got stuck at: ' + GFX.stuckAt : ''); }
+  showVer();
 
   /* =================== controller =================== */
   const pad = { on: false, prev: {}, rep: {}, cx: 0, cy: 0, down: false };
@@ -6481,23 +6533,28 @@ const Props = (() => {
       refT += rdt; if (refT > 1 && panelRefresh) { refT = 0; panelRefresh(); }
       if (playing && now - lastSave > 15000) save();
     }
+    if (DinoArt.newFrame) DinoArt.newFrame();
     render();
+    // the start went fine once it has drawn for a few seconds (if it gets stuck before that, next time uses simple graphics)
+    if (!boot.done) { boot.n++; if (boot.n === 1) GFX.stage('drawing'); if (boot.n >= 40 && now - boot.t0 > 6000) { boot.done = true; GFX.ok(); } }
     requestAnimationFrame(frame);
   }
+  const boot = { n: 0, t0: performance.now(), done: false };
   // behind the title screen the park keeps living, but nothing costs money
   function stepIdle(dt) { for (const a of S.animals) updAnimal(a, dt); }
   addEventListener('resize', resize);
-  addEventListener('pagehide', save);
+  addEventListener('pagehide', () => { save(); if (!boot.done) { boot.done = true; GFX.ok(); } });   // closed on purpose: not stuck
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else if (AU.ctx) AU.ctx.resume(); });
 
   // start
-  resize(); buildTools(); drawTitle();
+  GFX.stage('title'); resize(); buildTools(); drawTitle();
   if (document.fonts && document.fonts.load) document.fonts.load('100px AncientTitle').then(drawTitle, () => {});
-  addEventListener('resize', () => { if (!$('title').hidden) drawTitle(); });
-  WORLD = loadWorld(); registerHybrids();
+  let titleT = 0; addEventListener('resize', () => { if ($('title').hidden) return; clearTimeout(titleT); titleT = setTimeout(drawTitle, 150); });   // once it stops changing size
+  GFX.stage('park'); WORLD = loadWorld(); registerHybrids();
   S = load(); if (!S) { S = newPark('na'); S.fresh = true; }
   rebuild(); cam.x = GATE.x * T; cam.y = (MH - 8) * T; cam.z = clamp(W / (17 * T), zMin(), 1.6); clampCam();
-  showTitle();
+  showTitle(); GFX.stage('first picture');
+  if (GFX.stuck) setTimeout(() => toast('Ancient Bird got stuck last time, so it switched to simple graphics. You can change this in Settings.'), 1500);
   if (window.TTG) TTG.mount($('menucard'), $('logo'));
   requestAnimationFrame(frame);
   // for checks
