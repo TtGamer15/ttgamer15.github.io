@@ -402,6 +402,18 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   // Inside the TtGamer15 Games Android app, the app hands the page a bridge for consoles, emulators and apps.
   const NATIVE = (() => { try { return window.TTGAndroid || null; } catch (e) { return null; } })();
   if (NATIVE) document.documentElement.classList.add('native');
+  // Loading a save in the Android app: a file picker that asks for ".zip" (or ".txt") files greys out every file, because
+  // Android's picker doesn't understand file endings. So in the app, the pickers in the menu and in every game show all
+  // your files (Downloads and the rest), and the game checks the file you pick itself. Picture pickers stay pictures.
+  function anyFile(doc) {
+    try {
+      doc.addEventListener('click', (e) => {
+        const t = e.target;
+        if (t && t.tagName === 'INPUT' && t.type === 'file' && t.accept && !/^\s*image\//.test(t.accept)) t.removeAttribute('accept');
+      }, true);
+    } catch (e) { /* fine */ }
+  }
+  if (NATIVE) anyFile(document);
   // The "just the games" app (?games=only) is the same menu with only the games: no consoles, apps or home-screen setup.
   const LIBRARY = !!NATIVE && !/[?&]games=only\b/.test(location.search);
 
@@ -885,7 +897,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '16';   // bump when the games change, so phones get the new copies
+  const V = '17';   // bump when the games change, so phones get the new copies
   try { document.getElementById('menuVer').textContent = 'Menu version ' + V; } catch (e) { /* fine */ }
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
@@ -910,7 +922,10 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     const o = open = { g, frame: f, api: null, t0: performance.now(), exitMs: takeApartHub(), bg, shown: false, live: false, backMs: null };
     bedsDown();
     // a game that never says it's ready still gets shown
-    f.addEventListener('load', () => setTimeout(() => { if (open === o && !o.shown) reveal(o); }, 1200));
+    f.addEventListener('load', () => {
+      if (NATIVE) { try { anyFile(f.contentDocument); } catch (e) { /* fine */ } }
+      setTimeout(() => { if (open === o && !o.shown) reveal(o); }, 1200);
+    });
     try { history.pushState({ ttgGame: g.id }, ''); } catch (e) { /* fine */ }
   }
   function reveal(o) {
