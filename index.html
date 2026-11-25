@@ -307,6 +307,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
         <li><b>Android:</b> open it in Chrome, tap ⋮, then Add to Home screen or Install app. Or <a href="app/">get the Android app</a>, which can hold your retro games too.</li>
       </ul>
     </section>
+    <p class="msg" id="menuVer" style="text-align:center;opacity:.6"></p>
   </div>
 </div>
 
@@ -884,7 +885,8 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '12';   // bump when the games change, so phones get the new copies
+  const V = '13';   // bump when the games change, so phones get the new copies
+  try { document.getElementById('menuVer').textContent = 'Menu version ' + V; } catch (e) { /* fine */ }
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
   const probe = document.createElement('div'); probe.className = 'probe'; document.body.append(probe);
@@ -1563,7 +1565,8 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   window.TTG_HUB = { sound: () => ({ state: snd.ctx && snd.ctx.state, beds: Object.keys(snd.beds), made: Object.keys(BUF).filter((k) => BUF[k]).length, of: Object.keys(MAKE).length }), pos: () => pos, open: () => open && { id: open.g.id, shown: open.shown, live: open.live }, title: () => titleUp, fx: () => (THEMES[fxNext] || {}).fx, list: () => LIST.map((e) => e.id), view: () => view.kind, away: () => !!away };
   if (/[?&]settings=1/.test(location.search)) openSheet();
   // works offline after the first visit
-  if ('serviceWorker' in navigator) addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+  // the offline helper checks for a newer copy of itself every time the menu opens
+  if ('serviceWorker' in navigator) addEventListener('load', () => { navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {}); });
 })();
 </script>
 </body>
