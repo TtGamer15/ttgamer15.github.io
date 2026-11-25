@@ -884,7 +884,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '9';   // bump when the games change, so phones get the new copies
+  const V = '10';   // bump when the games change, so phones get the new copies
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
   const probe = document.createElement('div'); probe.className = 'probe'; document.body.append(probe);

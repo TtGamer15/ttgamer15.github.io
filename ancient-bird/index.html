@@ -2589,32 +2589,70 @@ const DinoArt = (() => {
     sx.globalAlpha = 1; sx.globalCompositeOperation = 'source-over'; lx.globalCompositeOperation = 'source-over';
     void a;
   }
-  function drawClean(ctx, key, x, y, dir, a, px) {
+  /* Animals are drawn once per pose into a picture that's kept, then just copied each frame (much faster on phones and
+     handhelds). Poses are rounded a little: 12 steps per stride, 16 steps of idle sway, and so on. */
+  const SPR = new Map(); let sprPx = 0; const SPR_BUDGET = 9e6;   // about 36 MB of kept pictures at most
+  const q = (v, n) => Math.round((v || 0) * n) / n, wrap = (v) => ((v % TAU) + TAU) % TAU;
+  function pose(R, a) {
+    const mv = a.sleep ? 0 : (a.mv || 0) > 0.25 ? 1 : 0, seed = a.seed || 0;
+    const phI = mv ? Math.round(wrap(a.ph || 0) / TAU * 10) % 10 : 0, ph = phI * TAU / 10;
+    const thI = mv ? phI : Math.round(wrap((a.t || 0) * 1.6 + seed) / TAU * 10) % 10, th = thI * TAU / 10;
+    const flI = R.plan === 'flyer' && (a.fly || 0) > 0.5 ? Math.round(wrap(a.flapPh || 0) / TAU * 8) % 8 : 0;   // only flying animals flap
+    const p = Object.assign({}, a, { mv, ph, t: (th - seed) / 1.6, hd: q(a.hd, 2), eat: a.eat ? 1 : 0, up: q(a.up, 2), roar: q(a.roar, 3), age: q(a.age == null ? 1 : a.age, 10), swim: q(a.swim, 2), flapPh: flI * TAU / 8, blink: !!a.blink, sleep: !!a.sleep, size: q(a.size || 1, 20) });
+    p.id = [mv, phI, thI, p.hd, p.eat, p.up, p.roar, p.age, p.swim, flI, p.blink ? 1 : 0, p.sleep ? 1 : 0, p.size, a.under ? 1 : 0, a.flat ? 1 : 0, (a.fly || 0) > 0.5 ? 1 : 0, a.flapping == null ? 'n' : q(a.flapping, 2)].join(',');
+    return p;
+  }
+  function drawClean(ctx, key, x, y, dir, a0, px) {
     const R = resolve(key); if (!R) return;
+    const still = R.plan === 'swim' || R.plan === 'custom';   // these move with smooth waves, so they're drawn fresh
+    const a = still ? a0 : pose(R, a0);
     const flying = R.plan === 'flyer' && (a.fly || 0) > 0.5, b = bounds(key, flying), sc = R.scale * (a.size || 1);
-    const k = Math.max(0.5, Math.min(18, px || 1)), pad = 4, alt = flying ? (a.alt != null ? a.alt : R.fly.flyH) : 0;
+    const k = still ? Math.max(0.5, Math.min(18, px || 1)) : Math.max(0.5, Math.min(18, Math.round(Math.min(px || 1, Math.max(2.5, (px || 1) > 4 ? px : 2.5)) * 4) / 4)), pad = 4, alt = flying ? (a.alt != null ? a.alt : R.fly.flyH) : 0;
     const wW = (b.w + 16) * sc, wH = (b.h + 20 + b.bot) * sc;
     const cw = Math.ceil(wW * k) + pad * 2, ch = Math.ceil(wH * k) + pad * 2;
     if (cw > 2048 || ch > 2048 || cw < 4 || ch < 4) { draw(ctx, key, x, y, dir, a); return; }
+    const cx = (dir > 0 ? -(b.x - 8) * sc : (b.x + b.w + 8) * sc) * k + pad, cy = ch - pad - (10 + b.bot) * sc * k;
+    if (!a.noShadow) { ctx.fillStyle = flying ? 'rgba(20,30,10,.14)' : 'rgba(20,30,10,.22)'; ctx.beginPath(); ctx.ellipse(x, y, Math.max(12, b.w * (flying ? 0.22 : 0.32)) * sc, (flying ? 4 : 7) * sc, 0, 0, TAU); ctx.fill(); }
+    y -= alt * (a.altWorld ? 1 : sc);
+    const E = 4, ox = x - cx / k, oy = y - cy / k;
+    const id = still ? null : (typeof key === 'string' ? key : JSON.stringify(key)) + '|' + dir + '|' + k + '|' + a.id;
+    if (!id) {   // drawn fresh, straight onto the screen
+      render(R, key, dir, a, k, b, sc, cw, ch, cx, cy, flying, 0, true);
+      const w = cw / k, h = ch / k, ow = 3.2 / k;
+      for (const [dx, dy] of OUTL) ctx.drawImage(sil, 0, 0, cw, ch, ox + dx * ow, oy + dy * ow, w, h);
+      ctx.drawImage(scr, 0, 0, cw, ch, ox, oy, w, h);
+      return;
+    }
+    let spr = SPR.get(id);
+    if (spr) { SPR.delete(id); SPR.set(id, spr); }
+    else {
+      spr = render(R, key, dir, a, k, b, sc, cw, ch, cx, cy, flying, E);
+      if (id) { SPR.set(id, spr); sprPx += spr.width * spr.height; for (const [kk, v] of SPR) { if (sprPx <= SPR_BUDGET) break; SPR.delete(kk); sprPx -= v.width * v.height; } }
+    }
+    ctx.drawImage(spr, ox - E / k, oy - E / k, spr.width / k, spr.height / k);
+  }
+  // draw the animal (with its lighting) and one smooth outline around the whole shape, into a picture of its own
+  const OUTL = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.71, 0.71], [-0.71, 0.71], [0.71, -0.71], [-0.71, -0.71]];
+  function render(R, key, dir, a, k, b, sc, cw, ch, cx, cy, flying, E, direct) {
     if (scr.width < cw || scr.height < ch) { scr.width = sil.width = Math.max(scr.width, cw); scr.height = sil.height = Math.max(scr.height, ch); }
     sx.setTransform(1, 0, 0, 1, 0, 0); sx.clearRect(0, 0, cw + 4, ch + 4);
-    const cx = (dir > 0 ? -(b.x - 8) * sc : (b.x + b.w + 8) * sc) * k + pad, cy = ch - pad - (10 + b.bot) * sc * k;
     sx.setTransform(k, 0, 0, k, cx, cy); curK = k;
     draw(sx, key, 0, 0, dir, Object.assign({}, a, { noShadow: true }, flying ? { alt: 0 } : null)); curK = 1;
     if (!a.flat) lighting(R, a, cw, ch, cy, cy - (b.h + 4) * sc * k, k, sc);
     si.setTransform(1, 0, 0, 1, 0, 0); si.clearRect(0, 0, cw + 4, ch + 4); si.globalCompositeOperation = 'source-over';
     si.drawImage(scr, 0, 0, cw, ch, 0, 0, cw, ch);
     si.globalCompositeOperation = 'source-in'; si.fillStyle = R.line || '#2a1c10'; si.fillRect(0, 0, cw + 4, ch + 4); si.globalCompositeOperation = 'source-over';
-    if (!a.noShadow) { ctx.fillStyle = flying ? 'rgba(20,30,10,.14)' : 'rgba(20,30,10,.22)'; ctx.beginPath(); ctx.ellipse(x, y, Math.max(12, b.w * (flying ? 0.22 : 0.32)) * sc, (flying ? 4 : 7) * sc, 0, 0, TAU); ctx.fill(); }
     if (a.under) {   // swimming: the lower part of the body is seen through the water
       sx.setTransform(1, 0, 0, 1, 0, 0); sx.globalCompositeOperation = 'source-atop';
       const g = sx.createLinearGradient(0, cy - b.h * sc * k * 0.75, 0, cy); g.addColorStop(0, 'rgba(70,150,195,0)'); g.addColorStop(0.45, 'rgba(70,150,195,.45)'); g.addColorStop(1, 'rgba(60,140,190,.8)');
       sx.fillStyle = g; sx.fillRect(0, 0, cw + 4, ch + 4); sx.globalCompositeOperation = 'source-over';
     }
-    y -= alt * (a.altWorld ? 1 : sc);
-    const ox = x - cx / k, oy = y - cy / k, w = cw / k, h = ch / k, ow = 3.2 / k;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [0.71, 0.71], [-0.71, 0.71], [0.71, -0.71], [-0.71, -0.71]]) ctx.drawImage(sil, 0, 0, cw, ch, ox + dx * ow, oy + dy * ow, w, h);
-    ctx.drawImage(scr, 0, 0, cw, ch, ox, oy, w, h);
+    if (direct) return null;
+    const out = document.createElement('canvas'); out.width = cw + E * 2; out.height = ch + E * 2;
+    const o = out.getContext('2d');
+    for (const [dx, dy] of OUTL) o.drawImage(sil, 0, 0, cw, ch, E + dx * 3.2, E + dy * 3.2, cw, ch);
+    o.drawImage(scr, 0, 0, cw, ch, E, E, cw, ch);
+    return out;
   }
   const iconCache = {};
   function icon(key, w, h, opts) {
@@ -2634,7 +2672,7 @@ const DinoArt = (() => {
   // add a hybrid as an animal of its own, so it can be drawn by name like any other
   function register(key, parts) { if (!SP[parts.body] || !SP[parts.head] || !SP[parts.tail]) return false; SP[key] = Object.assign(JSON.parse(JSON.stringify(hybrid(parts))), { isHybrid: true }); return true; }
   const hasBack = (k) => { const b = SP[k] && SP[k].back; return !!(b && (b.plates || b.sail || b.armor)); };
-  return { draw, drawClean, icon, size, hybrid, register, rigKeys, hasBack, keys: Object.keys(SP), spec: (k) => SP[k] };
+  return { draw, drawClean, icon, size, hybrid, register, rigKeys, hasBack, keys: Object.keys(SP), spec: (k) => SP[k], sprites: () => ({ n: SPR.size, px: sprPx }) };
 })();
 </script>
 <script>/* ---------- Drawings for everything that isn't an animal: plants, buildings, fences, people ---------- */
