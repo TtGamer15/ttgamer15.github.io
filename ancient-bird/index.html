@@ -424,6 +424,34 @@ body.ramp .ttstats b{color:#ffd86a}
 @media (max-height:760px) and (orientation:landscape){.menucard>.ver{grid-column:1}}
 /* in the park the controller hint is a small list under the ☰ button, clear of the tools along the bottom */
 .padhint.side{bottom:auto;flex-direction:column;align-items:flex-start;gap:3px;padding:6px 9px;font-size:11.5px}
+/* Toolbar down the left or right side (Settings → Toolbar). The main buttons are a column under the top bar;
+   the Build tray is two columns; the option row stays along the bottom, beside them. */
+.hud.lay-left .tools,.hud.lay-right .tools{left:auto;right:auto;bottom:calc(6px + var(--sa-b));top:calc(var(--tc,56px) + 6px);transform:none;flex-direction:column;justify-content:center;align-items:center;gap:6px;max-width:none;overflow-y:auto;overflow-x:hidden;pointer-events:none;touch-action:pan-y}
+.hud.lay-left .tools>*,.hud.lay-right .tools>*{pointer-events:auto;flex:none}
+.hud.lay-left .tools{left:calc(6px + var(--sa-l))}
+.hud.lay-right .tools{right:calc(6px + var(--sa-r))}
+.hud.lay-left .tray,.hud.lay-right .tray{left:auto;right:auto;bottom:auto!important;top:calc(var(--tc,56px) + 6px);transform:none;display:grid;grid-template-columns:repeat(2,auto);max-width:none;max-height:calc(100% - var(--tc,56px) - 14px);overflow-y:auto;overflow-x:hidden;touch-action:pan-y}
+.hud.lay-left .tray[hidden],.hud.lay-right .tray[hidden]{display:none}
+.hud.lay-left .tray{left:calc(6px + var(--sa-l))}
+.hud.lay-right .tray{right:calc(6px + var(--sa-r))}
+.hud.lay-left .sub,.hud.lay-right .sub,.hud.lay-left.tray-open .sub,.hud.lay-right.tray-open .sub{bottom:calc(8px + var(--sa-b));max-width:calc(100vw - 200px - var(--sa-l) - var(--sa-r))}
+.hud.lay-left .sub{left:calc(50% + 70px)}
+.hud.lay-right .sub{left:calc(50% - 70px)}
+@media (max-height:520px){
+  .hud.lay-left .mb .disc,.hud.lay-right .mb .disc{width:50px;height:50px}
+  .hud.lay-left .mb .disc .ic,.hud.lay-right .mb .disc .ic{width:30px;height:30px}
+  .hud.lay-left .mb,.hud.lay-right .mb{width:62px;font-size:11.5px;gap:1px}
+  .hud.lay-left .tray .tb,.hud.lay-right .tray .tb{width:52px;height:50px}
+}
+/* the helper bubble points at a side toolbar from beside it */
+.hint.beside-left,.hint.beside-right{flex-direction:row;align-items:center;transform:translate(0,-50%)}
+.hint.beside-right{flex-direction:row-reverse;transform:translate(-100%,-50%)}
+.hint.beside-left .ha,.hint.beside-right .ha{margin:0;border-top:14px solid transparent;border-bottom:14px solid transparent}
+.hint.beside-left .ha{border-left:0;border-right:20px solid #ffcf3a}
+.hint.beside-right .ha{border-right:0;border-left:20px solid #ffcf3a}
+/* controller hints in Time Travel: under the watch buttons when watching, along the bottom-left when playing an animal */
+.padhint.ttw{bottom:auto;top:calc(58px + var(--sa-t))}
+.padhint.ttp{bottom:calc(12px + var(--sa-b))}
 </style>
 </head>
 <body>
@@ -726,6 +754,10 @@ const BUILDINGS = {
   drink: { name: 'Drink stand', icon: '🥤', cost: 600, w: 1, h: 1, sells: 'drink', price: 4, tip: 'Thirsty guests buy drinks here.' },
   restroom: { name: 'Restroom', icon: '🚻', cost: 900, w: 1, h: 1, sells: 'toilet', price: 0, tip: 'Guests need a bathroom!' },
   gift: { name: 'Gift shop', icon: '🎁', cost: 2500, w: 2, h: 2, sells: 'gift', price: 12, tip: 'Happy guests buy souvenirs.' },
+  meal: { name: 'Restaurant', icon: '🍝', cost: 3500, w: 2, h: 2, sells: 'meal', price: 15, tip: 'Hungry guests walking by sit down for a big meal.' },
+  treat: { name: 'Ice cream cart', icon: '🍦', cost: 700, w: 1, h: 1, sells: 'treat', price: 5, tip: 'Guests walking by buy ice cream, especially when it\'s hot.' },
+  photo: { name: 'Photo booth', icon: '📸', cost: 1200, w: 1, h: 1, sells: 'photo', price: 6, tip: 'Put it near your best habitat: guests who just saw the animals buy a photo.' },
+  safari: { name: 'Safari jeep ride', icon: '🚙', cost: 5000, w: 2, h: 2, sells: 'ride', price: 12, tip: 'Put it next to a path, then lay a Jeep track from it past your habitats. Guests pay to ride.' },
   bench: { name: 'Bench', icon: '🪑', cost: 80, w: 1, h: 1, sells: 'rest', price: 0, tip: 'Tired guests sit and rest.' },
   trash: { name: 'Trash can', icon: '🗑️', cost: 60, w: 1, h: 1, sells: 'trash', price: 0, tip: 'Keeps paths clean.' },
   lab: { name: 'Science Center', icon: '🔬', cost: 6000, w: 2, h: 2, sells: 'learn', price: 4, tip: 'Scientists study fossils here. Research animals to unlock them sooner, or bring in animals from other parts of the world. Guests pay to visit.' },
@@ -737,8 +769,8 @@ const FENCES = {
   1: { name: 'Wood fence', cost: 20, tip: 'For small animals.' },
   2: { name: 'Stone wall', cost: 45, tip: 'For medium animals.' },
   3: { name: 'Steel fence', cost: 80, tip: 'For the biggest animals.' },
-  4: { name: 'Aviary net', cost: 60, tip: 'A tall net dome for flying reptiles (pterosaurs).' },
-  5: { name: 'Lagoon wall', cost: 70, tip: 'A glass-sided pool for sea creatures. Fill it with water!' },
+  4: { name: 'Aviary', cost: 60, tip: 'A glass dome for flying animals.' },
+  5: { name: 'Lagoon', cost: 70, tip: 'A pool with glass windows for sea creatures. It fills with water by itself.' },
 };
 // Habitat kinds: which wall makes which kind of home
 const PEN_OF = (lvl) => (lvl === 4 ? 'aviary' : lvl === 5 ? 'lagoon' : 'pen');
@@ -1055,6 +1087,86 @@ const SPECIES = {
       'Its skeleton was found with skin impressions: small bumpy scales, and no feathers.',
       'Its long, strong legs suggest it may have been one of the fastest big meat-eaters.'],
     myth: ['Changes color like a chameleon to hide.', 'That idea comes from a novel. There\'s no evidence any dinosaur could.'],
+  },
+  allo: {
+    home: ['na', 'eu'], atk: 'shake', name: 'Allosaurus', era: 'dino', diet: 'meat', biome: 'plains', plants: ['conifer', 'cycad', 'fern'], social: [1, 2], space: 16, fence: 3,
+    cost: 10000, appeal: 74, unlock: 2, call: 'roar', when: 'Late Jurassic, about 155–145 million years ago', where: 'Western USA (Morrison Formation) and Portugal',
+    size: 'About 8.5 m (28 ft) long, around 2 tonnes', what: 'A big meat-eating dinosaur (theropod)',
+    facts: ['It was the top hunter of the Late Jurassic, tens of millions of years before T. rex.',
+      'It had a small horn-like ridge in front of each eye.',
+      'A wound in one Allosaurus tail bone matches the shape of a Stegosaurus tail spike.',
+      'Dozens of Allosaurus skeletons have been dug up at one quarry in Utah, the Cleveland-Lloyd Dinosaur Quarry.'],
+    myth: ['It lived alongside T. rex.', 'No: Allosaurus died out more than 70 million years before T. rex appeared.'],
+  },
+  bary: {
+    home: ['eu'], atk: 'shake', name: 'Baryonyx', era: 'dino', diet: 'fish', biome: 'swamp', plants: ['horsetail', 'fern', 'treefern'], social: [1, 2], space: 14, fence: 2, water: 6,
+    cost: 8000, appeal: 66, unlock: 2, call: 'growl', when: 'Early Cretaceous, about 130–125 million years ago', where: 'Southern England',
+    size: 'About 7.5–10 m (25–33 ft) long', what: 'A fish-eating spinosaur',
+    facts: ['It was found in 1983 by an amateur fossil hunter, William Walker, who spotted a huge claw in a clay pit in Surrey, England.',
+      'Its name means "heavy claw", after the big curved claw on its thumb.',
+      'Fish scales were found in its stomach, along with bones of a young Iguanodon.',
+      'Its long, narrow jaws full of teeth were like a crocodile\'s, good for grabbing slippery fish.'],
+    myth: ['It only ate fish.', 'Its stomach also held bones of a young Iguanodon, so it ate other dinosaurs too.'],
+  },
+  galli: {
+    home: ['as'], atk: null, name: 'Gallimimus', era: 'dino', diet: 'plants', biome: 'plains', plants: ['cycad', 'fern', 'magnolia'], social: [3, 8], space: 12, fence: 1,
+    cost: 4500, appeal: 56, unlock: 1, call: 'honk', when: 'Late Cretaceous, about 70 million years ago', where: 'Gobi Desert, Mongolia',
+    size: 'About 6 m (20 ft) long, with hips almost 2 m (6 ft) off the ground', what: 'An ostrich-like dinosaur (ornithomimid)',
+    facts: ['Its name means "chicken mimic".',
+      'It had long legs like an ostrich and was probably one of the fastest dinosaurs.',
+      'It had a beak with no teeth.',
+      'Fossils of its close relative Ornithomimus show feathers, so Gallimimus probably had them too.'],
+    myth: ['It could only eat plants.', 'Its relatives swallowed stones to help grind up plants, but it may have eaten insects and small animals too.'],
+  },
+  edmonto: {
+    home: ['na'], atk: 'toss', name: 'Edmontosaurus', era: 'dino', diet: 'plants', biome: 'plains', plants: ['conifer', 'horsetail', 'magnolia'], social: [2, 6], space: 16, fence: 2,
+    cost: 6000, appeal: 58, unlock: 1, call: 'honk', when: 'Late Cretaceous, about 73–66 million years ago', where: 'Western North America (Canada and USA)',
+    size: 'About 12 m (39 ft) long', what: 'A duck-billed dinosaur (hadrosaur)',
+    facts: ['A "mummy" fossil showed it had a soft, fleshy crest on its head, like a rooster\'s comb.',
+      'It had hundreds of teeth packed together for grinding tough plants.',
+      'It lived at the same time and place as T. rex and Triceratops.',
+      'A healed T. rex bite on an Edmontosaurus tail shows that one got away.'],
+    myth: ['Its bill was soft like a duck\'s.', 'Its beak was hard, covered in the same stuff as your fingernails, and good for cropping plants.'],
+  },
+  kentro: {
+    home: ['af'], atk: 'toss', name: 'Kentrosaurus', era: 'dino', diet: 'plants', biome: 'forest', plants: ['cycad', 'fern', 'conifer'], social: [2, 5], space: 12, fence: 2,
+    cost: 5000, appeal: 56, unlock: 2, call: 'snort', when: 'Late Jurassic, about 152 million years ago', where: 'Tendaguru, Tanzania',
+    size: 'About 4.5 m (15 ft) long', what: 'A spiky plated dinosaur (stegosaur)',
+    facts: ['Its name means "spiked lizard".',
+      'It had small plates on its neck and back, and long sharp spikes over its hips and tail.',
+      'It had a long spike on each side of its body. Scientists still argue about whether it was on the shoulders or the hips.',
+      'Computer studies suggest it could swing its spiky tail very fast to defend itself.'],
+    myth: ['It was a baby Stegosaurus.', 'It was its own kind of stegosaur, smaller than Stegosaurus, and it lived in Africa.'],
+  },
+  diplo: {
+    home: ['na'], atk: 'toss', name: 'Diplodocus', era: 'dino', diet: 'plants', biome: 'plains', plants: ['conifer', 'araucaria', 'fern', 'ginkgo'], social: [1, 3], space: 24, fence: 3,
+    cost: 12000, appeal: 70, unlock: 2, call: 'rumble', when: 'Late Jurassic, about 154–152 million years ago', where: 'Western USA (Morrison Formation)',
+    size: 'About 25 m (82 ft) long', what: 'A long-necked dinosaur (sauropod)',
+    facts: ['Its tail was very long and thin, like a whip.',
+      'It had peg-like teeth only at the front of its mouth, for stripping leaves off branches.',
+      'A copy of a Diplodocus skeleton nicknamed "Dippy" stood in London\'s Natural History Museum for over 100 years.',
+      'Skin impressions show it had a row of spines along its back.'],
+    myth: ['It lived in lakes so the water could hold up its weight.', 'Old books said that, but its legs and feet were built for walking on land.'],
+  },
+  styraco: {
+    home: ['na'], atk: 'toss', name: 'Styracosaurus', era: 'dino', diet: 'plants', biome: 'plains', plants: ['fern', 'cycad', 'magnolia'], social: [2, 6], space: 14, fence: 2,
+    cost: 6500, appeal: 64, unlock: 2, call: 'bellow', when: 'Late Cretaceous, about 75 million years ago', where: 'Alberta, Canada',
+    size: 'About 5.5 m (18 ft) long', what: 'A horned dinosaur (ceratopsian)',
+    facts: ['Its name means "spiked lizard".',
+      'It had one long nose horn, up to about 60 cm (2 ft), and four to six long spikes on its frill.',
+      'Its frill spikes were probably for showing off to other Styracosaurus.',
+      'Many were found buried together, so it may have lived in herds.'],
+    myth: ['It used its frill spikes to fight off predators.', 'The spikes were probably mostly for showing off, though its nose horn could have helped it fight.'],
+  },
+  micro: {
+    home: ['as'], kind: 'Flying dinosaur', pen: 'aviary', atk: null, name: 'Microraptor', era: 'dino', diet: 'meat', biome: 'forest', plants: ['conifer', 'ginkgo', 'fern'], social: [2, 6], space: 4, fence: 1,
+    cost: 5000, appeal: 62, unlock: 2, call: 'screech', when: 'Early Cretaceous, about 120 million years ago', where: 'Liaoning, China',
+    size: 'About 80 cm (2.6 ft) long, about the size of a crow', what: 'A small four-winged raptor',
+    facts: ['It had long flight feathers on its arms and on its legs, so it had four wings.',
+      'Tiny color structures in its fossil feathers show it was glossy black with a shiny sheen, like a crow.',
+      'It could glide from tree to tree, and it may have been able to fly.',
+      'Fossils have been found with a bird, a fish and a small mammal in its stomach.'],
+    myth: ['Microraptor was a bird.', 'It was a small raptor, a close cousin of Velociraptor, not a bird (though birds are dinosaurs too).'],
   },
   elasmoth: {
     home: ['ru'], atk: 'toss', name: 'Elasmotherium', nick: 'Siberian unicorn', era: 'ice', diet: 'plants', biome: 'snow', plants: ['steppe'], social: [1, 3], space: 14, fence: 2,
@@ -1610,8 +1722,14 @@ const DinoArt = (() => {
       for (const [x, y, r] of [[-0.12, -0.75, 0.12], [0.04, -0.6, 0.09], [-0.24, -0.45, 0.08]]) ell(ctx, L * x, h * y * fs, h * r, h * r, 0, rgba(c.accent, 0.5));
       ctx.restore();
       for (let i = 1; i < 5; i++) { const p = fr[i], q = fr[i + 1] || fr[i]; ell(ctx, (p[0] + q[0]) / 2, (p[1] + q[1]) / 2, h * 0.07, h * 0.07, 0, lt(c.base, 0.45)); }
+      if (H.spikes) {   // Styracosaurus: long spikes sticking out around the top of the frill
+        const cx = -L * 0.05, cy = -h * 0.1;
+        for (let i = 1; i < 5; i++) { const p = fr[i], dx = p[0] - cx, dy = p[1] - cy, d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d, ln = h * (i === 2 || i === 3 ? 0.95 : 0.7) * fs, bw = h * 0.11;
+          fillPts(ctx, [[p[0] - ny * bw, p[1] + nx * bw], [p[0] + nx * ln, p[1] + ny * ln, 1], [p[0] + ny * bw, p[1] - nx * bw]], '#e2d6b8'); }
+      }
       // far brow horn
-      const horn = (dx, dy, col) => fillPts(ctx, [[L * 0.4 + dx, -h * 0.4 + dy], [L * (0.42 + 0.48 * hl) + dx, -h * (0.55 + 0.6 * hl - back) + dy, 1], [L * 0.52 + dx, -h * 0.34 + dy]], col);
+      const bh = H.browHorn == null ? 1 : H.browHorn;
+      const horn = (dx, dy, col) => fillPts(ctx, [[L * 0.4 + dx, -h * 0.4 + dy], [L * (0.42 + 0.48 * hl * bh) + dx, -h * (0.55 + 0.6 * hl * bh - back) + dy, 1], [L * 0.52 + dx, -h * 0.34 + dy]], col);
       if (!H.noHorns) horn(L * 0.05, -h * 0.04, '#cfc3a4');
       const jaw = [[L * 0.9, h * 0.3], [L * 0.62, h * 0.46], [L * 0.3, h * 0.5], [L * 0.1, h * 0.36], [L * 0.4, h * 0.2]];
       fillPts(ctx, jaw, hgrad(ctx, h, c));
@@ -1619,7 +1737,7 @@ const DinoArt = (() => {
       fillPts(ctx, top, hgrad(ctx, h, c));
       ctx.save(); ctx.beginPath(); smooth(ctx, top); ctx.clip(); ell(ctx, L * 1.0, h * 0.1, L * 0.14, h * 0.25, 0, c.beak || '#4a3a2a'); ctx.restore();
       if (H.noHorns) ell(ctx, L * 0.74, -h * 0.3, L * 0.09, h * 0.1, 0, lt(c.base, 0.12));   // just a low bump on the snout
-      else { fillPts(ctx, [[L * 0.66, -h * 0.32], [L * 0.73, -h * (0.42 + 0.22 * hl), 1], [L * 0.8, -h * 0.24]], '#e2d6b8');   // nose horn
+      else { fillPts(ctx, [[L * 0.66, -h * 0.32], [L * 0.73, -h * (0.42 + 0.22 * hl * (H.noseHorn || 1)), 1], [L * 0.8, -h * 0.24]], '#e2d6b8');   // nose horn
         horn(0, 0, '#ece2c6'); }   // near brow horn
       ctx.beginPath(); ctx.moveTo(L * 0.86, h * 0.26); ctx.quadraticCurveTo(L * 0.66, h * 0.3, L * 0.45, h * 0.26); ctx.lineWidth = Math.max(0.7, h * 0.04); ctx.strokeStyle = 'rgba(40,25,15,.6)'; ctx.stroke();
       const er = h * (H.eye || 0.11);
@@ -1769,8 +1887,10 @@ const DinoArt = (() => {
       const t = (far ? i + 0.5 : i) / (n - 1); if (t > 1) continue;
       const [x, y] = along(sp, P.from + (P.to - P.from) * t);
       const k = Math.sin(Math.min(1, t * 1.15) * Math.PI * 0.92 + 0.12), sz = P.size * (0.4 + 0.6 * k) * (0.6 + 0.4 * (a.age == null ? 1 : a.age)) * (far ? 0.92 : 1);
-      const w = sz * 0.62, h = sz * 1.05, lean = -sz * 0.12, base = y + sz * 0.22;
-      const pts = [[x - w * 0.16, base], [x - w * 0.46, y - h * 0.32], [x - w * 0.24 + lean, y - h * 0.82], [x + lean * 0.7, y - h, 1], [x + w * 0.26 + lean * 0.3, y - h * 0.8], [x + w * 0.48, y - h * 0.3], [x + w * 0.16, base]];
+      const spike = P.spikeFrom != null && t >= P.spikeFrom;   // Kentrosaurus: small plates in front, tall spikes over the hips and tail
+      const w = sz * (spike ? 0.26 : 0.62), h = sz * (spike ? 1.35 : 1.05), lean = -sz * (spike ? 0.35 : 0.12), base = y + sz * 0.22;
+      const pts = spike ? [[x - w * 0.5, base], [x - w * 0.3, y - h * 0.4], [x + lean, y - h, 1], [x + w * 0.3, y - h * 0.4], [x + w * 0.5, base]]
+        : [[x - w * 0.16, base], [x - w * 0.46, y - h * 0.32], [x - w * 0.24 + lean, y - h * 0.82], [x + lean * 0.7, y - h, 1], [x + w * 0.26 + lean * 0.3, y - h * 0.8], [x + w * 0.48, y - h * 0.3], [x + w * 0.16, base]];
       const g = ctx.createLinearGradient(0, y - h, 0, base);
       g.addColorStop(0, far ? dk(R.c.accent, 0.18) : lt(R.c.accent, 0.18)); g.addColorStop(0.7, far ? dk(R.c.accent, 0.3) : R.c.accent); g.addColorStop(1, dk(R.c.accent, 0.35));
       fillPts(ctx, pts, g);
@@ -2337,6 +2457,72 @@ const DinoArt = (() => {
     pattern: { from: 0.22, step: 0.055, n: 6 },
     c: C('#8a7d68', '#645a48', '#dcd2bc', { mark: 'rgba(50,40,30,.26)' }),
   });
+  // ----- more dinosaurs -----
+  def('allo', {   // Allosaurus: a big Jurassic hunter with a crest-like ridge in front of each eye
+    scale: 0.6, plan: 'biped', hipH: 40, shoulderH: 37, bodyLen: 23, depth: 22, sag: 1,
+    neck: { len: 15, ang: 32, base: 15, end: 12, rise: 0.25, down: 40, raise: 25, curve: 0.18 },
+    head: { type: 'theropod', len: 29, h: 14, follow: 0.2, tilt: 0.05, dip: 0.3, eye: 0.11, angry: 1, brow: 1 },
+    tail: { len: 56, base: 17, tip: 1, droop: 3, arch: -3, taper: 0.9 },
+    leg: { x: -1, l1: 19, l2: 17, l3: 9, w: 11.5, stride: 9, lift: 4, toe: 7 },
+    arm: { len: 12, w: 3.4, fingers: 3 },
+    pattern: { from: 0.18, step: 0.07, n: 8 },
+    c: C('#9a7a52', '#6b5236', '#e8d4ae', { mark: 'rgba(80,45,20,.32)', eye: '#e0b040' }),
+  });
+  def('bary', {   // Baryonyx: a fish-eating spinosaur with a long crocodile-like snout and a huge thumb claw
+    scale: 0.5, plan: 'biped', hipH: 33, shoulderH: 32, bodyLen: 22, depth: 19, sag: 1,
+    neck: { len: 15, ang: 28, base: 13, end: 10, rise: 0.2, down: 35, raise: 20, curve: 0.15 },
+    head: { type: 'croc', len: 27, h: 9, follow: 0.25, tilt: 0.05, eye: 0.16 },
+    tail: { len: 52, base: 13, tip: 1, droop: 3, arch: -2, taper: 0.85 },
+    leg: { x: 0, l1: 16, l2: 15, l3: 8, w: 10, stride: 8, lift: 4, toe: 6 },
+    arm: { len: 14, w: 4, fingers: 3, thumb: 1 },
+    pattern: { from: 0.3, step: 0.06, n: 6 },
+    c: C('#7d8a6a', '#55614a', '#e0ddc4', { mark: 'rgba(35,45,25,.28)', eye: '#e0b040' }),
+  });
+  def('galli', {   // Gallimimus: an ostrich-like dinosaur with a beak, a long neck and long fast legs, covered in feathers
+    scale: 0.36, plan: 'biped', hipH: 46, shoulderH: 45, bodyLen: 16, depth: 18, sag: 2, cover: 'feathers',
+    neck: { len: 26, ang: 62, base: 9, end: 6, rise: 0.4, down: 50, raise: 14, curve: -0.1 },
+    head: { type: 'bird', len: 18, h: 9, follow: 0.3, tilt: 0.1, eye: 0.17 },
+    tail: { len: 44, base: 10, tip: 2, droop: 0, arch: -1, type: 'fan', fan: 9, taper: 0.7 },
+    leg: { x: 0, l1: 16, l2: 22, l3: 16, w: 8, stride: 13, lift: 6, toe: 5, scaly: '#a08a62' },
+    arm: { len: 14, w: 2.6, fold: 18, foldH: 10, wing: '#8a6a44' },
+    c: C('#b08a5a', '#7c5e3a', '#efe2c4', { accent: '#7c5e3a', beak: '#5a4630', eye: '#e0b040' }),
+  });
+  def('edmonto', {   // Edmontosaurus: a huge duck-billed dinosaur with no crest
+    scale: 0.66, plan: 'quad', hipH: 38, shoulderH: 31, bodyLen: 30, depth: 27, sag: 3, hump: [0.25, 3],
+    neck: { len: 14, ang: 20, base: 14, end: 11, rise: 0.15, down: 45, raise: 20, curve: -0.12 },
+    head: { type: 'duck', len: 25, h: 11, follow: 0.6, tilt: 0.3, eye: 0.13, crestLen: 0 },
+    tail: { len: 52, base: 16, tip: 1, droop: 2, arch: -3 },
+    hind: { x: -2, w: 12.5, stride: 7, lift: 4, foot: 'hoof' }, fore: { x: 27, w: 7, stride: 6, lift: 3, foot: 'hoof' },
+    pattern: { from: 0.1, step: 0.06, n: 8 },
+    c: C('#7a7458', '#575239', '#e4dfc0', { mark: 'rgba(40,40,25,.3)', beak: '#3d3a2a' }),
+  });
+  def('kentro', {   // Kentrosaurus: a small stegosaur with plates in front and long spikes over the hips and tail
+    scale: 0.42, plan: 'quad', hipH: 30, shoulderH: 22, bodyLen: 26, depth: 22, sag: 2, hump: [0.15, 5],
+    neck: { len: 11, ang: -16, base: 11, end: 8, rise: 0.1, down: 25, raise: 25, curve: 0.08 },
+    head: { type: 'beak', len: 13, h: 8, follow: 0.5, tilt: 0.25, eye: 0.18 },
+    tail: { len: 44, base: 14, tip: 2, droop: -8, arch: -4, type: 'spikes', spike: 15 },
+    hind: { x: -3, w: 10, stride: 6, lift: 3, foot: 'hoof' }, fore: { x: 24, w: 7.5, stride: 5, lift: 3, foot: 'hoof' },
+    back: { plates: { n: 7, from: 0.02, to: 0.98, size: 17, spikeFrom: 0.5 } },
+    c: C('#a08a52', '#73623a', '#e6dcb0', { accent: '#c79a4a', beak: '#4a4030' }),
+  });
+  def('diplo', {   // Diplodocus: a very long, low sauropod with a whip-like tail
+    scale: 0.52, plan: 'quad', hipH: 46, shoulderH: 38, bodyLen: 32, depth: 28, sag: 3, hump: [0.3, 3],
+    neck: { len: 60, ang: 24, base: 19, end: 8, rise: 0.15, down: 30, raise: 10, curve: -0.08 },
+    head: { type: 'sauro', len: 17, h: 7, follow: 0.25, tilt: 0.3, eye: 0.15 },
+    tail: { len: 100, base: 16, tip: 0.3, droop: 20, arch: -4, taper: 0.62 },
+    hind: { x: -2, w: 13, stride: 7, lift: 3, foot: 'pad' }, fore: { x: 30, w: 11, stride: 6, lift: 3, foot: 'pad' },
+    pattern: { from: 0.2, step: 0.05, n: 7 },
+    c: C('#7d8270', '#5a5e4e', '#dcdcc8', { mark: 'rgba(40,45,35,.26)' }),
+  });
+  def('styraco', {   // Styracosaurus: a horned dinosaur with one long nose horn and long spikes around its frill
+    scale: 0.5, plan: 'quad', hipH: 32, shoulderH: 28, bodyLen: 28, depth: 27, sag: 2,
+    neck: { len: 8, ang: -10, base: 16, end: 14, rise: 0.1, down: 20, raise: 15, curve: 0 },
+    head: { type: 'cerat', len: 26, h: 15, follow: 0.5, tilt: 0.25, eye: 0.1, spikes: 1, noseHorn: 2.6, browHorn: 0.25 },
+    tail: { len: 28, base: 14, tip: 1, droop: 6, arch: -2 },
+    hind: { x: -2, w: 12, stride: 6, lift: 3, foot: 'hoof' }, fore: { x: 27, w: 10, stride: 6, lift: 3, foot: 'hoof' },
+    pattern: { from: 0.15, step: 0.07, n: 6 },
+    c: C('#9c7b58', '#6d5238', '#e6d4b4', { mark: 'rgba(70,40,20,.3)', accent: '#c4673a', beak: '#4a3a2a' }),
+  });
   // ----- before the dinosaurs -----
   def('dimetro', {
     scale: 0.44, plan: 'quad', hipH: 19, shoulderH: 19, bodyLen: 28, depth: 16, sag: 1,
@@ -2514,6 +2700,18 @@ const DinoArt = (() => {
     arm: { len: 20, w: 2.6, fold: 30, foldH: 12, claws3: 1, wing: '#2b2724' },
     c: C('#3d3833', '#24201d', '#857a6c', { accent: '#2b2724', eye: '#e0a830', wing: '#2b2724' }),
   });
+  def('microW', { hidden: true,
+    scale: 0.22, plan: 'biped', hipH: 28, shoulderH: 28, bodyLen: 13, depth: 15, sag: 2, cover: 'feathers',
+    neck: { len: 12, ang: 50, base: 8, end: 6, rise: 0.35, down: 50, raise: 25, curve: 0.25 },
+    head: { type: 'theropod', len: 15, h: 8, follow: 0.15, tilt: 0.0, eye: 0.2, snoutUp: 1, feathers: 1 },
+    tail: { len: 42, base: 8, tip: 2, droop: 0, arch: -2, type: 'frond', fan: 5, taper: 0.5 },
+    leg: { x: -1, l1: 13, l2: 15, l3: 10, w: 6, stride: 9, lift: 5, toe: 4, sickle: 1, scaly: '#2a2a34' },
+    arm: { len: 19, w: 2.4, fold: 30, foldH: 12, claws3: 1, wing: '#1d1f2e' },
+    c: C('#24252f', '#14151c', '#4a4e66', { accent: '#2f3b6e', eye: '#e0a830', wing: '#1d1f2e' }),
+  });
+  def('micro', { scale: 0.22, plan: 'flyer', hipH: 28, shoulderH: 28, bodyLen: 13, depth: 15,
+    fly: { bird: 1, walk: 'microW', span: 96, body: 24, bodyW: 12, neck: 9, head: 13, headH: 8, legH: 12, armH: 18, flyH: 10, tail: 38, tailW: 14 },
+    c: C('#24252f', '#14151c', '#4a4e66', { wing: '#1d1f2e', accent: '#2f3b6e', eye: '#e0a830' }), line: '#0e0f14' });
   def('archaeo', { scale: 0.26, plan: 'flyer', hipH: 30, shoulderH: 30, bodyLen: 14, depth: 17,
     fly: { bird: 1, walk: 'archaeoW', span: 104, body: 26, bodyW: 13, neck: 9, head: 14, headH: 9, legH: 13, armH: 20, flyH: 10, tail: 40, tailW: 15 },
     c: C('#3d3833', '#24201d', '#857a6c', { wing: '#2b2724', accent: '#2b2724', eye: '#e0a830' }), line: '#1a1714' });
@@ -2957,6 +3155,45 @@ const Props = (() => {
       rr(c, -22, -76, 44, 14, 4, '#fff3d6', L, 1.4);
       c.fillStyle = '#6a2f22'; c.font = 'bold 9px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('GIFTS', 0, -68.6);
     },
+    meal(c) {   // the restaurant: a striped awning over a terrace with tables
+      shadow(c, 38, 8);
+      rr(c, -34, -46, 68, 46, 3, '#f1e2c4', L, 1.6);
+      rr(c, -28, -38, 18, 16, 2, '#cfeaf2', L, 1.2); rr(c, 10, -38, 18, 16, 2, '#cfeaf2', L, 1.2);
+      rr(c, -7, -26, 14, 26, 2, '#7a4a2a', L, 1.3);
+      poly(c, [[-38, -46], [38, -46], [32, -60], [-32, -60]], '#2f8a4a', L, 1.6);
+      for (let i = 0; i < 6; i++) poly(c, [[-38 + i * 12.7, -46], [-31.6 + i * 12.7, -46], [-26.7 + i * 10.7, -60], [-32 + i * 10.7, -60]], '#f6efe2');
+      poly(c, [[-38, -46], [38, -46], [32, -60], [-32, -60]], null, L, 1.6);
+      rr(c, -20, -76, 40, 14, 4, '#fff3d6', L, 1.4);
+      c.fillStyle = '#2f6a3a'; c.font = 'bold 8px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FOOD', 0, -68.6);
+      for (const x of [-26, 26]) { ell(c, x, -4, 6, 2.5, '#fff', L, 1); rr(c, x - 0.8, -4, 1.6, 4, 0.5, '#6b4a2e'); }
+    },
+    treat(c) {   // an ice cream cart with a parasol
+      shadow(c, 16, 4);
+      rr(c, -14, -18, 28, 14, 3, '#f7d7e4', L, 1.4);
+      rr(c, -14, -21, 28, 4, 2, '#fff', L, 1.1);
+      for (const x of [-9, 9]) ell(c, x, -3, 3.5, 3.5, '#4a4a4a', L, 1);
+      c.strokeStyle = L; c.lineWidth = 1.4; c.beginPath(); c.moveTo(0, -21); c.lineTo(0, -38); c.stroke();
+      c.beginPath(); c.moveTo(-17, -36); c.quadraticCurveTo(0, -50, 17, -36); c.closePath(); c.fillStyle = '#f08ab0'; c.fill(); c.stroke();
+      for (const x of [-8, 0, 8]) { c.beginPath(); c.moveTo(x, -45 + Math.abs(x) * 0.4); c.lineTo(x * 1.9, -36); c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1.2; c.stroke(); }
+      c.font = '9px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('🍦', 0, -12);
+    },
+    photo(c) {   // a photo booth with a curtain and a camera sign
+      shadow(c, 14, 4);
+      rr(c, -12, -36, 24, 36, 3, '#e8b23a', L, 1.5);
+      rr(c, -8, -28, 16, 28, 2, '#b3283a', L, 1.2);
+      c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 1; for (const x of [-4, 0, 4]) { c.beginPath(); c.moveTo(x, -27); c.lineTo(x, -1); c.stroke(); }
+      rr(c, -10, -48, 20, 12, 3, '#3a3f48', L, 1.3); ell(c, 0, -42, 4, 4, '#9fd4e6', L, 1); rr(c, 4, -50, 4, 2.5, 1, '#f2c23a');
+    },
+    safari(c) {   // the safari station: a thatched roof on posts, a sign, and a little queue rail
+      shadow(c, 38, 8);
+      rr(c, -34, -8, 68, 8, 2, '#b89a6a', L, 1.4);
+      for (const x of [-30, -10, 10, 30]) rr(c, x - 2, -40, 4, 32, 1.5, '#7a5632', L, 1.1);
+      poly(c, [[-40, -40], [40, -40], [30, -60], [-30, -60]], '#d6b15e', L, 1.6);
+      c.strokeStyle = 'rgba(120,80,30,.45)'; c.lineWidth = 1; for (let x = -34; x <= 34; x += 5) { c.beginPath(); c.moveTo(x, -41); c.lineTo(x * 0.78, -59); c.stroke(); }
+      rr(c, -24, -78, 48, 16, 4, '#3f7a3a', L, 1.4);
+      c.fillStyle = '#fff4d0'; c.font = 'bold 9px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('SAFARI', 0, -69.6);
+      c.strokeStyle = '#c9a24a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-26, -16); c.lineTo(26, -16); c.stroke();
+    },
     bench(c) {
       shadow(c, 16, 3.5);
       rr(c, -14, -10, 28, 4, 1.5, '#a0703e', L, 1.2);
@@ -3053,7 +3290,7 @@ const Props = (() => {
   }
 
   /* Fences: a run between two points (x1,y1)-(x2,y2). lvl 1 wood, 2 stone, 3 steel. */
-  function fence(c, x1, y1, x2, y2, lvl, hp, broken) {
+  function fence(c, x1, y1, x2, y2, lvl, hp, broken, front) {
     const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy), vertical = Math.abs(dy) > Math.abs(dx);
     const worn = hp < 40;
     if (broken) {   // a broken section: a few pieces lying on the ground
@@ -3061,26 +3298,32 @@ const Props = (() => {
       for (let i = 0; i < 4; i++) { const t = (i + 0.5) / 4; c.fillRect(x1 + dx * t - 3, y1 + dy * t - 2, 6, 3); }
       return;
     }
-    if (lvl === 4) {   // aviary: tall poles with netting
-      const hgt = 56, n = Math.max(1, Math.round(len / 40));
-      c.strokeStyle = worn ? 'rgba(60,60,55,.35)' : 'rgba(40,45,40,.45)'; c.lineWidth = 0.8;
-      if (vertical) { for (let k = 0; k <= 6; k++) { c.beginPath(); c.moveTo(x1, y1 - hgt * k / 6); c.lineTo(x2, y2 - hgt * k / 6); c.stroke(); } }
+    if (lvl === 4) {   // aviary: a low glass-and-steel base wall (the glass dome over it is drawn by aviaryRoof)
+      const hgt = 12;
+      if (vertical) { rr(c, x1 - 3, Math.min(y1, y2) - hgt, 6, len + hgt, 2, 'rgba(150,200,220,.5)', L, 1.1); }
       else {
-        for (let k = 0; k <= 6; k++) { c.beginPath(); c.moveTo(x1, y1 - hgt * k / 6); c.lineTo(x2, y2 - hgt * k / 6); c.stroke(); }
-        for (let x = x1; x <= x2; x += 6) { c.beginPath(); c.moveTo(x, y1); c.lineTo(x, y1 - hgt); c.stroke(); }
+        c.fillStyle = 'rgba(170,215,235,.42)'; c.fillRect(x1, y1 - hgt, len, hgt);
+        c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1; for (let x = x1 + 8; x < x2 - 4; x += 22) { c.beginPath(); c.moveTo(x, y1 - 2); c.lineTo(x + 5, y1 - hgt + 2); c.stroke(); }
+        c.strokeStyle = L; c.lineWidth = 1.2; c.strokeRect(x1, y1 - hgt, len, hgt);
+        c.fillStyle = '#6f7f8a'; const n = Math.max(1, Math.round(len / 40)); for (let i = 0; i <= n; i++) c.fillRect(x1 + len * i / n - 1.8, y1 - hgt - 1, 3.6, hgt + 1);
       }
-      for (let i = 0; i <= n; i++) { const x = x1 + dx * i / n, y = y1 + dy * i / n; rr(c, x - 2, y - hgt - 4, 4, hgt + 4, 1.5, '#5d6a5a', L, 1); ell(c, x, y - hgt - 4, 3, 2.4, '#8a9a86', L, 0.8); }
       return;
     }
-    if (lvl === 5) {   // lagoon: low glass panels in a steel frame
-      const hgt = 14;
-      if (vertical) { rr(c, x1 - 2.5, Math.min(y1, y2) - hgt, 5, len + hgt, 1.5, 'rgba(170,220,240,.55)', L, 1.1); }
-      else {
-        c.fillStyle = 'rgba(170,220,240,.5)'; c.fillRect(x1, y1 - hgt, len, hgt);
-        c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.2; for (let x = x1 + 6; x < x2; x += 18) { c.beginPath(); c.moveTo(x, y1 - 3); c.lineTo(x + 6, y1 - hgt + 2); c.stroke(); }
-        c.strokeStyle = L; c.lineWidth = 1.2; c.strokeRect(x1, y1 - hgt, len, hgt);
-        c.fillStyle = '#6a7a84'; for (let x = x1; x <= x2 + 0.1; x += len / Math.max(1, Math.round(len / 40))) c.fillRect(x - 1.5, y1 - hgt - 1, 3, hgt + 1);
+    if (lvl === 5) {   // lagoon: a stone edge all round; the front side is a glass window you can see the water through
+      const stone = worn ? '#bdb5a2' : '#d8d0bc';
+      if (vertical) { rr(c, x1 - 5, Math.min(y1, y2) - 7, 10, len + 9, 3, stone, L, 1.2); return; }
+      if (front) {
+        const hgt = 18, g = c.createLinearGradient(0, y1 - hgt, 0, y1);
+        g.addColorStop(0, 'rgba(110,190,235,.85)'); g.addColorStop(1, 'rgba(25,85,150,.92)');
+        c.fillStyle = g; c.fillRect(x1, y1 - hgt, len, hgt);
+        c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.3; for (let x = x1 + 6; x < x2 - 6; x += 16) { c.beginPath(); c.moveTo(x, y1 - 3); c.lineTo(x + 6, y1 - hgt + 3); c.stroke(); }
+        c.strokeStyle = L; c.lineWidth = 1.3; c.strokeRect(x1, y1 - hgt, len, hgt);
+        c.fillStyle = '#5f6d76'; const n = Math.max(1, Math.round(len / 44)); for (let i = 0; i <= n; i++) c.fillRect(x1 + len * i / n - 1.8, y1 - hgt, 3.6, hgt);
+        rr(c, x1 - 4, y1 - hgt - 6, len + 8, 7, 2.5, stone, L, 1.2);
+        return;
       }
+      rr(c, x1 - 4, y1 - 7, len + 8, 9, 3, stone, L, 1.2);
+      c.strokeStyle = 'rgba(80,70,50,.28)'; c.lineWidth = 1; for (let x = x1 + 18; x < x2 - 4; x += 22) { c.beginPath(); c.moveTo(x, y1 - 6); c.lineTo(x, y1 + 1); c.stroke(); }
       return;
     }
     if (lvl === 2) {
@@ -3109,14 +3352,52 @@ const Props = (() => {
     }
   }
 
-  // the netting over the top of an aviary (x0,y0)-(x1,y1) is the fence line, in pixels
+  // An aviary is a glass greenhouse: steel arches across it, glass between them, and a door at the front.
+  // (x0,y0)-(x1,y1) is its wall line, in pixels. Drawn over the animals inside, so it's mostly see-through.
   function aviaryRoof(c, x0, y0, x1, y1) {
-    const H = 56;
-    c.save(); c.globalAlpha = 0.55;
-    c.strokeStyle = 'rgba(40,45,40,.5)'; c.lineWidth = 0.7;
-    for (let x = x0; x <= x1; x += 12) { c.beginPath(); c.moveTo(x, y0 - H); c.lineTo(x, y1 - H); c.stroke(); }
-    for (let y = y0; y <= y1; y += 12) { c.beginPath(); c.moveTo(x0, y - H); c.lineTo(x1, y - H); c.stroke(); }
-    c.globalAlpha = 0.9; c.strokeStyle = '#4d584a'; c.lineWidth = 2; c.strokeRect(x0, y0 - H, x1 - x0, y1 - y0);
+    const w = x1 - x0, H = Math.min(110, 34 + w * 0.3);
+    const arch = (y, t) => [x0 + w * t, y - H * Math.sin(Math.PI * t)];
+    const archPath = (y, rev) => { for (let k = 0; k <= 24; k++) { const t = rev ? 1 - k / 24 : k / 24, [px, py] = arch(y, t); if (k) c.lineTo(px, py); else c.moveTo(px, py); } };
+    c.save();
+    // the glass roof, and the glass at the front
+    c.beginPath(); archPath(y0, false); for (let k = 24; k >= 0; k--) { const [px, py] = arch(y1, k / 24); c.lineTo(px, py); } c.closePath();
+    c.fillStyle = 'rgba(205,238,255,.2)'; c.fill();
+    c.beginPath(); archPath(y1, false); c.closePath(); c.fillStyle = 'rgba(205,238,255,.16)'; c.fill();
+    // lengthwise bars along the roof
+    c.lineCap = 'round';
+    for (const t of [0.08, 0.22, 0.36, 0.5, 0.64, 0.78, 0.92]) { const [ax, ay] = arch(y0, t), [bx, by] = arch(y1, t); c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.strokeStyle = t === 0.5 ? 'rgba(60,75,85,.75)' : 'rgba(70,85,95,.45)'; c.lineWidth = t === 0.5 ? 2.4 : 1.1; c.stroke(); }
+    // steel arches, every two tiles, the front one thickest
+    const n = Math.max(1, Math.round((y1 - y0) / 80));
+    for (let i = 0; i <= n; i++) {
+      const y = y0 + (y1 - y0) * i / n, front = i === n;
+      c.beginPath(); archPath(y, false); c.strokeStyle = L; c.lineWidth = front ? 5 : 3.6; c.stroke();
+      c.strokeStyle = front ? '#9fb0bb' : '#8a9aa6'; c.lineWidth = front ? 3 : 2; c.stroke();
+    }
+    // a shine on the glass
+    c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 2;
+    for (const t of [0.28, 0.33]) { const [ax, ay] = arch(y1, t), [bx, by] = arch(y0 + (y1 - y0) * 0.55, t + 0.04); c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke(); }
+    // the door in the middle of the front
+    const dx = x0 + w / 2, dw = 26, dh = 32;
+    rr(c, dx - dw / 2 - 4, y1 - dh - 6, dw + 8, dh + 6, 4, '#7f909b', L, 1.3);
+    rr(c, dx - dw / 2, y1 - dh, dw, dh, 3, 'rgba(120,170,190,.85)', L, 1.1);
+    c.strokeStyle = '#4c5a63'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(dx, y1 - dh); c.lineTo(dx, y1); c.stroke();
+    c.restore();
+  }
+
+  // A safari jeep at (x,y) = middle of its wheels, facing left (dir < 0) or right; riders = how many guests are on it.
+  function jeep(c, x, y, dir, riders, t) {
+    c.save(); c.translate(x, y); if (dir < 0) c.scale(-1, 1);
+    ell(c, 0, 2, 22, 5, 'rgba(20,30,10,.25)');
+    const bob = Math.sin((t || 0) * 18) * 0.6;
+    c.translate(0, bob);
+    rr(c, -20, -16, 40, 12, 3, '#3f7a3a', L, 1.5);   // body
+    c.fillStyle = '#e9c35a'; c.fillRect(-20, -11, 40, 3);   // safari stripe
+    poly(c, [[8, -16], [18, -16], [20, -10], [8, -10]], '#9fd4e6', L, 1.1);   // windscreen
+    rr(c, -18, -30, 30, 3, 1.5, '#d6b15e', L, 1.1);   // roof frame
+    for (const px of [-16, 8]) { c.strokeStyle = L; c.lineWidth = 1.6; c.beginPath(); c.moveTo(px, -27); c.lineTo(px, -16); c.stroke(); }
+    const SK = ['#f1c9a5', '#d9a47a', '#b97a52', '#8a5638'];
+    for (let i = 0; i < Math.min(4, riders || 0); i++) ell(c, -12 + i * 6.5, -19, 2.8, 2.8, SK[i % 4], L, 0.9);
+    for (const wx of [-12, 12]) { ell(c, wx, -3, 5, 5, '#2b2b2b', L, 1.2); ell(c, wx, -3, 2, 2, '#9a9a9a'); }
     c.restore();
   }
 
@@ -3184,7 +3465,7 @@ const Props = (() => {
     rr(c, -3, -1.5, 6, 3, 1, '#f2efe6', '#8a8070', 0.7); c.fillStyle = '#d9483b'; c.fillRect(-1, -1.5, 2, 3);
     c.restore();
   }
-  return { plantSprite, plantHeight, bldSprite, gate, fence, aviaryRoof, person, randomLook, dung, trash, rnd };
+  return { plantSprite, plantHeight, bldSprite, gate, fence, aviaryRoof, jeep, person, randomLook, dung, trash, rnd };
 })();
 </script>
 <script>/* ---------- Ancient Bird (a prehistoric park game) ---------- */
@@ -3237,7 +3518,7 @@ const Props = (() => {
     const R = REGIONS[region];
     const s = {
       v: 2, id: 'p' + Date.now().toString(36) + ((rand() * 1e4) | 0), region, name: name || 'Dino Park', money: 30000, t: 0, day: 1, admission: 15, stars: 0, maxStars: 0, score: 0,
-      ground: new Array(MW * MH).fill(BI[R.ground]), path: new Array(MW * MH).fill(0), owned: new Array(PW * PH).fill(0),
+      ground: new Array(MW * MH).fill(BI[R.ground]), path: new Array(MW * MH).fill(0), track: new Array(MW * MH).fill(0), owned: new Array(PW * PH).fill(0),
       objs: [], habs: [], animals: [], staff: [], trash: [], goals: {}, nid: 1, seenSp: {}, research: null, weather: { k: 'sun', t: 50, next: 'cloud' },
       stats: { guests: 0, dayIn: 0, dayOut: 0, dayGuests: 0 }, gHappy: [],
     };
@@ -3321,6 +3602,8 @@ const Props = (() => {
       const kind = BUILDINGS[o.type].sells;
       (access[kind] || (access[kind] = [])).push(o);
     }
+    // safari rides: the jeep's route goes out along the track from the station and back again
+    for (const o of access.ride || []) o.route = jeepRoute(o);
     habInfo = new Map();
     for (const h of S.habs) habInfo.set(h.id, scanHab(h));
     groundDirty = true;
@@ -3395,6 +3678,9 @@ const Props = (() => {
       for (const a of o.animals) if (['brawl', 'hunt', 'ko', 'attack', 'chase'].includes(a.st)) { a.st = 'idle'; a.fight = null; a.atk = null; }
       o.weather = o.weather || { k: 'sun', t: 50, next: 'cloud' };
       if (!o.owned) o.owned = new Array(PW * PH).fill(1);
+      if (!Array.isArray(o.track) || o.track.length !== MW * MH) o.track = new Array(MW * MH).fill(0);   // jeep tracks (newer parks)
+      if (o.money < -200) o.money = -200;   // older parks could sink far below zero
+      if (!o.lag2) { for (const h of o.habs || []) if (h.lvl === 5) fillLagoon(o, h); o.lag2 = 1; }   // older lagoons had to be filled by hand: fill them
       return o;
     } catch (e) { return null; }
   }
@@ -3533,24 +3819,37 @@ const Props = (() => {
   function resize() {
     DPR = Math.min(lowGfx ? Math.min(1.25, GFX.dpr) : GFX.dpr, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
-    uiPad = [0, 0]; if (typeof $ === 'function' && $('tools')) measureUi();
+    uiPad = [0, 0, 0, 0]; if (typeof $ === 'function' && $('tools')) { applyLayout(); measureUi(); }
     clampCam();
   }
   const zMin = () => Math.max(W / (MW * T) * 0.9, H / (MH * T) * 0.9, 0.25);
   // How far the menus reach in from the top and bottom of the screen. The view can be dragged that much
   // further, so the edge of the map (like the entrance) can always be brought out from under the menus.
-  let uiPad = [0, 0];
-  function uiCover() {
-    let top = 0, bot = 0;
-    const tp = document.querySelector('.hud .top'); if (tp && tp.offsetParent !== null) top = tp.getBoundingClientRect().bottom;
-    for (const id of ['tools', 'tray', 'sub']) { const e = $(id); if (e && !e.hidden && e.offsetParent !== null) { const r = e.getBoundingClientRect(); if (r.height) bot = Math.max(bot, H - r.top); } }
-    return [top, bot];
+  let uiPad = [0, 0, 0, 0];   // top, bottom, left, right
+  // Where the toolbar goes (Settings → Toolbar): along the bottom, or down the left or right side.
+  const layout = () => (PREF.layout === 'left' || PREF.layout === 'right' ? PREF.layout : 'bottom');
+  function applyLayout() {
+    const hud = document.querySelector('.hud'); if (!hud) return;
+    hud.classList.toggle('lay-left', layout() === 'left'); hud.classList.toggle('lay-right', layout() === 'right');
+    const tp = document.querySelector('.hud .top'); if (tp) hud.style.setProperty('--tc', Math.round(tp.getBoundingClientRect().bottom || 56) + 'px');
   }
-  function measureUi() { const [t, b] = uiCover(); uiPad = [Math.max(uiPad[0], t), Math.max(uiPad[1], b)]; }
+  function uiCover() {
+    let top = 0, bot = 0, lft = 0, rgt = 0;
+    const tp = document.querySelector('.hud .top'); if (tp && tp.offsetParent !== null) top = tp.getBoundingClientRect().bottom;
+    const side = layout() !== 'bottom';
+    for (const id of ['tools', 'tray', 'sub']) {
+      const e = $(id); if (!e || e.hidden || e.offsetParent === null) continue;
+      const r = e.getBoundingClientRect(); if (!r.height) continue;
+      if (side && id !== 'sub') { if (layout() === 'left') lft = Math.max(lft, r.right); else rgt = Math.max(rgt, W - r.left); }
+      else bot = Math.max(bot, H - r.top);
+    }
+    return [top, bot, lft, rgt];
+  }
+  function measureUi() { const c = uiCover(); uiPad = uiPad.map((v, i) => Math.max(v, c[i] || 0)); }
   function clampCam() {
     cam.z = clamp(cam.z, zMin(), 2.6);
-    const hw = W / 2 / cam.z, hh = H / 2 / cam.z, pt = uiPad[0] / cam.z, pb = uiPad[1] / cam.z;
-    cam.x = clamp(cam.x, Math.min(hw - T * 2, MW * T / 2), Math.max(MW * T - hw + T * 2, MW * T / 2));
+    const hw = W / 2 / cam.z, hh = H / 2 / cam.z, pt = uiPad[0] / cam.z, pb = uiPad[1] / cam.z, pl = (uiPad[2] || 0) / cam.z, pr = (uiPad[3] || 0) / cam.z;
+    cam.x = clamp(cam.x, Math.min(hw - T * 2 - pl, MW * T / 2), Math.max(MW * T - hw + T * 2 + pr, MW * T / 2));
     cam.y = clamp(cam.y, Math.min(hh - T * 2 - pt, MH * T / 2), Math.max(MH * T - hh + T * 2 + pb, MH * T / 2));
   }
   // slide the view smoothly (used to bring a spot out from behind the menus)
@@ -3635,6 +3934,28 @@ const Props = (() => {
       if (!isP(x, y)) continue; const i = I(x, y);
       for (let k = 0; k < 4; k++) { gx.fillStyle = 'rgba(150,120,70,.35)'; gx.beginPath(); gx.arc(x * T + 8 + hash(i, 40 + k) * (T - 16), y * T + 8 + hash(i, 50 + k) * (T - 16), 1.6, 0, 7); gx.fill(); }
     }
+    // jeep tracks: a gravel bed with two wheel ruts, joined to their neighbours
+    const trk = GS().track;
+    if (trk) {
+      const isT = (x, y) => inMap(x, y) && !!trk[I(x, y)];
+      for (const pass of [0, 1]) {
+        gx.fillStyle = pass ? '#b3a283' : '#7e705a'; const e = pass ? 0 : 2;
+        for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+          if (!isT(x, y)) continue; const X = x * T, Y = y * T;
+          gx.beginPath(); gx.roundRect(X + 7 - e, Y + 7 - e, T - 14 + e * 2, T - 14 + e * 2, 7 + e); gx.fill();
+          if (isT(x + 1, y)) gx.fillRect(X + T / 2, Y + 7 - e, T, T - 14 + e * 2);
+          if (isT(x, y + 1)) gx.fillRect(X + 7 - e, Y + T / 2, T - 14 + e * 2, T);
+        }
+      }
+      gx.strokeStyle = 'rgba(80,62,40,.55)'; gx.lineWidth = 2.2; gx.lineCap = 'round';
+      for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+        if (!isT(x, y)) continue; const cx = x * T + T / 2, cy = y * T + T / 2;
+        for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) {
+          if (!isT(x + dx, y + dy)) continue;
+          for (const s2 of [-5, 5]) { gx.beginPath(); gx.moveTo(cx + dy * s2, cy + dx * s2); gx.lineTo(cx + dx * T / 2 + dy * s2, cy + dy * T / 2 + dx * s2); gx.stroke(); }
+        }
+      }
+    }
     // a paved plaza at the gate
     if (mode === 'park') { gx.fillStyle = '#cdb88a'; gx.beginPath(); gx.roundRect((GATE.x - 1.5) * T, (GATE.y) * T + 2, 3 * T, T - 2, 8); gx.fill(); }
   }
@@ -3650,13 +3971,19 @@ const Props = (() => {
       if (!owns(x, y)) return 'You don\'t own this land yet. Buy it with the Land tool 🗺️';
       const i = I(x, y), edge = x === x0 || x === x1 || y === y0 || y === y1;
       if (S.path[i]) return 'There\'s a path in the way';
+      if (hasTrack(i)) return 'A jeep track is in the way';
       if (ring[i] || inner[i]) return 'It overlaps another habitat';
       const o = occ[i] && OBJ.get(occ[i]); if (o && o.k === 'bld') return 'A building is in the way';
-      if (edge && S.ground[i] === WATER && lvl !== 5) return 'Fences can\'t go on water (lagoon walls can)';
+      if (edge && S.ground[i] === WATER && lvl !== 5) return 'Fences can\'t go on water (lagoons can)';
     }
     const cost = habCost(x0, y0, x1, y1, lvl);
     if (cost > S.money) return 'Not enough money (' + fmt(cost) + ')';
     return '';
+  }
+  // everything inside a lagoon's walls is water (plants there are cleared away)
+  function fillLagoon(P, h) {
+    for (let y = h.y0 + 1; y < h.y1; y++) for (let x = h.x0 + 1; x < h.x1; x++) P.ground[y * MW + x] = WATER;
+    P.objs = (P.objs || []).filter((q) => !(q.k === 'plant' && q.x > h.x0 && q.x < h.x1 && q.y > h.y0 && q.y < h.y1));
   }
   const habCost = (x0, y0, x1, y1, lvl) => ((x1 - x0 + 1) * 2 + (y1 - y0 - 1) * 2) * FENCES[lvl].cost;
   function buildHab(x0, y0, x1, y1, lvl) {
@@ -3666,7 +3993,8 @@ const Props = (() => {
     // plants on the fence line are cleared away
     S.objs = S.objs.filter((o) => !(o.k === 'plant' && (o.x === x0 || o.x === x1 || o.y === y0 || o.y === y1) && o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1));
     const n = S.habs.length + 1;
-    S.habs.push({ id: S.nid++, x0, y0, x1, y1, lvl, hp: 100, food: 100, dung: [], name: 'Habitat ' + n, brk: -1 });
+    S.habs.push({ id: S.nid++, x0, y0, x1, y1, lvl, hp: 100, food: 100, dung: [], name: (lvl === 4 ? 'Aviary ' : lvl === 5 ? 'Lagoon ' : 'Habitat ') + n, brk: -1 });
+    if (lvl === 5) { fillLagoon(S, S.habs[S.habs.length - 1]); groundDirty = true; }   // a lagoon fills itself with water
     spend(cost, (x0 + x1 + 1) / 2 * T, y0 * T);
     rebuild(); SFX.place(); goal('hab');
     return true;
@@ -3676,11 +4004,48 @@ const Props = (() => {
     if (!owns(x, y)) return 'You don\'t own this land yet. Buy it with the Land tool 🗺️';
     const i = I(x, y);
     if (S.path[i]) return 'That\'s a path';
+    if (hasTrack(i)) return 'That\'s a jeep track';
     if (ring[i]) return 'That\'s a fence';
     if (occ[i]) return 'Something is already there';
     if (S.ground[i] === WATER) return 'Can\'t plant in water';
     if (PLANTS[type].cost > S.money) return 'Not enough money';
     return '';
+  }
+  // ---- the safari jeep ride: a track of its own that the jeep drives along ----
+  const hasTrack = (i) => !!(S.track && S.track[i]);
+  function jeepRoute(o) {
+    let start = -1;
+    for (let y = o.y - 1; y <= o.y + o.h && start < 0; y++) for (let x = o.x - 1; x <= o.x + o.w; x++) {
+      if (!inMap(x, y)) continue; const inside = x >= o.x && x < o.x + o.w && y >= o.y && y < o.y + o.h, diag = (x < o.x || x >= o.x + o.w) && (y < o.y || y >= o.y + o.h);
+      if (!inside && !diag && hasTrack(I(x, y))) { start = I(x, y); break; }
+    }
+    if (start < 0) return [];
+    const route = [], seen = new Set();
+    const go = (i, depth) => {   // visit every connected track tile, and come back the same way
+      seen.add(i); route.push(i); if (depth > 400) return;
+      const x = i % MW, y = (i / MW) | 0;
+      for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) { const nx = x + dx, ny = y + dy; if (!inMap(nx, ny)) continue; const j = I(nx, ny); if (hasTrack(j) && !seen.has(j)) { go(j, depth + 1); route.push(i); } }
+    };
+    go(start, 0);
+    return seen.size >= 6 ? route : [];
+  }
+  function trackOkReason(x, y) {
+    if (!inMap(x, y) || y >= MH - 1) return 'Off the park';
+    if (!owns(x, y)) return 'You don\'t own this land yet. Buy it with the Land tool 🗺️';
+    const i = I(x, y);
+    if (S.path[i]) return 'Jeep tracks can\'t go on paths';
+    if (ring[i] || inner[i]) return 'Not through a habitat';
+    if (occ[i]) { const o = OBJ.get(occ[i]); if (!(o.k === 'plant' && o.wild)) return 'Something is in the way'; }
+    if (S.ground[i] === WATER) return 'Not on water';
+    if (!canPay(15)) return 'Not enough money';
+    return '';
+  }
+  function paintTrack(x, y) {
+    if (!inMap(x, y) || hasTrack(I(x, y))) return;
+    const why = trackOkReason(x, y); if (why) { toastOnce(why, 'bad'); return; }
+    const i = I(x, y);
+    if (occ[i]) S.objs = S.objs.filter((q) => q.id !== occ[i]);   // a wild plant there is cleared away
+    S.track[i] = 1; spend(15); rebuild(); groundDirty = true; SFX.path();
   }
   function bldOkReason(x, y, type) {
     const b = BUILDINGS[type];
@@ -3690,6 +4055,7 @@ const Props = (() => {
       if (!owns(xx, yy)) return 'You don\'t own this land yet. Buy it with the Land tool 🗺️';
       const i = I(xx, yy);
       if (S.path[i]) return 'That\'s a path';
+      if (hasTrack(i)) return 'That\'s a jeep track';
       if (ring[i] || inner[i]) return 'Not inside a habitat';
       if (occ[i]) { const o = OBJ.get(occ[i]); if (!(o.k === 'plant' && o.wild)) return 'Something is already there'; }
       if (S.ground[i] === WATER) return 'Not on water';
@@ -3722,6 +4088,7 @@ const Props = (() => {
     if (!owns(x, y)) { toastOnce('You don\'t own this land yet. Buy it with the Land tool 🗺️', 'bad'); return; }
     const i = I(x, y);
     if (S.path[i]) return;
+    if (hasTrack(i)) { toastOnce('That\'s a jeep track. Remove it first.', 'bad'); return; }
     if (ring[i] || inner[i] || S.ground[i] === WATER) return;
     if (occ[i]) { const o = OBJ.get(occ[i]); if (o.k === 'plant' && o.wild) S.objs = S.objs.filter((q) => q !== o); else return; }
     if (S.money < 10) { toastOnce('Not enough money', 'bad'); return; }
@@ -3752,6 +4119,7 @@ const Props = (() => {
       rebuild(); SFX.place(); return;
     }
     if (S.path[i]) { S.path[i] = 0; S.money += 4; rebuild(); SFX.path(); return; }
+    if (hasTrack(i)) { S.track[i] = 0; earn(5); rebuild(); groundDirty = true; SFX.path(); return; }
     if (ring[i] || inner[i]) { openHab(ring[i] || inner[i]); }
   }
   // Can this park get this animal? Its fossils are found in this region and the park has enough stars, or it was researched, or it's your hybrid.
@@ -3774,7 +4142,7 @@ const Props = (() => {
     if (!avail(sp)) { toast(lockText(sp), 'bad'); SFX.error(); return false; }
     if (d.cost > S.money) { toast('Not enough money (' + fmt(d.cost) + ')', 'bad'); SFX.error(); return false; }
     const hp = PEN_OF(h.lvl);
-    if (penOf(sp) !== hp) { toast(d.name + ' needs ' + PEN_NAME[penOf(sp)] + ', not ' + PEN_NAME[hp] + '. ' + (penOf(sp) === 'aviary' ? 'Use the Habitat tool with Aviary net.' : penOf(sp) === 'lagoon' ? 'Use the Habitat tool with Lagoon wall, then fill it with water.' : ''), 'bad'); SFX.error(); return false; }
+    if (penOf(sp) !== hp) { toast(d.name + ' needs ' + PEN_NAME[penOf(sp)] + ', not ' + PEN_NAME[hp] + '. ' + (penOf(sp) === 'aviary' ? 'Build one with Build → Aviary.' : penOf(sp) === 'lagoon' ? 'Build one with Build → Lagoon.' : ''), 'bad'); SFX.error(); return false; }
     if (hp === 'lagoon' && habInfo.get(hid).water < 6) { toast('Fill the lagoon with water first: Ground tool → Water.', 'bad'); SFX.error(); return false; }
     if (hp === 'pen' && h.lvl < d.fence) { toast(d.name + ' needs a ' + FENCES[d.fence].name.toLowerCase() + ' or stronger. Upgrade the fence in the habitat panel.', 'bad'); SFX.error(); return false; }
     const others = habAnimals(hid);
@@ -3792,7 +4160,9 @@ const Props = (() => {
     return true;
   }
   function pickName() { const used = new Set(S.animals.map((a) => a.name)); const free = PET_NAMES.filter((n) => !used.has(n)); return free.length ? pick(free) : pick(PET_NAMES) + ' ' + (2 + ((rand() * 8) | 0)); }
-  function spend(n, wx, wy) { S.money -= n; S.stats.dayOut += n; if (wx != null) floater(wx, wy, '-' + fmt(n), '#a33a2a'); }
+  // Money never goes lower than -$200: costs that would go past that (wages, feeding, fines) are only paid down to it.
+  const MONEY_FLOOR = -200, canPay = (n) => S.money - n >= MONEY_FLOOR;
+  function spend(n, wx, wy) { n = Math.max(0, Math.min(n, S.money - MONEY_FLOOR)); if (!n) return; S.money -= n; S.stats.dayOut += n; if (wx != null) floater(wx, wy, '-' + fmt(n), '#a33a2a'); }
   function earn(n, wx, wy, icon) { S.money += n; S.stats.dayIn += n; if (wx != null && n > 0) floater(wx, wy, (icon || '+') + fmt(n), '#2f6f2c'); }
   function floater(x, y, text, col) { FX.push({ x, y, text, col, t: 0, life: 1.4 }); }
 
@@ -4395,22 +4765,46 @@ const Props = (() => {
     if (access.learn && !g.learned && g.st === 'walk') for (const o of access.learn) if (o.acc.includes(i) && rand() < 0.4) { g.learned = 1; if (g.money >= 4) { g.money -= 4; o.sales++; o.earned += 4; earn(4, (o.x + 1) * T, o.y * T); } g.fun = Math.min(100, g.fun + 14); think(g, '🤓'); break; }
     // donation boxes
     if (g.lastSaw && g.t - g.lastSaw < 25 && g.happy > 55 && access.donate) for (const o of access.donate) if (o.acc.includes(i) && rand() < 0.45 && !g.donated) { g.donated = 1; const n = 1 + ((rand() * 5) | 0); o.sales++; o.earned += n; earn(n, (o.x + 0.5) * T, o.y * T, '💝+'); }
+    // shops guests stop at as they walk past (not because they need something): the safari ride, a big meal, a photo, ice cream, gifts
+    if (g.st === 'walk' && !g.goingTo) for (const kind of ['ride', 'meal', 'photo', 'treat', 'gift']) {
+      const o = (access[kind] || []).find((q) => q.acc.includes(i)); if (!o) continue;
+      if (walkIn(g, o, kind)) { g.goingTo = { o, kind, need: kind === 'meal' ? 'food' : null, at: i }; startUse(g); break; }
+    }
   }
+  // would this guest stop at this shop as they walk past?
+  function walkIn(g, o, kind) {
+    const b = BUILDINGS[o.type]; g.bought = g.bought || {};
+    if (g.bought[kind] || g.money < b.price) return false;
+    let p = 0;
+    if (kind === 'gift') p = g.fun > 45 ? 0.35 : 0.1;
+    else if (kind === 'treat') p = S.weather && S.weather.k === 'sun' ? 0.35 : 0.18;
+    else if (kind === 'photo') p = g.lastSaw && g.t - g.lastSaw < 30 ? 0.4 : 0.06;
+    else if (kind === 'meal') p = g.need.food < 75 ? 0.55 : 0.08;
+    else if (kind === 'ride') { if (!o.route || !o.route.length || G.filter((q) => q.riding === o.id && q.st === 'use').length >= 4) return false; p = g.fun < 90 ? 0.45 : 0.15; }
+    if (rand() >= p) return false;
+    g.bought[kind] = 1; return true;
+  }
+  const rideTime = (o) => Math.min(45, Math.max(12, (o.route ? o.route.length : 0) / 2.2));
   function startUse(g) {
     const o = g.goingTo && g.goingTo.o; if (!o || !OBJ.has(o.id)) { g.goingTo = null; return; }
     const b = BUILDINGS[o.type];
     if (b.price > g.money) { think(g, '💸'); g.goingTo = null; g.need[g.goingTo ? g.goingTo.need : 'food'] += 30; return; }
-    g.st = 'use'; g.tm = o.type === 'bench' ? 6 : 2.2;
+    g.st = 'use'; g.tm = o.type === 'bench' ? 6 : o.type === 'meal' ? 5 : o.type === 'safari' ? rideTime(o) : 2.2;
+    if (o.type === 'safari') g.riding = o.id;   // off on the jeep (hidden until the ride is over)
     if (o.type === 'bench') g.useAt = [(o.x + 0.5) * T, (o.y + 0.75) * T];
   }
   function finishUse(g) {
-    const go = g.goingTo; g.goingTo = null; if (!go || !OBJ.has(go.o.id)) return;
+    const go = g.goingTo; g.goingTo = null; g.riding = null; if (!go || !OBJ.has(go.o.id)) return;
     const o = go.o, b = BUILDINGS[o.type];
-    g.need[go.need] = 100;
+    if (go.need) g.need[go.need] = 100;
     if (b.price) { g.money -= b.price; o.sales++; o.earned += b.price; earn(b.price, (o.x + o.w / 2) * T, o.y * T); }
-    if (b.sells === 'food' || b.sells === 'drink') g.trashT = 6 + rand() * 10;
+    if (b.sells === 'food' || b.sells === 'drink' || b.sells === 'treat') g.trashT = 6 + rand() * 10;
+    if (b.sells === 'meal') { g.need.energy = Math.min(100, g.need.energy + 25); g.fun = Math.min(100, g.fun + 5); }
+    if (b.sells === 'treat') { g.need.food = Math.min(100, g.need.food + 20); g.fun = Math.min(100, g.fun + 6); }
+    if (b.sells === 'photo') g.fun = Math.min(100, g.fun + 10);
+    if (b.sells === 'ride') g.fun = Math.min(100, g.fun + 30);
     if (o.type === 'gift') { g.fun = Math.min(100, g.fun + 15); g.balloon = pick(['#e6524a', '#3f8fd8', '#f2c23a', '#8a5ad0', '#3fb58a']); }
-    think(g, b.sells === 'food' ? '😋' : b.sells === 'drink' ? '😌' : b.sells === 'rest' ? '😊' : b.sells === 'toilet' ? '😅' : '🎈');
+    think(g, ({ food: '😋', drink: '😌', rest: '😊', toilet: '😅', meal: '🍝', treat: '🍦', photo: '📸', ride: '🤩' })[b.sells] || '🎈');
     // the gift shop: also counts as a need met for fun
   }
   function dropTrash(g) {
@@ -4538,6 +4932,14 @@ const Props = (() => {
     }
     // habitat floors: a faint tint so you can see the habitat area
     for (const h of S.habs) {
+      if (h.lvl === 5) {   // a lagoon is deep: darker water, with light rippling over it
+        const lx0 = (h.x0 + 0.5) * T, ly0 = (h.y0 + 0.5) * T, lw = (h.x1 - h.x0) * T, lh = (h.y1 - h.y0) * T;   // water right up to the walls
+        ctx.save(); ctx.beginPath(); ctx.rect(lx0, ly0, lw, lh); ctx.clip();
+        const g = ctx.createLinearGradient(0, ly0, 0, ly0 + lh); g.addColorStop(0, '#5eaedd'); g.addColorStop(1, '#2f74b6'); ctx.fillStyle = g; ctx.fillRect(lx0, ly0, lw, lh);
+        ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 1.4;
+        for (let k = 0; k < (lw * lh) / 2600; k++) { const rx = lx0 + hash(h.id * 31 + k, 5) * lw, ry = ly0 + hash(h.id * 31 + k, 6) * lh, ph = time * 0.8 + k; ctx.globalAlpha = 0.4 + 0.4 * Math.sin(ph); ctx.beginPath(); ctx.moveTo(rx - 7, ry); ctx.quadraticCurveTo(rx, ry - 3 * Math.sin(ph), rx + 7, ry); ctx.stroke(); }
+        ctx.restore();
+      }
       if (sel && sel.t === 'hab' && sel.id === h.id) { ctx.fillStyle = 'rgba(255,240,150,.16)'; ctx.fillRect((h.x0 + 0.5) * T, (h.y0 + 0.5) * T, (h.x1 - h.x0) * T, (h.y1 - h.y0) * T); }
       for (const [dx, dy] of h.dung) Props.dung(ctx, dx, dy);
     }
@@ -4563,16 +4965,25 @@ const Props = (() => {
       void X1;
     }
     for (const a of S.animals) if (vis(a.x, a.y - (a.alt || 0), 160)) list.push([a.y, 2, a]);
-    for (const g of G) if (g.st !== 'caught' && vis(g.x, g.y, 40)) list.push([g.y, 3, g]);
+    for (const g of G) if (g.st !== 'caught' && !(g.riding && g.st === 'use') && vis(g.x, g.y, 40)) list.push([g.y, 3, g]);
+    // safari jeeps drive out along their track and back
+    for (const o of access.ride || []) if (o.route && o.route.length > 1) {
+      const n = o.route.length, u = (time * 2.2 + o.id * 3.7) % n, k = Math.floor(u), f = u - k, a = o.route[k], b2 = o.route[(k + 1) % n];
+      const ax = (a % MW + 0.5) * T, ay = (((a / MW) | 0) + 0.5) * T, bx = (b2 % MW + 0.5) * T, by = (((b2 / MW) | 0) + 0.5) * T;
+      const x = ax + (bx - ax) * f, y = ay + (by - ay) * f + 8;
+      if (bx !== ax) o.jdir = Math.sign(bx - ax);
+      if (vis(x, y, 60)) list.push([y, 6, [x, y, o.jdir || 1, G.filter((q) => q.riding === o.id && q.st === 'use').length]]);
+    }
     for (const s of S.staff) if (vis(s.x, s.y, 40)) list.push([s.y, 4, s]);
     list.push([GATE.y * T + T - 4, 5, null]);
     list.sort((a, b) => a[0] - b[0]);
     for (const [, k, o] of list) {
       if (k === 0) drawObj(o);
-      else if (k === 1) { const [h, x1, y1, x2, y2, br] = o; Props.fence(ctx, x1, y1, x2, y2, h.lvl, h.hp, br); }
+      else if (k === 1) { const [h, x1, y1, x2, y2, br] = o; Props.fence(ctx, x1, y1, x2, y2, h.lvl, h.hp, br, Math.abs(y2 - y1) < 1 && y1 >= (h.y1 + 0.5) * T - 1); }
       else if (k === 2) { drawAnimal(o); if (o.st === 'attack') drawCaught(o); }
       else if (k === 3) Props.person(ctx, o.x, o.y, o, o.ph, o.st !== 'use', o.st === 'use' && o.useAt);
       else if (k === 4) Props.person(ctx, o.x, o.y, o, o.ph, o.st !== 'work');
+      else if (k === 6) Props.jeep(ctx, o[0], o[1], o[2], o[3], time);
       else { ctx.save(); ctx.translate((GATE.x + 0.5) * T, (GATE.y + 1) * T - 4); Props.gate(ctx, S.name, time); ctx.restore(); }
     }
     // aviary nets go over the top of everything inside
@@ -4591,7 +5002,7 @@ const Props = (() => {
       }
     }
     // bubbles above guests and animals
-    for (const g of G) if (g.thT > 0 && vis(g.x, g.y, 40)) bubble(g.x, g.y - 34, g.thought, Math.min(1, g.thT * 2));
+    for (const g of G) if (g.thT > 0 && !(g.riding && g.st === 'use') && vis(g.x, g.y, 40)) bubble(g.x, g.y - 34, g.thought, Math.min(1, g.thT * 2));
     for (const s of S.staff) if (s.st === 'work') bubble(s.x, s.y - 34, s.kind === 'keeper' ? '🍖' : '🔧', 1);
     for (const a of S.animals) {
       if (a.st === 'tranq') bubble(a.x, a.y - 40, '💤', 1);
@@ -4736,7 +5147,9 @@ const Props = (() => {
     ['animal', '🦖', 'Animals'], ['shop', '🍔', 'Shops'], ['staff', '👷', 'Staff'], ['land', '🗺️', 'Land'], ['dozer', '🧹', 'Remove']];
   const FENCE_ICON = ['', Icon('fence'), Icon('fenceStone'), Icon('fenceSteel'), Icon('net'), Icon('lagoon')];
   const MAIN = [['build', 'hammer', 'Build', ''], ['animal', 'dino', 'Animals', 'green'], ['shop', 'shop', 'Shops', 'blue'], ['staff', 'staff', 'Staff', 'purple']];
-  const BUILDT = [['path', 'path', 'Path'], ['hab', 'fence', 'Habitat'], ['ground', 'paint', 'Ground'], ['plant', 'plant', 'Plants'], ['land', 'map', 'Land'], ['dozer', 'remove', 'Remove']];
+  const BUILDT = [['path', 'path', 'Path'], ['hab', 'fence', 'Habitat'], ['avi', 'net', 'Aviary'], ['lag', 'lagoon', 'Lagoon'], ['ground', 'paint', 'Ground'], ['plant', 'plant', 'Plants'], ['land', 'map', 'Land'], ['dozer', 'remove', 'Remove']];
+  // habitats, aviaries and lagoons are all drawn as a rectangle
+  const isHabTool = (k) => k === 'hab' || k === 'avi' || k === 'lag', habLvl = () => (tool.k === 'avi' ? 4 : tool.k === 'lag' ? 5 : tool.lvl);
   const isBuildTool = (k) => BUILDT.some((t) => t[0] === k);
   let trayOpen = false;
   const PLANT_ICON = { fern: '🌿', cycad: '🌴', conifer: '🌲', horsetail: '🎋', scaletree: '🌳', magnolia: '🌸', steppe: '🌾', rock: '🪨', treefern: '🪴', glossopteris: '🍃', ginkgo: '🍂', araucaria: '🎄', bennett: '🌼' };
@@ -4746,7 +5159,7 @@ const Props = (() => {
   function setTool(k) {
     if (k === 'staff') { openStaff(); return; }
     if (k === 'animal' && !tool.sp) { openShop(); }
-    tool.k = k; drag = null;
+    tool.k = k; drag = null; tool.rm = false; tool.trk = false;
     if (isBuildTool(k)) trayOpen = true;
     refreshTools();
     buildSub();
@@ -4757,18 +5170,28 @@ const Props = (() => {
     const sub = $('sub'); sub.innerHTML = ''; sub.hidden = tool.k === 'look';
     const opt = (html, on, fn, cls) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt' + (on ? ' on' : '') + (cls ? ' ' + cls : ''); b.innerHTML = html; b.addEventListener('click', () => { SFX.tap(); fn(); buildSub(); }); sub.append(b); return b; };
     const note = (t) => { const s = document.createElement('span'); s.className = 'note'; s.textContent = t; sub.append(s); };
+    // every section has its own Remove button (Build has the Remove tool)
+    const rmOpt = (tip) => { opt(Icon('remove') + lbl('Remove', tool.rm ? 'on' : 'tap to use'), tool.rm, () => { tool.rm = !tool.rm; if (tool.rm) { tool.trk = false; toast(tip); } }, 'rm'); if (tool.rm) note(tip); };
     const thumb = (img, w, h) => { const c = document.createElement('canvas'), k = Math.min(w * 2 / img.width, h * 2 / img.height); c.width = w * 2; c.height = h * 2; c.style.width = w + 'px'; c.style.height = h + 'px'; const x = c.getContext('2d'); x.drawImage(img, (c.width - img.width * k) / 2, c.height - img.height * k, img.width * k, img.height * k); return c; };
     const lbl = (name, small) => `<span class="lbl">${name}<small>${small}</small></span>`;
     if (tool.k === 'path') note('Drag to lay path ($10 a tile). Guests only walk on paths. Drag near the screen edge to scroll.');
-    else if (tool.k === 'hab') { for (const l of [1, 2, 3, 4, 5]) opt(FENCE_ICON[l] + lbl(FENCES[l].name, fmt(FENCES[l].cost) + '/tile'), tool.lvl === l, () => { tool.lvl = l; toast(FENCES[l].name + ': ' + FENCES[l].tip); }); note('Drag a rectangle'); }
+    else if (tool.k === 'avi') note('Drag a rectangle (at least 5 × 5) for a glass dome where flying animals live');
+    else if (tool.k === 'lag') note('Drag a rectangle (at least 5 × 5) for a lagoon. It fills with water by itself. Sea creatures live here');
+    else if (tool.k === 'hab') { if (tool.lvl > 3) tool.lvl = 1; for (const l of [1, 2, 3]) opt(FENCE_ICON[l] + lbl(FENCES[l].name, fmt(FENCES[l].cost) + '/tile'), tool.lvl === l, () => { tool.lvl = l; toast(FENCES[l].name + ': ' + FENCES[l].tip); }); note('Drag a rectangle'); }
     else if (tool.k === 'land') note('Tap a shaded plot next to your park to buy it (' + fmt(plotPrice()) + ' each). More land = more room to build.');
     else if (tool.k === 'ground') { BIOME_KEYS.forEach((k, i) => opt(`<span class="sw" style="background:rgb(${BIOMES[k].col.join(',')})"></span>` + lbl(BIOMES[k].name, fmt(BIOMES[k].cost)), tool.biome === i, () => { tool.biome = i; })); opt(Icon('paint') + lbl(tool.big ? 'Big brush' : 'Small brush', 'tap to change'), false, () => { tool.big = !tool.big; }); }
     else if (tool.k === 'plant') PLANT_KEYS.forEach((k) => { const b = opt(lbl(PLANTS[k].name, fmt(PLANTS[k].cost)), tool.plant === k, () => { tool.plant = k; toast(PLANTS[k].name + ': ' + PLANTS[k].tip + ' (' + PLANTS[k].eras + ')'); }); b.prepend(thumb(Props.plantSprite(k, 0, false).img, 30, 44)); });
-    else if (tool.k === 'shop') BUILD_KEYS.forEach((k) => { const b = opt(lbl(BUILDINGS[k].name, fmt(BUILDINGS[k].cost)), tool.bld === k, () => { tool.bld = k; toast(BUILDINGS[k].tip); }); b.prepend(thumb(Props.bldSprite(k).img, 40, 44)); });
+    else if (tool.k === 'shop') {
+      rmOpt('Tap a shop or jeep track to remove it (you get some money back)');
+      opt(Icon('path') + lbl('Jeep track', fmt(15) + '/tile'), !!tool.trk, () => { tool.trk = !tool.trk; tool.rm = false; if (tool.trk) toast('Drag to lay a jeep track out from your Safari jeep ride, past your habitats (6 tiles or more).'); });
+      opt('<span class="emo">🎟️</span>' + lbl('Ticket price', fmt(S.admission)), false, () => openPark());
+      BUILD_KEYS.forEach((k) => { const b = opt(lbl(BUILDINGS[k].name, fmt(BUILDINGS[k].cost)), !tool.rm && !tool.trk && tool.bld === k, () => { tool.rm = false; tool.trk = false; tool.bld = k; toast(BUILDINGS[k].tip); }); b.prepend(thumb(Props.bldSprite(k).img, 40, 44)); });
+    }
     else if (tool.k === 'animal') {
-      if (tool.sp) { const c = DinoArt.icon(tool.sp, 60, 34); const b = opt('', true, () => openShop()); b.prepend(c); b.append(SPECIES[tool.sp].name); }
-      opt(Icon('book') + 'Pick another', false, () => openShop());
-      note('Tap a habitat to bring it to life');
+      rmOpt('Tap an animal to send it to a partner park');
+      if (tool.sp) { const c = DinoArt.icon(tool.sp, 60, 34); const b = opt('', !tool.rm, () => { tool.rm = false; openShop(); }); b.prepend(c); b.append(SPECIES[tool.sp].name); }
+      opt(Icon('book') + 'Pick another', false, () => { tool.rm = false; openShop(); });
+      if (!tool.rm) note('Tap a habitat to bring it to life');
     } else if (tool.k === 'dozer') note('Tap paths, plants or buildings to remove them. Tap a habitat to manage it.');
     padRefresh(); measureUi();
     if (trayOpen) keepClear((GATE.x + 0.5) * T, (GATE.y + 0.5) * T);   // don't let the menus hide the entrance
@@ -4777,22 +5200,23 @@ const Props = (() => {
     const [tx, ty] = tileOf(wx, wy); hover = [tx, ty];
     if (tool.k === 'path') paintPath(tx, ty);
     else if (tool.k === 'ground') paintGround(tx, ty, tool.biome);
-    else if (tool.k === 'hab') drag = { x0: tx, y0: ty, x1: tx, y1: ty };
+    else if (isHabTool(tool.k)) drag = { x0: tx, y0: ty, x1: tx, y1: ty };
     else if (tool.k === 'dozer') bulldoze(tx, ty);
+    else if (tool.k === 'shop' && tool.trk) paintTrack(tx, ty);
     drag && (drag.last = [tx, ty]);
     lastPaint = [tx, ty];
   }
   let lastPaint = null;
   function toolMove(wx, wy) {
     const [tx, ty] = tileOf(wx, wy); hover = [tx, ty];
-    if (tool.k === 'hab' && drag) { drag.x1 = tx; drag.y1 = ty; return; }
+    if (isHabTool(tool.k) && drag) { drag.x1 = tx; drag.y1 = ty; return; }
     if (!lastPaint || (lastPaint[0] === tx && lastPaint[1] === ty)) return;
-    if (tool.k === 'path' || tool.k === 'ground') {
+    if (tool.k === 'path' || tool.k === 'ground' || (tool.k === 'shop' && tool.trk)) {
       // fill every tile along the line, so fast swipes don't leave gaps
       let [x, y] = lastPaint;
       while (x !== tx || y !== ty) {
         if (Math.abs(tx - x) >= Math.abs(ty - y)) x += Math.sign(tx - x); else y += Math.sign(ty - y);
-        if (tool.k === 'path') paintPath(x, y); else paintGround(x, y, tool.biome);
+        if (tool.k === 'path') paintPath(x, y); else if (tool.k === 'shop') paintTrack(x, y); else paintGround(x, y, tool.biome);
       }
     } else if (tool.k === 'dozer') bulldoze(tx, ty);
     lastPaint = [tx, ty];
@@ -4800,12 +5224,15 @@ const Props = (() => {
   function toolUp(wx, wy, tap) {
     const [tx, ty] = tileOf(wx, wy);
     lastPaint = null;
-    if (tool.k === 'hab' && drag) {
+    if (isHabTool(tool.k) && drag) {
       const x0 = Math.min(drag.x0, drag.x1), x1 = Math.max(drag.x0, drag.x1), y0 = Math.min(drag.y0, drag.y1), y1 = Math.max(drag.y0, drag.y1);
-      if (tap) toast('Drag across the ground to draw a habitat (at least 5 × 5)');
-      else buildHab(x0, y0, x1, y1, tool.lvl);
+      if (tap) toast('Drag across the ground to draw ' + (tool.k === 'avi' ? 'an aviary' : tool.k === 'lag' ? 'a lagoon' : 'a habitat') + ' (at least 5 × 5)');
+      else buildHab(x0, y0, x1, y1, habLvl());
       drag = null;
     } else if (tool.k === 'plant') placeObj('plant', tool.plant, tx, ty);
+    else if (tool.k === 'shop' && tool.trk) { /* laying track: nothing more when you let go */ }
+    else if (tool.k === 'shop' && tool.rm) removeShopAt(tx, ty);
+    else if (tool.k === 'animal' && tool.rm) removeAnimalAt(wx, wy);
     else if (tool.k === 'shop') { const b = BUILDINGS[tool.bld]; placeObj('bld', tool.bld, tx - (b.w > 1 ? 0 : 0), ty - (b.h > 1 ? 1 : 0)); }
     else if (tool.k === 'animal') {
       const hid = inMap(tx, ty) ? (inner[I(tx, ty)] || ring[I(tx, ty)]) : 0;
@@ -4820,12 +5247,36 @@ const Props = (() => {
       else openLand(p);
     } else if (tool.k === 'look' && tap) pickAt(wx, wy);
   }
+  // Remove buttons in the Shops and Animals sections
+  function removeShopAt(tx, ty) {
+    if (!inMap(tx, ty)) return;
+    const id = occ[I(tx, ty)], o = id && OBJ.get(id);
+    if ((!o || o.k !== 'bld') && hasTrack(I(tx, ty))) { if (owns(tx, ty)) bulldoze(tx, ty); return; }
+    if (!o || o.k !== 'bld') { toast('Tap a shop, building or jeep track to remove it', 'bad'); SFX.error(); return; }
+    if (!owns(tx, ty)) return;
+    bulldoze(tx, ty);
+  }
+  function animalAt(wx, wy) {
+    const as = S.animals.slice().sort((a, b) => b.y - a.y);
+    for (const a of as) { const sz = DinoArt.size(a.sp), s = 0.55 + 0.45 * a.age, ay = a.y - (a.alt || 0); if (Math.abs(wx - a.x) < sz.w * s * 0.5 + 6 && wy < ay + 8 && wy > ay - sz.h * s - 6) return a; }
+    return null;
+  }
+  function removeAnimalAt(wx, wy) {
+    const a = animalAt(wx, wy); if (!a) { toast('Tap an animal to send it away', 'bad'); SFX.error(); return; }
+    const d = SPECIES[a.sp], val = Math.round(d.cost * 0.4);
+    openPanel('remove', 'Send ' + a.name + ' away?', (b) => {
+      b.append(el('p', 'help', a.name + ' the ' + d.name + ' will go to a partner park, and you get ' + fmt(val) + '.'));
+      const row = el('div', 'row');
+      row.append(btn('Send away · +' + fmt(val), 'warn', () => { S.animals = S.animals.filter((q) => q !== a); earn(val, a.x, a.y - 40); SFX.coin(); closePanel(); }), btn('Keep', 'alt', closePanel));
+      b.append(row);
+    });
+  }
   function pickAt(wx, wy) {
     // animals first (front ones first), then people, then tiles
     const as = S.animals.slice().sort((a, b) => b.y - a.y);
     for (const a of as) { const sz = DinoArt.size(a.sp), s = 0.55 + 0.45 * a.age, ay = a.y - (a.alt || 0); if (Math.abs(wx - a.x) < sz.w * s * 0.5 + 6 && wy < ay + 8 && wy > ay - sz.h * s - 6) { SFX.tap(); openAnimal(a.id); return; } }
     for (const s of S.staff) if (Math.abs(wx - s.x) < 10 && wy < s.y + 4 && wy > s.y - 32) { SFX.tap(); openStaffer(s.id); return; }
-    for (const g of G) if (Math.abs(wx - g.x) < 9 && wy < g.y + 4 && wy > g.y - 30) { SFX.tap(); openGuest(g.id); return; }
+    for (const g of G) if (!(g.riding && g.st === 'use') && Math.abs(wx - g.x) < 9 && wy < g.y + 4 && wy > g.y - 30) { SFX.tap(); openGuest(g.id); return; }
     const [tx, ty] = tileOf(wx, wy); if (!inMap(tx, ty)) { closePanel(); return; }
     const i = I(tx, ty);
     if (occ[i] && OBJ.get(occ[i]).k === 'bld') { SFX.tap(); openObj(occ[i]); return; }
@@ -4836,12 +5287,12 @@ const Props = (() => {
   function drawToolPreview() {
     if (!hover || tool.k === 'look') return;
     const [tx, ty] = hover;
-    if (tool.k === 'hab' && drag) {
+    if (isHabTool(tool.k) && drag) {
       const x0 = Math.min(drag.x0, drag.x1), x1 = Math.max(drag.x0, drag.x1), y0 = Math.min(drag.y0, drag.y1), y1 = Math.max(drag.y0, drag.y1);
-      const why = habOkReason(x0, y0, x1, y1, tool.lvl), ok = !why;
+      const why = habOkReason(x0, y0, x1, y1, habLvl()), ok = !why;
       ctx.fillStyle = ok ? 'rgba(120,220,90,.22)' : 'rgba(230,80,60,.22)'; ctx.fillRect(x0 * T, y0 * T, (x1 - x0 + 1) * T, (y1 - y0 + 1) * T);
       ctx.strokeStyle = ok ? '#4fd04a' : '#e85a3a'; ctx.lineWidth = 3; ctx.setLineDash([10, 6]); ctx.strokeRect((x0 + 0.5) * T, (y0 + 0.5) * T, (x1 - x0) * T, (y1 - y0) * T); ctx.setLineDash([]);
-      const label = (x1 - x0 + 1) + ' × ' + (y1 - y0 + 1) + '  ' + (ok ? fmt(habCost(x0, y0, x1, y1, tool.lvl)) : why);
+      const label = (x1 - x0 + 1) + ' × ' + (y1 - y0 + 1) + '  ' + (ok ? fmt(habCost(x0, y0, x1, y1, habLvl())) : why);
       worldLabel((x0 + x1 + 1) / 2 * T, y0 * T - 8, label, ok);
       return;
     }
@@ -4904,7 +5355,7 @@ const Props = (() => {
     if (e.button === 1 || e.button === 2) { gest = { t: 'pan', x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y }; return; }
     gest = { t: 'press', x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false, at: performance.now() };
     const [wx, wy] = toWorld(e.clientX, e.clientY);
-    if (tool.k !== 'look' && tool.k !== 'plant' && tool.k !== 'shop' && tool.k !== 'animal') toolDown(wx, wy);
+    if ((tool.k !== 'look' && tool.k !== 'plant' && tool.k !== 'shop' && tool.k !== 'animal') || (tool.k === 'shop' && tool.trk)) toolDown(wx, wy);
     else hover = tileOf(wx, wy);
   });
   cv.addEventListener('pointermove', (e) => {
@@ -4922,10 +5373,10 @@ const Props = (() => {
     else if (gest.t === 'press') {
       const far = Math.hypot(e.clientX - gest.x, e.clientY - gest.y) > 9;
       if (far) gest.moved = true;
-      if (tool.k === 'look' && far) { gest.t = 'pan'; }
+      if (far && (tool.k === 'look' || tool.k === 'plant' || (tool.k === 'shop' && !tool.trk) || tool.k === 'animal')) { gest.t = 'pan'; hover = null; }   // tap to place, drag to look around
       else {
         const [wx, wy] = toWorld(e.clientX, e.clientY);
-        if (tool.k === 'plant' || tool.k === 'shop' || tool.k === 'animal') hover = tileOf(wx, wy);
+        if (tool.k === 'plant' || (tool.k === 'shop' && !tool.trk) || tool.k === 'animal') hover = tileOf(wx, wy);
         else { if (gest.moved) { if (drawPtr) { drawPtr.x = e.clientX; drawPtr.y = e.clientY; } else drawStart(e.clientX, e.clientY); } toolMove(wx, wy); }
       }
     }
@@ -5105,8 +5556,8 @@ const Props = (() => {
       const kv2 = el('dl', 'kv');
       const pen = d.pen || 'pen';
       const rows = pen === 'lagoon'
-        ? [['Home', '🌊 A lagoon (Lagoon wall) full of water'], ['Water', d.water + ' water tiles or more'], ['Group', d.social[0] + '–' + d.social[1] + ' ' + d.name], ['If it escapes', 'It can\'t: lagoon walls hold it in']]
-        : [['Home', pen === 'aviary' ? '🕸️ An aviary (Aviary net)' : FENCE_ICON[d.fence] + ' ' + FENCES[d.fence].name + ' or stronger'], ['Ground', BIOMES[d.biome].icon + ' ' + BIOMES[d.biome].name + (d.water ? ' + ' + d.water + ' water tiles' : '')], ['Plants', d.plants.map((p) => PLANTS[p].name).join(', ')], ['Group', d.social[0] + '–' + d.social[1] + ' ' + d.name], ['Space', d.space + ' tiles each'],
+        ? [['Home', '🌊 A lagoon (Build → Lagoon)'], ['Water', d.water + ' water tiles or more'], ['Group', d.social[0] + '–' + d.social[1] + ' ' + d.name], ['If it escapes', 'It can\'t: lagoon walls hold it in']]
+        : [['Home', pen === 'aviary' ? '🕸️ An aviary (Build → Aviary)' : FENCE_ICON[d.fence] + ' ' + FENCES[d.fence].name + ' or stronger'], ['Ground', BIOMES[d.biome].icon + ' ' + BIOMES[d.biome].name + (d.water ? ' + ' + d.water + ' water tiles' : '')], ['Plants', d.plants.map((p) => PLANTS[p].name).join(', ')], ['Group', d.social[0] + '–' + d.social[1] + ' ' + d.name], ['Space', d.space + ' tiles each'],
           ['If it escapes', pen === 'aviary' ? 'Flies around the park and scares people' : d.atk ? (d.atk === 'toss' ? 'Knocks people over, and fights back if attacked' : 'Hunts guests and other animals! Keep its fence strong') : 'Just wanders and scares people']];
       rows.push(['Food', FOOD[d.diet].icon + ' ' + FOOD[d.diet].name]);
       if (d.home) rows.push(['Fossil regions', d.home.map((r) => REGIONS[r].icon + ' ' + REGIONS[r].name).join(', ')]);
@@ -5139,7 +5590,7 @@ const Props = (() => {
       b.append(bigArt(a.sp, a.age));
       if (a.esc) {
         b.append(el('div', 'say bad', '🚨 ' + a.name + ' escaped! Guests nearby are running away.'));
-        b.append(btn('Send a ranger · ' + fmt(300), 'warn', () => { if (a.fight) { const f = S.animals.find((q) => q.id === a.fight.foe); if (f) { f.fight = null; f.st = 'idle'; f.tm = 1; } a.fight = null; } if (a.st !== 'tranq') { if (a.atk) { const g = G.find((q) => q.id === a.atk.g); if (g) { g.st = 'flee'; g.fear = 50; } a.atk = null; } spend(300, a.x, a.y - 40); tranq(a); } closePanel(); }));
+        b.append(btn('Send a ranger · ' + fmt(300), 'warn', () => { if (!canPay(300)) { toast('Not enough money (' + fmt(300) + ')', 'bad'); SFX.error(); return; } if (a.fight) { const f = S.animals.find((q) => q.id === a.fight.foe); if (f) { f.fight = null; f.st = 'idle'; f.tm = 1; } a.fight = null; } if (a.st !== 'tranq') { if (a.atk) { const g = G.find((q) => q.id === a.atk.g); if (g) { g.st = 'flee'; g.fear = 50; } a.atk = null; } spend(300, a.x, a.y - 40); tranq(a); } closePanel(); }));
         return;
       }
       const [emo, text] = wantText(a);
@@ -5184,8 +5635,8 @@ const Props = (() => {
       if (h.lvl !== 5) b.append(statRow(FENCE_ICON[h.lvl], h.lvl === 4 ? 'Net' : 'Fence', h.hp));
       if (h.lvl === 5 && info.water < info.tiles.length * 0.6) b.append(el('div', 'say bad', '🌊 Paint more water in this lagoon with the Ground tool. Sea creatures need lots of it.'));
       const row = el('div', 'row');
-      row.append(btn('Feed now · ' + fmt(feedCost(h) + 30), 'alt', () => { spend(30); feedHab(h); SFX.coin(); panelRefresh && panelRefresh(); }, !list.length));
-      row.append(btn('Repair · ' + fmt(Math.round((100 - h.hp) * 3) + 20), 'alt', () => { spend(Math.round((100 - h.hp) * 3) + 20); h.hp = 100; h.brk = -1; SFX.place(); panelRefresh && panelRefresh(); }, h.hp >= 100));
+      row.append(btn('Feed now · ' + fmt(feedCost(h) + 30), 'alt', () => { spend(30); feedHab(h); SFX.coin(); panelRefresh && panelRefresh(); }, !list.length || !canPay(feedCost(h) + 30)));
+      row.append(btn('Repair · ' + fmt(Math.round((100 - h.hp) * 3) + 20), 'alt', () => { spend(Math.round((100 - h.hp) * 3) + 20); h.hp = 100; h.brk = -1; SFX.place(); panelRefresh && panelRefresh(); }, h.hp >= 100 || !canPay(Math.round((100 - h.hp) * 3) + 20)));
       b.append(row);
       if (h.lvl < 3) { const per = FENCES[h.lvl + 1].cost, n = (h.x1 - h.x0 + 1) * 2 + (h.y1 - h.y0 - 1) * 2, c = n * per; b.append(btn('Upgrade to ' + FENCES[h.lvl + 1].name + ' · ' + fmt(c), 'alt', () => { if (S.money < c) { toast('Not enough money', 'bad'); return; } spend(c); h.lvl++; h.hp = 100; h.brk = -1; SFX.place(); panelRefresh(); })); }
       b.append(el('div', 'sec', 'Inside'));
@@ -5222,7 +5673,12 @@ const Props = (() => {
       $('ptitle').textContent = d.icon + ' ' + d.name;
       if (!o.acc.length) b.append(el('div', 'say bad', 'Guests can\'t reach this. Put a path next to it.'));
       b.append(el('p', 'help', d.tip));
-      const kv = el('dl', 'kv'); kv.append(el('dt', null, o.type === 'donate' ? 'Donations' : 'Visits'), el('dd', null, String(o.sales)), el('dt', null, 'Earned'), el('dd', null, fmt(o.earned))); b.append(kv);
+      if (o.type === 'safari') {
+        const tiles = o.route && o.route.length ? new Set(o.route).size : 0;
+        b.append(tiles ? el('div', 'say good', '🚙 The jeep runs on ' + tiles + ' tiles of track. ' + G.filter((q) => q.riding === o.id && q.st === 'use').length + ' guests riding now.')
+          : el('div', 'say bad', '🛤️ No jeep track yet. Shops → Jeep track, then drag from next to this station (6 tiles or more).'));
+      }
+      const kv = el('dl', 'kv'); kv.append(el('dt', null, o.type === 'donate' ? 'Donations' : o.type === 'safari' ? 'Rides' : 'Visits'), el('dd', null, String(o.sales)), el('dt', null, 'Earned'), el('dd', null, fmt(o.earned))); b.append(kv);
       b.append(btn('Sell (+' + fmt(d.cost * 0.4) + ')', 'warn', () => { earn(d.cost * 0.4); S.objs = S.objs.filter((q) => q !== o); rebuild(); closePanel(); }));
     }, true);
   }
@@ -5437,6 +5893,10 @@ const Props = (() => {
       b.append(btn((PREF.attacks ? '🦖 Escaped animals attack: on' : '🦖 Escaped animals attack: off'), 'alt', () => { PREF.attacks = !PREF.attacks; savePrefs(); openSettings(); }));
       b.append(el('p', 'help', 'When it\'s off, escaped animals only scare guests away.'));
       b.append(btn((PREF.hints === false ? 'Helper arrows: off' : 'Helper arrows: on'), 'alt', () => { PREF.hints = PREF.hints === false; savePrefs(); openSettings(); }));
+      b.append(el('div', 'sec', '🧰 Toolbar'));
+      const lay = el('div', 'row');
+      for (const [k, n] of [['left', '⬅️ Left'], ['bottom', '⬇️ Bottom'], ['right', '➡️ Right']]) lay.append(btn(n, layout() === k ? '' : 'alt', () => { PREF.layout = k; savePrefs(); applyLayout(); uiPad = [0, 0, 0, 0]; measureUi(); clampCam(); openSettings(); }));
+      b.append(lay);
       b.append(btn((GFX.simple ? '🖼️ Graphics: simple' : '🖼️ Graphics: sharp'), 'alt', () => { GFX.set(GFX.simple ? 'sharp' : 'simple'); DinoArt.flush && DinoArt.flush(); resize(); drawTitle(); showVer(); openSettings(); }));
       b.append(el('p', 'help', 'Simple graphics are lighter, for devices where the game freezes or runs slowly.'));
       b.append(el('p', 'help', 'Your park saves by itself on this device.'));
@@ -6244,7 +6704,7 @@ const Props = (() => {
     }
     h.hidden = !on; document.body.classList.toggle('tt', !!on); document.body.classList.toggle('ttwatching', !!(on && TT && TT.watch));
     $('ttHome').querySelector('b').textContent = mode === 'park' && S && S.rampage ? 'Stop' : TT && TT.watch ? 'Leave' : 'Go home'; watchLast = '';
-    if (on && !(TT && TT.watch) && !(mode === 'park' && S && S.rampage && !rampMe())) { $('ttHelp').hidden = false; setTimeout(() => { if ($('ttHelp')) $('ttHelp').hidden = true; }, 6000); } else $('ttHelp').hidden = true;
+    if (on && !pad.on && !(TT && TT.watch) && !(mode === 'park' && S && S.rampage && !rampMe())) { $('ttHelp').hidden = false; setTimeout(() => { if ($('ttHelp')) $('ttHelp').hidden = true; }, 6000); } else $('ttHelp').hidden = true;
   }
   let ttHudT = 0;
   function ttHudUpdate() {
@@ -6280,8 +6740,18 @@ const Props = (() => {
     let x, y;
     // don't cover the option row unless the hint points into it
     if (!$('sub').hidden && st.el && !$('sub').querySelector(st.el)) { h.hidden = true; return; }
-    if (st.el) { const e = document.querySelector(st.el); if (!e || e.offsetParent === null) { h.hidden = true; return; } const r = e.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top - 2; }
+    let beside = '';
+    if (st.el) {
+      const e = document.querySelector(st.el); if (!e || e.offsetParent === null) { h.hidden = true; return; } const r = e.getBoundingClientRect();
+      if (layout() !== 'bottom' && e.closest('#tools, #tray')) {   // the toolbar is down a side: point at the button from beside it
+        beside = layout(); h.hidden = false; if ($('hintText').textContent !== st.text) $('hintText').textContent = st.text;
+        h.className = 'hint beside-' + beside; h.querySelector('.ha').style.transform = '';
+        h.style.left = (beside === 'left' ? r.right + 4 : r.left - 4) + 'px'; h.style.top = (r.top + r.height / 2) + 'px'; return;
+      }
+      x = r.left + r.width / 2; y = r.top - 2;
+    }
     else { [x, y] = toScreen((st.world[0] + 0.5) * T, st.world[1] * T); }
+    h.className = 'hint';
     h.hidden = false; if ($('hintText').textContent !== st.text) $('hintText').textContent = st.text;
     const half = $('hintText').offsetWidth / 2 + 8, cx = clamp(x, half, W - half);
     h.style.left = cx + 'px'; h.style.top = clamp(y, 110, H) + 'px';
@@ -6400,7 +6870,7 @@ const Props = (() => {
   });
   $('setBtn').addEventListener('click', () => { auInit(); SFX.tap(); openSettings(); });
   for (const k of ['paleo', 'dino', 'ice']) $('eraPills').append(eraPill(k));
-  const GAME_VERSION = '1.5';   // shown under the title, so you can tell which copy a device has
+  const GAME_VERSION = '1.6';   // shown under the title, so you can tell which copy a device has
   // (on Android it also says which web view the device has and how it's drawing, to help fix problems)
   function showVer() { $('verTag').textContent = 'Version ' + GAME_VERSION + (GFX.simple ? ' · simple graphics' : '') + (GFX.android ? ' · web view ' + (GFX.chrome || '?') + (GFX.cpu ? '' : ' (no cpu)') : '') + (GFX.stuck ? ' · got stuck at: ' + GFX.stuckAt : ''); }
   showVer();
@@ -6408,7 +6878,15 @@ const Props = (() => {
   /* =================== controller =================== */
   const pad = { on: false, prev: {}, rep: {}, cx: 0, cy: 0, down: false };
   const BTN = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, SEL: 8, START: 9, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
-  function dia(pos) { const p = { s: [10, 17], e: [17, 10], w: [3, 10], n: [10, 3] }; let s = '<svg class="dia" viewBox="0 0 20 20">'; for (const k in p) s += `<circle cx="${p[k][0]}" cy="${p[k][1]}" r="2.8" fill="${k === pos ? '#fff' : 'none'}" stroke="#fff" stroke-width="1.4"/>`; return s + '</svg>'; }
+  // Which way round the face buttons are drawn: the same as the TtGamer15 Games menu's "Controller buttons" setting
+  // (A on the right, like the Retroid and Nintendo, or A on the bottom, like Xbox). The buttons themselves are the same.
+  function padRight() {
+    let v = null; try { v = localStorage.getItem('ttg.padIcons'); } catch (e) { v = null; }
+    if (v) return v === 'right';
+    if (/TtGamer15GamesApp/.test(navigator.userAgent)) return true;   // the menu's own default in the Android app
+    try { return !!(window.parent !== window && window.parent.TTG_HOST && window.parent.TTG_HOST.native); } catch (e) { return false; }
+  }
+  function dia(pos) { if (padRight()) pos = ({ s: 'e', e: 's', w: 'n', n: 'w' })[pos] || pos; const p = { s: [10, 17], e: [17, 10], w: [3, 10], n: [10, 3] }; let s = '<svg class="dia" viewBox="0 0 20 20">'; for (const k in p) s += `<circle cx="${p[k][0]}" cy="${p[k][1]}" r="2.8" fill="${k === pos ? '#fff' : 'none'}" stroke="#fff" stroke-width="1.4"/>`; return s + '</svg>'; }
   function padOff() { if (!pad.on) return; pad.on = false; $('cursor').hidden = true; $('padhint').hidden = true; for (const e of document.querySelectorAll('.pad-focus')) e.classList.remove('pad-focus'); }
   function padRefresh(reset) {
     if (!pad.on) return;
@@ -6419,7 +6897,10 @@ const Props = (() => {
     const side = !scope && playing && mode !== 'tt' && $('title').hidden && $('hud').style.visibility !== 'hidden';
     $('padhint').classList.toggle('side', side);
     $('padhint').style.top = side ? Math.round($('menuChip').getBoundingClientRect().bottom + 10) + 'px' : '';
-    $('padhint').innerHTML = scope ? `<span>${dia('s')} Choose</span><span>${dia('e')} Back</span>` : mode === 'tt' ? `<span>${dia('s')} Eat / attack</span><span>${dia('e')} Roar</span><span>START Go home</span>` : `<span>${dia('s')} Use</span><span>${dia('e')} Back</span><span>LB/RB Tools</span><span>${dia('w')} Options</span><span>LT/RT Zoom</span>`;
+    const ramp = mode === 'park' && S && S.rampage && rampMe(), watch = mode === 'tt' && TT && TT.watch;
+    $('padhint').classList.toggle('ttw', !scope && !!watch); $('padhint').classList.toggle('ttp', !scope && !watch && (mode === 'tt' || !!ramp));
+    if (mode === 'tt' || ramp) { const th = $('ttHelp'); if (th) th.hidden = true; }   // the touch tip isn't needed with a controller
+    $('padhint').innerHTML = scope ? `<span>${dia('s')} Choose</span><span>${dia('e')} Back</span>` : watch ? `<span>◀ ▶ Next animal</span><span>${dia('e')} Leave</span><span>LT/RT Zoom</span>` : (mode === 'tt' || ramp) ? `<span>${dia('s')} Eat / attack</span><span>${dia('e')} Roar</span><span>START ${ramp ? 'Stop' : 'Go home'}</span>` : `<span>${dia('s')} Use</span><span>${dia('e')} Back</span><span>LB/RB Tools</span><span>${dia('w')} Options</span><span>LT/RT Zoom</span>`;
     if (scope) { const cur = scope.querySelector('.pad-focus'); if (reset || !cur || !scope.contains(cur)) focusFirst(scope); }
   }
   function padScope() { if (!$('panel').hidden) return $('panel'); if (!$('title').hidden) return $('title'); if (pad.subFocus && !$('sub').hidden) return $('sub'); return null; }
@@ -6483,10 +6964,20 @@ const Props = (() => {
       if (lt > 0.2) zoomBy(1 - lt * 1.4 * dt); if (rt > 0.2) zoomBy(1 + rt * 1.4 * dt);
     } else if (playing) {
       // move the cursor; the map scrolls when it reaches the edge
-      const lx = ax(0), ly = ax(1), sp = 520 * dt;
-      pad.cx = clamp(pad.cx + lx * sp, 20, W - 20); pad.cy = clamp(pad.cy + ly * sp, 60, H - 80);
-      if (rep('u', b(BTN.UP))) pad.cy -= T * cam.z; if (rep('d', b(BTN.DOWN))) pad.cy += T * cam.z; if (rep('l', b(BTN.LEFT))) pad.cx -= T * cam.z; if (rep('r', b(BTN.RIGHT))) pad.cx += T * cam.z;
-      const edge = 60; if (pad.cx < edge) cam.x -= (edge - pad.cx) * 6 * dt / cam.z; if (pad.cx > W - edge) cam.x += (pad.cx - W + edge) * 6 * dt / cam.z; if (pad.cy < edge + 40) cam.y -= (edge + 40 - pad.cy) * 6 * dt / cam.z; if (pad.cy > H - edge - 60) cam.y += (pad.cy - H + edge + 60) * 6 * dt / cam.z;
+      // The left stick moves the cursor (gently near the middle of the stick, fast when pushed all the way); the d-pad
+      // steps one tile. The cursor stays in a box clear of the menus: pushing past the box moves the map instead, smoothly.
+      const curve = (v) => Math.sign(v) * Math.pow(Math.abs(v), 1.5), sp = 640 * dt;
+      let dx = curve(ax(0)) * sp, dy = curve(ax(1)) * sp;
+      if (rep('u', b(BTN.UP))) dy -= T * cam.z; if (rep('d', b(BTN.DOWN))) dy += T * cam.z; if (rep('l', b(BTN.LEFT))) dx -= T * cam.z; if (rep('r', b(BTN.RIGHT))) dx += T * cam.z;
+      const bx0 = Math.max(80, (uiPad[2] || 0) + 50), bx1 = Math.min(W - 80, W - (uiPad[3] || 0) - 50), by0 = Math.max(100, uiPad[0] + 40), by1 = Math.min(H - 70, H - uiPad[1] - 30);
+      let nx = pad.cx + dx, ny = pad.cy + dy, mx = 0, my = 0;
+      if (nx < bx0) { mx = nx - bx0; nx = bx0; } else if (nx > bx1) { mx = nx - bx1; nx = bx1; }
+      if (ny < by0) { my = ny - by0; ny = by0; } else if (ny > by1) { my = ny - by1; ny = by1; }
+      if (mx || my) {   // move the map; whatever the map can't move (at its edge) moves the cursor after all
+        const ox = cam.x, oy = cam.y; cam.x += mx / cam.z; cam.y += my / cam.z; clampCam();
+        nx += mx - (cam.x - ox) * cam.z; ny += my - (cam.y - oy) * cam.z;
+      }
+      pad.cx = clamp(nx, 16, W - 16); pad.cy = clamp(ny, 16, H - 16);
       cam.x += ax(2) * 600 * dt / cam.z; cam.y += ax(3) * 600 * dt / cam.z;
       const lt = gp.buttons[BTN.LT] ? gp.buttons[BTN.LT].value : 0, rt = gp.buttons[BTN.RT] ? gp.buttons[BTN.RT].value : 0;
       if (lt > 0.2) zoomBy(1 - lt * 1.4 * dt); if (rt > 0.2) zoomBy(1 + rt * 1.4 * dt);
@@ -6494,8 +6985,8 @@ const Props = (() => {
       $('cursor').style.left = pad.cx + 'px'; $('cursor').style.top = pad.cy + 'px';
       const [wx, wy] = toWorld(pad.cx, pad.cy);
       hover = tileOf(wx, wy);
-      if (pressed(BTN.A)) { auInit(); pad.down = true; pad.moved = false; if (tool.k !== 'look' && tool.k !== 'plant' && tool.k !== 'shop' && tool.k !== 'animal') toolDown(wx, wy); }
-      else if (b(BTN.A) && pad.down) { if (tool.k === 'path' || tool.k === 'ground' || tool.k === 'dozer' || tool.k === 'hab') toolMove(wx, wy); }
+      if (pressed(BTN.A)) { auInit(); pad.down = true; pad.moved = false; if ((tool.k !== 'look' && tool.k !== 'plant' && tool.k !== 'shop' && tool.k !== 'animal') || (tool.k === 'shop' && tool.trk)) toolDown(wx, wy); }
+      else if (b(BTN.A) && pad.down) { if (tool.k === 'path' || tool.k === 'ground' || tool.k === 'dozer' || isHabTool(tool.k) || (tool.k === 'shop' && tool.trk)) toolMove(wx, wy); }
       if (!b(BTN.A) && pad.down) { pad.down = false; toolUp(wx, wy, !(drag && (drag.x0 !== drag.x1 || drag.y0 !== drag.y1))); }
       if (pressed(BTN.B)) { if (tool.k !== 'look') setTool('look'); else if (sel) closePanel(); }
       if (pressed(BTN.LB) || pressed(BTN.RB)) { const i = TOOLS.findIndex((t) => t[0] === tool.k); let j = (i + (pressed(BTN.RB) ? 1 : TOOLS.length - 1)) % TOOLS.length; SFX.tap(); setTool(TOOLS[j][0]); }
