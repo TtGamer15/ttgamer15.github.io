@@ -885,7 +885,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '15';   // bump when the games change, so phones get the new copies
+  const V = '16';   // bump when the games change, so phones get the new copies
   try { document.getElementById('menuVer').textContent = 'Menu version ' + V; } catch (e) { /* fine */ }
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
@@ -939,11 +939,12 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       $('fx').getAnimations().forEach((a) => a.cancel()); fxMix = 0;
       wakeSoon(); bedsUp();
       pad.seen = false; try { window.focus(); } catch (e) { /* fine */ }   // the controller comes back to the menu; a button still down from the game won't act here
-      // then the game's colors slowly fade into the menu's.
-      // In the Android app the game goes away at once instead: while a game is still on the page, the web view can run out of
-      // room for pictures, and the menu's posters come back invisible. Once it's gone, the menu is drawn fresh.
-      if (NATIVE) setTimeout(() => { o.frame.remove(); setTimeout(redraw, 200); setTimeout(redraw, 1200); }, calm ? 0 : 900);
-      else setTimeout(() => { o.frame.classList.add('fading'); o.frame.classList.remove('shown'); setTimeout(() => o.frame.remove(), 1600); }, calm ? 0 : 420);
+      // then the game's colors slowly fade into the menu's. In the Android app the menu is drawn fresh once the game is gone
+      // (not before: while a game is still on the page, the web view can run out of room, and the posters came back invisible).
+      setTimeout(() => {
+        o.frame.classList.add('fading'); o.frame.classList.remove('shown');
+        setTimeout(() => { o.frame.remove(); if (NATIVE) { setTimeout(redraw, 200); setTimeout(redraw, 1200); } }, 1600);
+      }, calm ? 0 : 420);
     }, calm ? 0 : ms * 0.5);
   }
   window.TTG_HOST = {

@@ -482,11 +482,13 @@ body.ramp .ttstats b{color:#ffd86a}
      it starts, it remembers, and uses simple graphics next time (Settings can switch back). */
   window.ABGFX = (function () {
     var ua = navigator.userAgent || '', ls = null;
-    try { ls = window.localStorage; ls.getItem('ab.gfx'); } catch (e) { ls = null; }
+    try { ls = window.localStorage; ls.getItem('ab.gfx2'); } catch (e) { ls = null; }
     function get(k) { try { return ls ? ls.getItem(k) : null; } catch (e) { return null; } }
     function put(k, v) { try { if (ls) ls.setItem(k, v); } catch (e) { /* fine */ } }
-    var prev = get('ab.boot') || '', pref = get('ab.gfx') || '', stuck = prev.indexOf('start') === 0;
-    if (stuck) { pref = 'simple'; put('ab.gfx', 'simple'); }
+    // ab.gfx2: '' normal · 'sharp' / 'simple' picked in Settings · 'auto:N' simple by itself after getting stuck (N good starts since)
+    // · 'retry' trying sharp again after 2 good starts (if that gets stuck too, it stays simple)
+    var prev = get('ab.boot') || '', pref = get('ab.gfx2') || '', stuck = prev.indexOf('start') === 0;
+    if (stuck) { pref = pref === 'retry' || pref === 'simple' ? 'simple' : 'auto:0'; put('ab.gfx2', pref); }
     var g = { android: /Android/i.test(ua), stuck: stuck, stuckAt: stuck ? prev.slice(6) : '', pref: pref, cpu: false,
       chrome: (ua.match(/Chrome\/(\d+)/) || [])[1] || '' };
     var P2 = window.HTMLCanvasElement && HTMLCanvasElement.prototype, orig = P2 && P2.getContext;
@@ -500,8 +502,8 @@ body.ramp .ttstats b{color:#ffd86a}
     }
     // the settings that follow from that (Settings can change them while playing)
     g.set = function (mode) {
-      if (mode) { g.pref = mode; put('ab.gfx', mode); }
-      g.simple = g.pref === 'simple';
+      if (mode) { g.pref = mode; put('ab.gfx2', mode); }
+      g.simple = g.pref === 'simple' || g.pref.indexOf('auto') === 0;
       g.blur = !g.simple && (!g.android || g.cpu);              // soft shading (blurs are heavy for the graphics chip)
       g.dpr = g.simple ? 1 : g.android ? 1.5 : 2;               // how sharp the park is drawn
       g.ground = g.simple ? 0.75 : g.android ? 1 : 1.5;         // how sharp the ground picture is
@@ -510,7 +512,12 @@ body.ramp .ttstats b{color:#ffd86a}
     };
     g.set();
     g.stage = function (s) { put('ab.boot', 'start:' + s); };   // how far it got, in case it gets stuck
-    g.ok = function () { put('ab.boot', 'ok'); };
+    // real: it drew smoothly for a while (not just closed early); after 2 of those, simple-by-itself tries sharp again
+    g.ok = function (real) {
+      put('ab.boot', 'ok'); if (!real) return;
+      if (g.pref.indexOf('auto:') === 0) { var n = (+g.pref.slice(5) || 0) + 1; put('ab.gfx2', n >= 2 ? 'retry' : 'auto:' + n); }
+      else if (g.pref === 'retry') put('ab.gfx2', '');
+    };
     g.stage('loading');
     return g;
   })();
@@ -6391,7 +6398,7 @@ const Props = (() => {
   });
   $('setBtn').addEventListener('click', () => { auInit(); SFX.tap(); openSettings(); });
   for (const k of ['paleo', 'dino', 'ice']) $('eraPills').append(eraPill(k));
-  const GAME_VERSION = '1.3';   // shown under the title, so you can tell which copy a device has
+  const GAME_VERSION = '1.4';   // shown under the title, so you can tell which copy a device has
   // (on Android it also says which web view the device has and how it's drawing, to help fix problems)
   function showVer() { $('verTag').textContent = 'Version ' + GAME_VERSION + (GFX.simple ? ' · simple graphics' : '') + (GFX.android ? ' · web view ' + (GFX.chrome || '?') + (GFX.cpu ? '' : ' (no cpu)') : '') + (GFX.stuck ? ' · got stuck at: ' + GFX.stuckAt : ''); }
   showVer();
@@ -6405,7 +6412,7 @@ const Props = (() => {
     if (!pad.on) return;
     const scope = padScope();
     $('cursor').hidden = !!scope || !playing || mode === 'tt';
-    $('padhint').hidden = false;
+    $('padhint').hidden = !$('title').hidden && $('panel').hidden;   // not on the title screen, where it would peek out from behind the menu
     $('padhint').innerHTML = scope ? `<span>${dia('s')} Choose</span><span>${dia('e')} Back</span>` : mode === 'tt' ? `<span>${dia('s')} Eat / attack</span><span>${dia('e')} Roar</span><span>START Go home</span>` : `<span>${dia('s')} Use</span><span>${dia('e')} Back</span><span>LB/RB Tools</span><span>${dia('w')} Options</span><span>LT/RT Zoom</span>`;
     if (scope) { const cur = scope.querySelector('.pad-focus'); if (reset || !cur || !scope.contains(cur)) focusFirst(scope); }
   }
@@ -6536,15 +6543,17 @@ const Props = (() => {
     if (DinoArt.newFrame) DinoArt.newFrame();
     render();
     // the start went fine once it has drawn for a few seconds (if it gets stuck before that, next time uses simple graphics)
-    if (!boot.done) { boot.n++; if (boot.n === 1) GFX.stage('drawing'); if (boot.n >= 40 && now - boot.t0 > 6000) { boot.done = true; GFX.ok(); } }
+    if (!boot.done) { boot.n++; if (boot.n === 1) GFX.stage('drawing'); if (boot.n >= 40 && now - boot.t0 > 6000) { boot.done = true; GFX.ok(true); } }
     requestAnimationFrame(frame);
   }
   const boot = { n: 0, t0: performance.now(), done: false };
   // behind the title screen the park keeps living, but nothing costs money
   function stepIdle(dt) { for (const a of S.animals) updAnimal(a, dt); }
   addEventListener('resize', resize);
-  addEventListener('pagehide', () => { save(); if (!boot.done) { boot.done = true; GFX.ok(); } });   // closed on purpose: not stuck
-  document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else if (AU.ctx) AU.ctx.resume(); });
+  // closed on purpose, or the app was put away: not stuck
+  const notStuck = () => { if (!boot.done) { boot.done = true; GFX.ok(false); } };
+  addEventListener('pagehide', () => { save(); notStuck(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); notStuck(); } else if (AU.ctx) AU.ctx.resume(); });
 
   // start
   GFX.stage('title'); resize(); buildTools(); drawTitle();
