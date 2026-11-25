@@ -398,6 +398,8 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   // Inside the TtGamer15 Games Android app, the app hands the page a bridge for consoles, emulators and apps.
   const NATIVE = (() => { try { return window.TTGAndroid || null; } catch (e) { return null; } })();
   if (NATIVE) document.documentElement.classList.add('native');
+  // The "just the games" app (?games=only) is the same menu with only the games: no consoles, apps or home-screen setup.
+  const LIBRARY = !!NATIVE && !/[?&]games=only\b/.test(location.search);
 
   /* ---------- looks: every card has a theme (colors, floating bits, jingle and sound bed) ---------- */
   const NB_C = ['#ff9f43', '#52e5ff', '#ff6fae', '#a6e85b', '#ffd447', '#b28cff'], MAD_C = ['#e8bf4f', '#9fb3ff', '#ffffff', '#c7a0ff'];
@@ -492,7 +494,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   const ADD = { id: 'add', kind: 'add', name: 'Add your games', theme: 'add', blurb: 'Put your retro games and apps right here, next to Noodle Bots and Museum After Dark.' };
   function buildMain() {
     const list = GAMES.map(webEntry);
-    if (NATIVE) { for (const c of LIB.consoles) list.push(consoleEntry(c)); for (const a of LIB.apps) list.push(appEntry(a)); list.push(ADD); }
+    if (LIBRARY) { for (const c of LIB.consoles) list.push(consoleEntry(c)); for (const a of LIB.apps) list.push(appEntry(a)); list.push(ADD); }
     return list;
   }
   const romList = (c) => c.games.length ? c.games.map((r, i) => romEntry(c, r, i)) : [{ id: 'empty:' + c.id, kind: 'empty', con: c, name: 'No games yet', theme: conTheme(c), blurb: 'No games in this folder yet. Add some game files, then tap Rescan in Your games.' }];
@@ -1487,7 +1489,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   $('homeBtn').addEventListener('click', () => { try { NATIVE.homeSettings(); } catch (e) { /* fine */ } });
   $('libDone').addEventListener('click', closeLib);
   lib.addEventListener('click', (e) => { if (e.target === lib) closeLib(); });
-  $('libEntry').hidden = !NATIVE; $('a2hs').hidden = !!NATIVE;
+  $('libEntry').hidden = !LIBRARY; $('a2hs').hidden = !!NATIVE;
   $('libOpenBtn').addEventListener('click', () => openLib('home'));
 
   /* ---------- fit the screen ---------- */
