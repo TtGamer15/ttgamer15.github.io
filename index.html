@@ -652,7 +652,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   }
   const wakeSoon = () => { wake(); setTimeout(wake, 300); setTimeout(wake, 1000); };
   function nap() { const c = snd.ctx; if (c && snd.unlocked && c.state === 'running') { try { c.suspend(); } catch (e) { /* fine */ } } }
-  document.addEventListener('visibilitychange', () => { if (document.hidden) nap(); else { wakeSoon(); setTimeout(() => unstick(), 600); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) nap(); else { wakeSoon(); setTimeout(() => { unstick(); redraw(); }, 600); } });
   addEventListener('pagehide', nap); addEventListener('pageshow', wakeSoon); addEventListener('focus', wake);
   // sounds asked for while the sound is just waking up still play, the moment it's awake
   const live = () => snd.on && snd.ctx && (snd.ctx.state === 'running' || (snd.unlocked && performance.now() - (snd.waking || 0) < 1500));
@@ -972,7 +972,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     $('fx').getAnimations().forEach((a) => a.cancel()); fxMix = 0;
     const from = (t.dir === 1 ? -1 : 1) * SHIFT * 1.4;
     if (!calm) PARTS().forEach((el, k) => el.animate([{ transform: `translateX(${from}px)`, opacity: 0 }, { transform: 'translateX(0px)', opacity: 1 }], { duration: 520, delay: 60 + k * 70, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));
-    clearTimeout(buildIn.safe); buildIn.safe = setTimeout(unstick, 60 + PARTS().length * 70 + 900);
+    clearTimeout(buildIn.safe); buildIn.safe = setTimeout(() => { unstick(); redraw(); }, 60 + PARTS().length * 70 + 900);
     if (t.noVeil) return;
     const fade = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 400 : 1500, delay: calm ? 0 : 520, easing: 'ease-in-out', fill: 'both' });
     fade.finished.then(() => veil.remove(), () => veil.remove());
@@ -992,6 +992,13 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     }
   }
   setInterval(unstick, 1500);
+  // Android's web view can also keep showing an old, faded picture of a piece that is really back in place (so even
+  // unstick sees nothing wrong). Taking each piece off the page for an instant makes the web view draw it fresh.
+  function redraw() {
+    if (!NATIVE || open || away || leaving || drag.on || document.hidden) return;
+    for (const el of [...PARTS(), $('fx')]) { if (!el) continue; const d = el.style.display; el.style.display = 'none'; void el.offsetWidth; el.style.display = d; }
+    setPos(pos);
+  }
   // Into a console: the menu slides off to the right and the console's games build in from the left. Back is the reverse.
   function enterConsole(e) {
     if (leaving) return; leaving = true; SFX.play();

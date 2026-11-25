@@ -6288,7 +6288,7 @@ const Props = (() => {
   }
   function padScope() { if (!$('panel').hidden) return $('panel'); if (!$('title').hidden) return $('title'); if (pad.subFocus && !$('sub').hidden) return $('sub'); return null; }
   const focusables = (scope) => [...scope.querySelectorAll('button:not(:disabled),input,a')].filter((e) => e.offsetParent !== null && !e.hidden);
-  function focusFirst(scope) { for (const e of document.querySelectorAll('.pad-focus')) e.classList.remove('pad-focus'); const f = focusables(scope)[scope === $('panel') ? 1 : 0] || focusables(scope)[0]; if (f) { f.classList.add('pad-focus'); f.scrollIntoView({ block: 'nearest' }); } }
+  function focusFirst(scope) { for (const e of document.querySelectorAll('.pad-focus')) e.classList.remove('pad-focus'); const f = (scope === $('title') && $('playBtn')) || focusables(scope)[scope === $('panel') ? 1 : 0] || focusables(scope)[0]; if (f) { f.classList.add('pad-focus'); f.scrollIntoView({ block: 'nearest' }); } }
   function moveFocus(scope, dx, dy) {
     const list = focusables(scope); const cur = scope.querySelector('.pad-focus') || list[0]; if (!cur) return;
     const r = cur.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -6308,7 +6308,11 @@ const Props = (() => {
     const ax = (i) => { const v = gp.axes[i] || 0; return Math.abs(v) < 0.2 ? 0 : v; };
     let any = false; for (let i = 0; i < gp.buttons.length; i++) if (b(i)) any = true;
     if (Math.abs(ax(0)) + Math.abs(ax(1)) + Math.abs(ax(2)) + Math.abs(ax(3)) > 0) any = true;
-    if (any && !pad.on) { pad.on = true; pad.cx = W / 2; pad.cy = H / 2; padRefresh(true); }
+    if ((any && !pad.on) || pad.fresh) {
+      if (!pad.on) { pad.on = true; pad.cx = W / 2; pad.cy = H / 2; padRefresh(true); }
+      pad.fresh = false; pad.prev = {}; for (let i = 0; i < gp.buttons.length; i++) pad.prev[i] = b(i);
+      return;
+    }
     if (!pad.on) return;
     const pressed = (i) => b(i) && !pad.prev[i];
     const rep = (i, v) => { if (!v) { pad.rep[i] = 0; return false; } pad.rep[i] = (pad.rep[i] || 0) - dt; if (pad.rep[i] <= 0) { pad.rep[i] = pad.rep[i] === -dt ? 0.38 : 0.12; return true; } return false; };
@@ -6368,7 +6372,15 @@ const Props = (() => {
     for (let i = 0; i < gp.buttons.length; i++) pad.prev[i] = b(i);
   }
   // inside the TtGamer15 Games app, a controller in use there works here right away
-  window.ttgPadWake = () => { pad.on = true; pad.cx = W / 2; pad.cy = H / 2; padRefresh(true); };
+  window.ttgPadWake = () => { pad.on = true; pad.fresh = true; pad.cx = W / 2; pad.cy = H / 2; padRefresh(true); };
+  // Android's back button inside TtGamer15 Games: step back one thing at a time; 'none' lets the app close the game
+  window.ttgBackKey = () => {
+    if (!$('panel').hidden) { closePanel(); return 'done'; }
+    if (mode === 'tt' && TT) { if (TT.watch) leaveTT(); else if (!TT.over) endTT(true); return 'done'; }
+    if (S && S.rampage && !S.rampage.over) { endRampage(); return 'done'; }
+    if (playing && $('title').hidden) { if (tool.k !== 'look' || trayOpen) { trayOpen = false; setTool('look'); } else { save(); showTitle(); } return 'done'; }
+    return 'none';
+  };
 
   /* =================== main loop =================== */
   let lastT = performance.now(), hudT = 0, refT = 0;
