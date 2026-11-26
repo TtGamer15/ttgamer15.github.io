@@ -897,7 +897,7 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   /* ---------- playing a game, right here ---------- */
   // Games open inside this page instead of loading a new one, so the menu can slide away while the game slides in,
   // and the menu's sound picks right back up when you come back.
-  const V = '20';   // bump when the games change, so phones get the new copies
+  const V = '21';   // bump when the games change, so phones get the new copies
   try { document.getElementById('menuVer').textContent = 'Menu version ' + V; } catch (e) { /* fine */ }
   const frameUrl = (g) => `${g.url}?hub=1&in=app&v=${V}`;
   const appEl = document.querySelector('.app');
@@ -955,18 +955,24 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
       wakeSoon(); bedsUp();
       pad.seen = false; try { window.focus(); } catch (e) { /* fine */ }   // the controller comes back to the menu; a button still down from the game won't act here
       // then the game's colors slowly fade into the menu's.
-      // In the Android app, fading the whole game out (with the menu on top) needs so much room that the web view drops the
-      // menu's pictures and everything but the background disappears. So there, a plain sheet in the menu's colors fades in
-      // over the game instead, the game is taken off the page underneath it, and the sheet fades away. Then the menu is
-      // drawn fresh.
+      // In the Android app, the web view can lose the menu's pictures after a big game (everything but the background and
+      // the music disappears), and redrawing pieces of the menu doesn't always bring them back. So there, a plain sheet in
+      // the menu's colors fades in over the game, the game is taken away, and the menu page loads itself again from the
+      // saved copy behind the sheet: a brand-new page always draws everything. It comes back on the same game, with the
+      // music, and builds itself in as the sheet fades away (see 'back' at the start, and in sw.js).
       if (NATIVE) {
         const veil = document.createElement('div'); veil.className = 'veil'; veil.style.background = (() => { const on = document.querySelector('.room i.on'); return on ? getComputedStyle(on).backgroundImage : o.bg || '#ffe0e4'; })();
         veil.style.opacity = '0'; veil.style.bottom = '-140px'; o.frame.after(veil);   // (as tall as the background, so it lines up)
         const gone = () => {
           o.frame.remove();
-          const out = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 0 : 400, fill: 'forwards' });
-          const done = () => { veil.remove(); setTimeout(redraw, 200); setTimeout(redraw, 1200); };
-          out.finished.then(done, done); setTimeout(() => { if (veil.isConnected) done(); }, 1500);   // in case the web view never finishes it
+          try { sessionStorage.setItem('ttg.trip', JSON.stringify({ dir: -1, at: Date.now(), bg: veil.style.background, still: 1, pad: pad.on ? 1 : 0 })); } catch (e) { /* fine */ }
+          try { const u = new URL(location.href); u.searchParams.set('back', '1'); location.replace(u.href); } catch (e) { location.reload(); }
+          // if the page somehow doesn't load again, the old way: fade the sheet away and redraw the menu
+          setTimeout(() => {
+            const out = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 0 : 400, fill: 'forwards' });
+            const done = () => { veil.remove(); setTimeout(redraw, 200); setTimeout(redraw, 1200); };
+            out.finished.then(done, done); setTimeout(() => { if (veil.isConnected) done(); }, 1500);
+          }, 6000);
         };
         setTimeout(() => {
           const fade = veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: calm ? 0 : 600, easing: 'ease-in-out', fill: 'forwards' });
@@ -1009,10 +1015,10 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
     const veil = document.createElement('div'); veil.className = 'veil'; veil.style.background = t.bg || '#1b1236'; if (!t.noVeil) $('fx').after(veil);
     $('fx').getAnimations().forEach((a) => a.cancel()); fxMix = 0;
     const from = (t.dir === 1 ? -1 : 1) * SHIFT * 1.4;
-    if (!calm) PARTS().forEach((el, k) => el.animate([{ transform: `translateX(${from}px)`, opacity: 0 }, { transform: 'translateX(0px)', opacity: 1 }], { duration: 520, delay: 60 + k * 70, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));
+    if (!calm && !t.still) PARTS().forEach((el, k) => el.animate([{ transform: `translateX(${from}px)`, opacity: 0 }, { transform: 'translateX(0px)', opacity: 1 }], { duration: 520, delay: 60 + k * 70, easing: 'cubic-bezier(.2,1.2,.4,1)', fill: 'backwards' }));   // (still: the menu was already in place before the page loaded again)
     clearTimeout(buildIn.safe); buildIn.safe = setTimeout(() => { unstick(); redraw(); }, 60 + PARTS().length * 70 + 900);
     if (t.noVeil) return;
-    const fade = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 400 : 1500, delay: calm ? 0 : 520, easing: 'ease-in-out', fill: 'both' });
+    const fade = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 400 : t.still ? 1100 : 1500, delay: calm ? 0 : t.still ? 150 : 520, easing: 'ease-in-out', fill: 'both' });
     fade.finished.then(() => veil.remove(), () => veil.remove());
   }
   // Android's web view can freeze an animation halfway (after an emulator, or after a game closes), which leaves parts of
@@ -1087,7 +1093,9 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   $('backBtn').addEventListener('click', () => { SFX.tap(); exitConsole(); });
   function arrive() {
     let t = null; try { t = JSON.parse(sessionStorage.getItem('ttg.trip') || 'null'); if (t && t.dir === -1) sessionStorage.removeItem('ttg.trip'); } catch (e) { t = null; }
-    buildIn(t && t.dir === -1 && Date.now() - t.at < 8000 ? t : null);
+    const back = t && t.dir === -1 && Date.now() - t.at < 8000;
+    if (back && t.pad) padUse();   // still on the controller: keep showing its buttons
+    buildIn(back ? t : null);
   }
   // the browser kept this page while you played, so it comes straight back (music and all)
   addEventListener('pageshow', (e) => { if (e.persisted) { if (sel >= 0) setPos(sel); arrive(); } });
@@ -1595,6 +1603,8 @@ textarea{width:100%;min-height:76px;resize:vertical;border-radius:14px;border:2p
   }
   titleEl.addEventListener('click', start);
 
+  // back from a game in the Android app (the page loaded itself again): tidy the address
+  try { if (/[?&]back=1/.test(location.search)) { const u = new URL(location.href); u.searchParams.delete('back'); history.replaceState(history.state, '', u.href); } } catch (e) { /* fine */ }
   const MAIN0 = buildMain(), last0 = store.get('ttg.last');
   showList(MAIN0, Math.max(0, MAIN0.findIndex((x) => x.id === last0))); if (!showTitle()) arrive(); setTimeout(() => { ready = true; }, 400);
   // for the site's own checks

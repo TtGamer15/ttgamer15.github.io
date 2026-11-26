@@ -14,8 +14,15 @@ self.addEventListener('fetch', (e) => {
   const req = e.request, u = new URL(req.url);
   if (req.method !== 'GET' || u.origin !== location.origin || req.headers.has('range')) return;   // other sites (fonts, box art) go straight through
   const page = req.mode === 'navigate' || req.destination === 'document' || req.destination === 'iframe';
-  e.respondWith(page ? freshPage(req) : netFirst(req));
+  e.respondWith(page ? (u.searchParams.get('back') === '1' ? backPage(req, u) : freshPage(req)) : netFirst(req));
 });
+// Coming back from a game in the Android app, the menu loads itself again; the copy saved a moment ago is used,
+// so it's quick even on slow internet.
+async function backPage(req, u) {
+  const c = await caches.open(CACHE), plain = new URL(u.href); plain.searchParams.delete('back');
+  const hit = await c.match(plain.href);
+  return hit || freshPage(req);
+}
 async function freshPage(req) {
   const c = await caches.open(CACHE);
   try {
